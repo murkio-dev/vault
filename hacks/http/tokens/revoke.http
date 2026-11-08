@@ -1,0 +1,3 @@
+# Vale na hora.
+POST {{APPLICATION_BACKEND}}/api/v1/applications/{{APP_ID}}/members/me/tokens/{{TOKEN_ID}}/revoke
+Authorization: Bearer {{ACCESS_TOKEN}}

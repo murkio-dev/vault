@@ -1,0 +1,20 @@
+@ENDPOINT={{APPLICATION_BACKEND}}/api/v1/applications
+
+POST {{ENDPOINT}}
+Authorization: Bearer {{ACCESS_TOKEN}}
+Content-Type: application/json
+
+[
+    {
+       "name": "myapp" 
+    },
+    {
+       "name": "1" 
+    },
+    {
+       "name": "my-app" 
+    },
+    {
+        "name": "youapp"
+    }
+]

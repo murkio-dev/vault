@@ -1,0 +1,24 @@
+@ENDPOINT={{APPLICATION_BACKEND}}/api/v1/applications/
+@ID=01a18edf-ddc9-76ec-b6b5-125de0f02221
+
+PUT {{ENDPOINT}}{{ID}}
+Authorization: Bearer {{ACCESS_TOKEN}}
+Content-Type: application/json
+
+{
+       "name": "jooj" 
+}
+
+PUT {{ENDPOINT}}
+Content-Type: application/json
+
+[
+       {
+              "id":"01a18edf-ddc9-76ec-b6b5-125de0f02221",
+              "name":"jooj9"
+       },
+       {
+              "id":"01a18edf-ddc9-76ec-b6b5-125de0f02221",
+              "name":"jooj10"
+       }
+]

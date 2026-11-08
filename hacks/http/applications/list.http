@@ -1,0 +1,5 @@
+@ENDPOINT={{APPLICATION_BACKEND}}/api/v1/applications
+
+GET {{ENDPOINT}}
+Authorization: Bearer {{ACCESS_TOKEN}}
+Accept: application/json

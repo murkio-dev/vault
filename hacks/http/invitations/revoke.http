@@ -1,0 +1,2 @@
+DELETE {{APPLICATION_BACKEND}}/api/v1/applications/{{APP_ID}}/invitations/{{INVITATION_ID}}
+Authorization: Bearer {{ACCESS_TOKEN}}

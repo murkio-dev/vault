@@ -1,0 +1,6 @@
+@ENDPOINT={{APPLICATION_BACKEND}}/api/v1/applications/
+@ID=5ee44485-e8af-4438-96dd-349a8f1b1579
+
+GET {{ENDPOINT}}{{ID}}
+Authorization: Bearer {{ACCESS_TOKEN}}
+Accept: application/json

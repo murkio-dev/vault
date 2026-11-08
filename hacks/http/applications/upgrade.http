@@ -1,0 +1,10 @@
+@ENDPOINT={{APPLICATION_BACKEND}}/api/v1/applications/
+@ID=01a18edf-ddc9-76ec-b6b5-125de0f02221
+
+PATCH {{ENDPOINT}}{{ID}}
+Authorization: Bearer {{ACCESS_TOKEN}}
+Accept: application/json
+
+{
+       "name": "jooj" 
+}

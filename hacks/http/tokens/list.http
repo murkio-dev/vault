@@ -1,0 +1,2 @@
+GET {{APPLICATION_BACKEND}}/api/v1/applications/{{APP_ID}}/members/me/tokens
+Authorization: Bearer {{ACCESS_TOKEN}}

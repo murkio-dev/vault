@@ -1,0 +1,6 @@
+@ENDPOINT={{APPLICATION_BACKEND}}/api/v1/applications/
+@ID=01a18edf-ddd4-7510-9ceb-ab4200fc9719
+
+DELETE {{ENDPOINT}}{{ID}}
+Authorization: Bearer {{ACCESS_TOKEN}}
+Accept: application/json

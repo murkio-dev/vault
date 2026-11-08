@@ -1,0 +1,3 @@
+# Filtros: action, actor_id, target_id, outcome, from, to. Próxima página: &cursor=<page.next_cursor>.
+GET {{APPLICATION_BACKEND}}/api/v1/applications/{{APP_ID}}/audit-logs?limit=50
+Authorization: Bearer {{ACCESS_TOKEN}}

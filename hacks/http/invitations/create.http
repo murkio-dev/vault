@@ -1,0 +1,9 @@
+# O token aparece só nesta resposta (e vai para a outbox como email.send).
+POST {{APPLICATION_BACKEND}}/api/v1/applications/{{APP_ID}}/invitations
+Authorization: Bearer {{ACCESS_TOKEN}}
+Content-Type: application/json
+
+{
+    "email": "joao@example.com",
+    "role": "developer"
+}

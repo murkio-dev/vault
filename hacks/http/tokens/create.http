@@ -1,0 +1,9 @@
+# O token vt_ aparece só nesta resposta.
+POST {{APPLICATION_BACKEND}}/api/v1/applications/{{APP_ID}}/members/me/tokens
+Authorization: Bearer {{ACCESS_TOKEN}}
+Content-Type: application/json
+
+{
+    "name": "notebook",
+    "expires_at": "2027-01-01T00:00:00Z"
+}

@@ -1,0 +1,8 @@
+# Use o ACCESS_TOKEN de quem aceita (a conta Murkio do convidado).
+POST {{APPLICATION_BACKEND}}/api/v1/invitations/accept
+Authorization: Bearer {{ACCESS_TOKEN}}
+Content-Type: application/json
+
+{
+    "token": "inv_..."
+}

@@ -1,0 +1,8 @@
+PATCH {{APPLICATION_BACKEND}}/api/v1/applications/{{APP_ID}}/members/{{MEMBER_ID}}
+Authorization: Bearer {{ACCESS_TOKEN}}
+Content-Type: application/json
+
+{
+    "role": "admin",
+    "status": "active"
+}
