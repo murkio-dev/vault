@@ -22,6 +22,8 @@ Só estas dependências de terceiros são permitidas. Qualquer outra exige aprov
 |---|---|---|
 | `modernc.org/sqlite` | driver do `database/sql` em `pkg/sqlite` | a stdlib não tem driver de SQLite. É Go puro (sem CGO), então compila para FreeBSD em binário único |
 | `go.yaml.in/yaml/v2` | decodificar e renderizar YAML em `pkg/utils` | não há alternativa na stdlib |
+| `google.golang.org/grpc` | servidor gRPC interno em `internal/rpc` | a stdlib não tem gRPC. Uso restrito ao tráfego privado entre serviços, em `127.0.0.1` e porta separada da HTTP; a API pública continua em `net/http` |
+| `google.golang.org/protobuf` | mensagens do gRPC em `pkg/rpc` (código gerado de `../proto`) | exigido pelo gRPC; a stdlib não tem protobuf |
 | `github.com/stretchr/testify` | `assert` nos testes | só entra em arquivos `_test.go`, então **não vai para o binário** |
 
 Dentro das exceções, use só o necessário (por exemplo, `testify/assert`, sem `mock` e `suite`). Dependências indiretas que vierem delas são aceitas, mas não use diretamente.

@@ -28,6 +28,7 @@ import (
 type stack struct {
 	t       *testing.T
 	db      *sql.DB
+	box     *secretbox.Box
 	dbPath  string
 	auth    *authntest.Auth
 	handler http.Handler
@@ -52,7 +53,7 @@ func newStack(t *testing.T) *stack {
 	require.NoError(t, err)
 
 	auth := authntest.New(t)
-	return &stack{t: t, db: db, dbPath: dbPath, auth: auth, handler: authn.Authenticate(auth.Verifier(), tokens, mux)}
+	return &stack{t: t, db: db, box: box, dbPath: dbPath, auth: auth, handler: authn.Authenticate(auth.Verifier(), tokens, mux)}
 }
 
 type person struct {

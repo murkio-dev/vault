@@ -2,6 +2,7 @@ package repositories_test
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 	"time"
 	"uuid"
@@ -23,6 +24,9 @@ func TestAuditRepository(t *testing.T) {
 	t.Run("Quando filtra a trilha.", func(t *testing.T) { whenFiltering(t) })
 	t.Run("Quando pagina por cursor.", func(t *testing.T) { whenPagingByCursor(t) })
 	t.Run("Quando alguém tenta alterar a trilha.", func(t *testing.T) { whenSomeoneTriesToTamper(t) })
+	t.Run("Quando expurga o que passou da retenção.", func(t *testing.T) { whenPurgingExpired(t) })
+	t.Run("Quando o banco guarda a retenção.", func(t *testing.T) { whenDatabaseGuardsRetention(t) })
+	t.Run("Quando o lote do expurgo é inválido.", func(t *testing.T) { whenPurgeLimitIsInvalid(t) })
 }
 
 // Functions
@@ -152,4 +156,76 @@ func whenSomeoneTriesToTamper(t *testing.T) {
 	assert.True(t, sqlite.IsConstraintViolation(updateErr), "o banco recusa reescrever")
 	assert.True(t, sqlite.IsConstraintViolation(deleteErr), "e apagar")
 	assert.Error(t, duplicateErr, "o mesmo id não entra duas vezes")
+}
+
+func entryAged(t *testing.T, repo repositories.AuditRepository, app, actor uuid.UUID, age time.Duration) entities.AuditLog {
+	t.Helper()
+	log := entry(app, actor, entities.AuditSecretRevealed, entities.AuditAllowed)
+	log.CreatedAt = time.Now().UTC().Add(-age)
+	saved, err := repo.Create(context.Background(), log)
+	require.NoError(t, err)
+	return saved
+}
+
+func countAudit(t *testing.T, db *sql.DB) int {
+	t.Helper()
+	var n int
+	require.NoError(t, db.QueryRow(`SELECT COUNT(*) FROM audit_logs`).Scan(&n))
+	return n
+}
+
+func whenPurgingExpired(t *testing.T) {
+	db := sqlitetest.New(t)
+	repo := repositories.NewRepository(db)
+	a := sqlitetest.Seed(t, db, "app-a")
+	day := 24 * time.Hour
+	for range 3 {
+		entryAged(t, repo, a.Application, a.User, 400*day)
+	}
+	entryAged(t, repo, a.Application, a.User, 10*day)
+	entryAged(t, repo, a.Application, a.User, 364*day)
+	inMargin := entryAged(t, repo, a.Application, a.User, 365*day+30*time.Minute)
+
+	first, err := repo.PurgeExpired(context.Background(), time.Now(), 2)
+	second, secondErr := repo.PurgeExpired(context.Background(), time.Now(), 2)
+	third, thirdErr := repo.PurgeExpired(context.Background(), time.Now(), 2)
+
+	require.NoError(t, err)
+	require.NoError(t, secondErr)
+	require.NoError(t, thirdErr)
+	assert.EqualValues(t, 2, first, "respeita o tamanho do lote")
+	assert.EqualValues(t, 1, second, "lote incompleto diz que o expurgo terminou")
+	assert.EqualValues(t, 0, third)
+	assert.Equal(t, 3, countAudit(t, db), "ficam a de 10 dias, a de 364 e a que está na folga de 1 h")
+	var kept int
+	require.NoError(t, db.QueryRow(`SELECT COUNT(*) FROM audit_logs WHERE id = ?`, inMargin.ID.String()).Scan(&kept))
+	assert.Equal(t, 1, kept, "o corte fica 1 h além do limite do trigger")
+}
+
+func whenDatabaseGuardsRetention(t *testing.T) {
+	db := sqlitetest.New(t)
+	repo := repositories.NewRepository(db)
+	a := sqlitetest.Seed(t, db, "app-a")
+	recent := entryAged(t, repo, a.Application, a.User, 10*24*time.Hour)
+	old := entryAged(t, repo, a.Application, a.User, 400*24*time.Hour)
+
+	_, recentErr := db.Exec(`DELETE FROM audit_logs WHERE id = ?`, recent.ID.String())
+	_, updateOldErr := db.Exec(`UPDATE audit_logs SET outcome = 'denied' WHERE id = ?`, old.ID.String())
+	_, oldErr := db.Exec(`DELETE FROM audit_logs WHERE id = ?`, old.ID.String())
+
+	assert.True(t, sqlite.IsConstraintViolation(recentErr), "dentro de 1 ano, nem o DELETE direto passa")
+	assert.True(t, sqlite.IsConstraintViolation(updateOldErr), "reescrever é recusado mesmo no que já venceu")
+	assert.NoError(t, oldErr, "o que passou de 1 ano pode ser apagado")
+	assert.Equal(t, 1, countAudit(t, db))
+}
+
+func whenPurgeLimitIsInvalid(t *testing.T) {
+	db := sqlitetest.New(t)
+	repo := repositories.NewRepository(db)
+
+	for _, limit := range []int{0, -1, repositories.MaxPurgeBatch + 1} {
+		_, err := repo.PurgeExpired(context.Background(), time.Now(), limit)
+
+		assert.Error(t, err, "limit %d", limit)
+	}
 }

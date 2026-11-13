@@ -30,6 +30,7 @@ internal/
     │   └── <nome da entity>.go
     ├── plugins/
     │   └── mcp/
+    ├── rpc/               # Camada de entrega gRPC interna (só 127.0.0.1, fora do Caddy): interceptor de autenticação (token do SDK vt_), controller que chama o IUseCase e initializr. Os contratos `.proto` ficam em `../proto` e o código gerado é versionado em `pkg/rpc/`
     ├── restful/           # Camada de entrega HTTP. Cada service é uma pasta autocontida
     │   ├── <nome do service>/   # Ex: application/
     │   │   ├── controllers/     # Recebe requisição, chama o IUseCase e define rotas

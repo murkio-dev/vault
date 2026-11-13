@@ -10,6 +10,7 @@ Contrato HTTP do `vault/`. O produto e as decisões estão em `../../schema/vaul
 - Erros: `{"error": {...}}` no formato RFC 9457 (`type`, `title`, `status`, `detail`, `instance`, `invalid_params`).
 - Só a criação de **aplicações** e de **segredos** aceita um lote (`[...]`, até 50 segredos); em lote cada item é independente e a resposta é `207` se houver sucesso e erro misturados. As demais escritas recebem um objeto.
 - Os corpos de segredos, convites, membros e tokens são **JSON estrito**: YAML e XML são recusados, e um campo desconhecido (`created_by`, `member_id`, `role` onde não cabe...) é `400`, nunca ignorado em silêncio.
+- **Prefixo público:** pelo Caddy as rotas são `<host>/v1/vault/...` (por exemplo `POST /v1/vault/applications`). O Caddy troca `/v1/vault` por `/api/v1`, então as rotas abaixo valem com esse prefixo. Há rate limit por IP e por rota (a leitura do ambiente também por token), e o excesso responde `429`.
 - Status: `201` cria, `200` lê/atualiza, `204` apaga/revoga, `207` lote parcial, `400` validação, `401` sem credencial válida, `403` sem permissão, `404` não existe **ou não é visível para você**, `409` conflito, `429` limite (do Caddy).
 - `404` e `403`: quem **não é membro** da aplicação recebe `404` em tudo (não se revela o que existe). Quem é membro e não tem a permissão recebe `403`.
 - Listas comuns: `?page=1&limit=50` (máximo 150), com `"page": {"page","limit","total","has_next","has_prev"}`. A **auditoria** usa cursor: `?cursor=<opaco>&limit=100`, com `page.next_cursor`.
@@ -22,6 +23,7 @@ Contrato HTTP do `vault/`. O produto e as decisões estão em `../../schema/vaul
 | Pessoa (admin, dev) | `Authorization: Bearer <JWT do Auth>` | Gestão: tudo menos `/runtime` |
 | Máquina (SDK) | `Authorization: Bearer vt_<token>` | Só `GET /runtime/{uri_id}/env` |
 
+- **gRPC interno** (`VaultService.ReadEnv`, contrato em `../proto/vault/v1/vault.proto`): escuta só em `127.0.0.1:GRPC_PORT` (padrão `50052`), fora do Caddy, e aceita só o token `vt_` no metadata `authorization` (`Bearer vt_...`). Mesma regra e mesma auditoria da rota `GET /runtime/{uri_id}/env`: `Unauthenticated` para credencial inválida (inclusive o JWT de pessoa), `NotFound` para `uri_id` que não é do dono do token. Não há escrita por gRPC: gravar segredo continua sendo ato de pessoa, pela API HTTP.
 - O JWT é validado localmente pelo JWKS do Auth (Ed25519, `iss`, `aud` = a aplicação do Vault no Auth, `exp`). Falha ou ausência: `401` genérico, sem dizer o motivo.
 - O token `vt_` é procurado pelo hash. Revogado, expirado ou de membro removido/suspenso: `401`.
 - Em toda chamada o Vault confere no banco se o membro continua ativo; remover alguém vale na hora, mesmo com o JWT ainda no prazo.

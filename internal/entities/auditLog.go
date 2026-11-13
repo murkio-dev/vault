@@ -36,6 +36,15 @@ const (
 
 const MaxAuditText = 256
 
+// AuditRetention é por quanto tempo a trilha fica no banco: 1 ano. O trigger de
+// audit_logs (migration 0007) recusa apagar o que tem menos que isso, e o
+// expurgo corta AuditRetentionMargin além dele para nunca esbarrar no limite
+// (o trigger compara com precisão de segundo).
+const (
+	AuditRetentionYears  = 1
+	AuditRetentionMargin = time.Hour
+)
+
 type AuditLog struct {
 	ID            uuid.UUID       `json:"id"`
 	ApplicationID *uuid.UUID      `json:"application_id,omitempty"`

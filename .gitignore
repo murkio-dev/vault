@@ -3,4 +3,5 @@ vault.db
 vault.db-wal
 vault.db-shm
 logs.txt
+*.log
 bin/
