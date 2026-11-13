@@ -7,18 +7,23 @@ package dotenv
 
 import (
 	"bufio"
+	"errors"
 	"flag"
 	"fmt"
+	"io/fs"
 	"net"
 	"net/url"
 	"os"
+	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 	"uuid"
 )
 
 type Config struct {
 	Server   Server
+	Log      Log
 	Database Database
 	Auth     Auth
 	Security Security
@@ -28,11 +33,16 @@ type Server struct {
 	Environment string `environmentRef:"ENVIRONMENT" required:"true"`
 	Port        string `environmentRef:"SERVER_PORT" required:"true"`
 	PublicURL   string `environmentRef:"PUBLIC_URL"`
+	GRPCPort    string `environmentRef:"GRPC_PORT" default:"50052"`
 }
 
 type Database struct {
 	SQLitePath     string `environmentRef:"SQLITE_PATH" required:"true"`
 	SQLiteTestPath string `environmentRef:"SQLITE_TEST_PATH" required:"false"`
+}
+
+type Log struct {
+	Path string `environmentRef:"LOG_PATH"`
 }
 
 type Auth struct {
@@ -61,7 +71,9 @@ func (a Auth) AuthApplicationID() uuid.UUID {
 }
 
 func New() (*Config, error) {
-	_ = loadEnvFile(".env")
+	if err := Load(); err != nil {
+		return nil, err
+	}
 
 	cfg := &Config{}
 	bindConfig(reflect.ValueOf(cfg).Elem())
@@ -70,11 +82,28 @@ func New() (*Config, error) {
 		return nil, err
 	}
 
+	cfg.Database.SQLitePath = ResolvePath(cfg.Database.SQLitePath)
+	cfg.Log.Path = LogPath(cfg.Log.Path)
+
 	if err := cfg.Auth.validate(); err != nil {
 		return nil, err
 	}
 
+	if err := cfg.Server.validateGRPCPort(); err != nil {
+		return nil, err
+	}
+
 	return cfg, nil
+}
+
+func (s Server) validateGRPCPort() error {
+
+	port, err := strconv.Atoi(s.GRPCPort)
+	if err != nil || port < 1 || port > 65535 || strings.TrimPrefix(s.Port, ":") == s.GRPCPort {
+		return fmt.Errorf("GRPC_PORT must be a port number between 1 and 65535, different from SERVER_PORT")
+	}
+
+	return nil
 }
 
 func (a Auth) validate() error {
@@ -210,4 +239,85 @@ func loadEnvFile(filename string) error {
 	}
 
 	return scanner.Err()
+}
+
+// Load lê os arquivos .env para o ambiente do processo, sem sobrescrever o que
+// já está definido: primeiro o do lado do binário, depois o da pasta atual. O
+// ambiente do processo vale mais que os dois. Arquivo ausente não é erro; um
+// que existe e não abre (permissão, por exemplo) é, para a config não subir
+// pela metade sem o operador saber. Exemplo: com bin/.env e ./.env, a variável
+// que está só no segundo ainda entra, e a que está nos dois fica com o valor do
+// primeiro.
+func Load() error {
+
+	var errs []error
+	seen := map[string]bool{}
+
+	for _, dir := range []string{BinaryDir(), workingDir()} {
+		path := filepath.Join(dir, ".env")
+		if seen[path] {
+			continue
+		}
+		seen[path] = true
+
+		if err := loadEnvFile(path); err != nil && !errors.Is(err, fs.ErrNotExist) {
+			errs = append(errs, err)
+		}
+	}
+
+	return errors.Join(errs...)
+}
+
+// ResolvePath devolve path absoluto: relativo, ele é relativo à pasta do
+// binário, de onde quer que o binário seja chamado, para o banco e o log não
+// mudarem de lugar conforme a pasta em que o serviço foi iniciado. Vazio,
+// ":memory:" e URIs file: passam como estão. Exemplo: "vault.db" vira
+// "/opt/vault/vault.db" quando o binário está em /opt/vault.
+func ResolvePath(path string) string {
+	if path == "" || path == ":memory:" || strings.HasPrefix(path, "file:") || filepath.IsAbs(path) {
+		return path
+	}
+	return filepath.Join(BinaryDir(), path)
+}
+
+// LogPath é o arquivo de log: LOG_PATH (relativo ao binário) ou
+// <nome do binário>.log ao lado dele. Dois processos na mesma pasta escrevem
+// cada um no próprio arquivo. Exemplo: vault-api vira vault-api.log.
+func LogPath(configured string) string {
+	if configured == "" {
+		name := strings.TrimSuffix(filepath.Base(executable()), filepath.Ext(executable()))
+		configured = name + ".log"
+	}
+	return ResolvePath(configured)
+}
+
+// BinaryDir é a pasta do executável. No `go run` e nos testes o executável
+// fica numa pasta temporária do build, e a pasta atual é usada no lugar dela:
+// o banco de dev não some a cada execução.
+func BinaryDir() string {
+	exe := executable()
+	dir := filepath.Dir(exe)
+	if exe == "" || strings.Contains(dir, "go-build") || IsTest() {
+		return workingDir()
+	}
+	return dir
+}
+
+func executable() string {
+	exe, err := os.Executable()
+	if err != nil {
+		return ""
+	}
+	if resolved, err := filepath.EvalSymlinks(exe); err == nil {
+		return resolved
+	}
+	return exe
+}
+
+func workingDir() string {
+	dir, err := os.Getwd()
+	if err != nil {
+		return "."
+	}
+	return dir
 }

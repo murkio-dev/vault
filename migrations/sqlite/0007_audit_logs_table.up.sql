@@ -1,5 +1,6 @@
--- Auditoria. Só aceita inserção: o próprio banco recusa UPDATE e DELETE, então
--- nem um bug no serviço adultera a trilha. metadata guarda nomes, versões e
+-- Auditoria. Só aceita inserção: o próprio banco recusa UPDATE sempre, e só
+-- deixa passar o DELETE do que já saiu da retenção de 1 ano (o expurgo), então
+-- nem um bug no serviço adultera a trilha nem apaga o que está dentro do prazo. metadata guarda nomes, versões e
 -- ids, nunca valores de segredo. application_id é nulo só em eventos fora de
 -- uma aplicação (ex.: acesso negado antes de saber qual).
 CREATE TABLE IF NOT EXISTS audit_logs (
@@ -22,6 +23,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 CREATE INDEX IF NOT EXISTS idx_audit_logs_application ON audit_logs(application_id, id DESC);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_actor ON audit_logs(application_id, actor_id, id DESC);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(application_id, action, id DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs(created_at);
 
 CREATE TRIGGER IF NOT EXISTS audit_logs_no_update
 BEFORE UPDATE ON audit_logs
@@ -29,8 +31,10 @@ BEGIN
     SELECT RAISE(ABORT, 'audit_logs is append-only');
 END;
 
+-- A comparação é de texto, por segundo, em UTC (o driver grava created_at em UTC).
 CREATE TRIGGER IF NOT EXISTS audit_logs_no_delete
 BEFORE DELETE ON audit_logs
+WHEN OLD.created_at >= strftime('%Y-%m-%d %H:%M:%S', 'now', '-1 year')
 BEGIN
     SELECT RAISE(ABORT, 'audit_logs is append-only');
 END;

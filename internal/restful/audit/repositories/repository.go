@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
+	"time"
 	"uuid"
 
 	"github.com/murkio-dev/vault/internal/contracts"
@@ -24,6 +26,7 @@ func NewRepository(db *sql.DB) AuditRepository {
 var (
 	_ contracts.IAuditLogCreator = AuditRepository{}
 	_ contracts.IAuditLogLister  = AuditRepository{}
+	_ contracts.IAuditLogPurger  = AuditRepository{}
 )
 
 // Functions
@@ -146,4 +149,38 @@ func parseUUID(value sql.NullString) *uuid.UUID {
 		return nil
 	}
 	return &id
+}
+
+// MaxPurgeBatch é o teto de linhas por chamada de PurgeExpired: lotes pequenos
+// seguram o lock de escrita do SQLite por pouco tempo, e as gravações da API
+// seguem entre um lote e outro.
+const MaxPurgeBatch = 5000
+
+// PurgeExpired apaga até limit linhas da trilha anteriores a now menos 1 ano
+// menos 1 hora, das mais antigas para as mais novas. A hora de folga existe
+// porque o trigger do banco compara por segundo: o corte nunca cai no limite
+// dele. Dentro de uma retenção, o trigger recusa o DELETE de qualquer jeito, e
+// o erro volta sem apagar nada. limit fora de 1..MaxPurgeBatch devolve erro, e
+// um lote que volta com menos linhas que limit diz que o expurgo terminou.
+// Exemplo: com 3 linhas de 400 dias e 2 de 10 dias, PurgeExpired(now, 2)
+// apaga 2, a chamada seguinte apaga 1 e as de 10 dias ficam.
+func (r AuditRepository) PurgeExpired(ctx context.Context, now time.Time, limit int) (int64, error) {
+
+	if limit < 1 || limit > MaxPurgeBatch {
+		return 0, fmt.Errorf("audit: purge limit must be between 1 and %d", MaxPurgeBatch)
+	}
+
+	cutoff := now.UTC().AddDate(-entities.AuditRetentionYears, 0, 0).Add(-entities.AuditRetentionMargin)
+
+	const query = `
+		DELETE FROM audit_logs WHERE id IN (
+			SELECT id FROM audit_logs WHERE created_at < ? ORDER BY created_at LIMIT ?
+		)`
+
+	result, err := sqlite.Conn(ctx, r.DB).ExecContext(ctx, query, cutoff, limit)
+	if err != nil {
+		return 0, err
+	}
+
+	return result.RowsAffected()
 }

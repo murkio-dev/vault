@@ -26,7 +26,10 @@ import (
 	"github.com/murkio-dev/vault/pkg/tokenauth"
 )
 
-func Init(db *sql.DB, box *secretbox.Box, publicURL string, mux *http.ServeMux) (authn.TokenAuthenticator, error) {
+// NewShared monta os contratos que os serviços compartilham, sobre o mesmo
+// banco. A API HTTP e o gRPC interno usam cada um o seu, com o mesmo
+// comportamento: as peças são só repositórios sobre o db e não guardam estado.
+func NewShared(db *sql.DB, box *secretbox.Box) (contracts.Shared, authn.TokenAuthenticator) {
 
 	members := member_repositories.NewRepository(db)
 	secrets := secret_repositories.NewRepository(db)
@@ -46,6 +49,13 @@ func Init(db *sql.DB, box *secretbox.Box, publicURL string, mux *http.ServeMux) 
 		SecretLister:     secrets,
 	}
 
+	return shared, tokenauth.NewAuthenticator(tokens, tokens)
+}
+
+func Init(db *sql.DB, box *secretbox.Box, publicURL string, mux *http.ServeMux) (authn.TokenAuthenticator, error) {
+
+	shared, tokenAuthenticator := NewShared(db, box)
+
 	initializers := []func() error{
 		func() error { return application.Init(db, shared, mux) },
 		func() error { return member.Init(db, shared, mux) },
@@ -61,5 +71,5 @@ func Init(db *sql.DB, box *secretbox.Box, publicURL string, mux *http.ServeMux) 
 		}
 	}
 
-	return tokenauth.NewAuthenticator(tokens, tokens), nil
+	return tokenAuthenticator, nil
 }
