@@ -29,6 +29,7 @@ func TestUpdateMember(t *testing.T) {
 	t.Run("Quando o acesso é negado.", func(t *testing.T) { whenUpdateIsDenied(t) })
 	t.Run("Quando a auditoria falha.", func(t *testing.T) { whenUpdateAuditFails(t) })
 	t.Run("Quando ocorre erro de banco.", func(t *testing.T) { whenUpdateFailsInDb(t) })
+	t.Run("Quando a contagem de admins falha.", func(t *testing.T) { whenUpdateAdminCountFails(t) })
 }
 
 // Functions
@@ -54,9 +55,9 @@ func adminsCount(total int) func(context.Context, uuid.UUID) (int, error) {
 func whenUpdateBuildSucceeds(t *testing.T) {
 	repo, guard, tx := &mocks.MemberRepo{}, &mocks.Guard{}, &audit_mocks.Tx{}
 
-	useCase := useCases.NewUpdateMemberUseCase(repo, repo, repo, guard, tx)
+	useCase := useCases.NewUpdateMemberUseCase(repo, guard, tx)
 
-	assert.Equal(t, repo, useCase.Finder)
+	assert.Equal(t, repo, useCase.Repository)
 	assert.Equal(t, guard, useCase.Guard)
 	assert.Equal(t, tx, useCase.Tx)
 }
@@ -65,7 +66,7 @@ func whenUpdateChangesRole(t *testing.T) {
 	repo := &mocks.MemberRepo{FindByIDFunc: memberWith(entities.RoleDeveloper, entities.MemberActive)}
 	tx := &audit_mocks.Tx{}
 
-	output := useCases.NewUpdateMemberUseCase(repo, repo, repo, &mocks.Guard{}, tx).
+	output := useCases.NewUpdateMemberUseCase(repo, &mocks.Guard{}, tx).
 		Perform(context.Background(), useCases.UpdateInput{Requester: mocks.NewUserRequester(), Application: uuid.NewV7(), Member: uuid.NewV7(), Role: role(entities.RoleAdmin)})
 
 	assert.Nil(t, output.Error)
@@ -78,7 +79,7 @@ func whenUpdateChangesRole(t *testing.T) {
 func whenUpdateChangesStatus(t *testing.T) {
 	repo := &mocks.MemberRepo{FindByIDFunc: memberWith(entities.RoleDeveloper, entities.MemberActive)}
 
-	output := useCases.NewUpdateMemberUseCase(repo, repo, repo, &mocks.Guard{}, &audit_mocks.Tx{}).
+	output := useCases.NewUpdateMemberUseCase(repo, &mocks.Guard{}, &audit_mocks.Tx{}).
 		Perform(context.Background(), useCases.UpdateInput{Requester: mocks.NewUserRequester(), Application: uuid.NewV7(), Member: uuid.NewV7(), Status: status(entities.MemberSuspended)})
 
 	assert.Nil(t, output.Error)
@@ -90,7 +91,7 @@ func whenUpdateChangesStatus(t *testing.T) {
 func whenUpdateHasNothingToChange(t *testing.T) {
 	repo, guard := &mocks.MemberRepo{}, &mocks.Guard{}
 
-	output := useCases.NewUpdateMemberUseCase(repo, repo, repo, guard, &audit_mocks.Tx{}).
+	output := useCases.NewUpdateMemberUseCase(repo, guard, &audit_mocks.Tx{}).
 		Perform(context.Background(), useCases.UpdateInput{Requester: mocks.NewUserRequester(), Application: uuid.NewV7(), Member: uuid.NewV7()})
 
 	if assert.NotNil(t, output.Error) {
@@ -102,7 +103,7 @@ func whenUpdateHasNothingToChange(t *testing.T) {
 
 func whenUpdateValuesAreInvalid(t *testing.T) {
 	repo := &mocks.MemberRepo{}
-	useCase := useCases.NewUpdateMemberUseCase(repo, repo, repo, &mocks.Guard{}, &audit_mocks.Tx{})
+	useCase := useCases.NewUpdateMemberUseCase(repo, &mocks.Guard{}, &audit_mocks.Tx{})
 
 	badRole := useCase.Perform(context.Background(), useCases.UpdateInput{Requester: mocks.NewUserRequester(), Application: uuid.NewV7(), Member: uuid.NewV7(), Role: role("root")})
 	badStatus := useCase.Perform(context.Background(), useCases.UpdateInput{Requester: mocks.NewUserRequester(), Application: uuid.NewV7(), Member: uuid.NewV7(), Status: status("banido")})
@@ -122,9 +123,9 @@ func whenUpdateDemotesTheLastAdmin(t *testing.T) {
 		CountAdminsFunc: adminsCount(1),
 	}
 
-	demote := useCases.NewUpdateMemberUseCase(repo, repo, repo, &mocks.Guard{}, &audit_mocks.Tx{}).
+	demote := useCases.NewUpdateMemberUseCase(repo, &mocks.Guard{}, &audit_mocks.Tx{}).
 		Perform(context.Background(), useCases.UpdateInput{Requester: mocks.NewUserRequester(), Application: uuid.NewV7(), Member: uuid.NewV7(), Role: role(entities.RoleDeveloper)})
-	suspend := useCases.NewUpdateMemberUseCase(repo, repo, repo, &mocks.Guard{}, &audit_mocks.Tx{}).
+	suspend := useCases.NewUpdateMemberUseCase(repo, &mocks.Guard{}, &audit_mocks.Tx{}).
 		Perform(context.Background(), useCases.UpdateInput{Requester: mocks.NewUserRequester(), Application: uuid.NewV7(), Member: uuid.NewV7(), Status: status(entities.MemberSuspended)})
 
 	for _, output := range []useCases.UpdateOutput{demote, suspend} {
@@ -139,7 +140,7 @@ func whenUpdateDemotesTheLastAdmin(t *testing.T) {
 func whenUpdateDemotesWithAnotherAdmin(t *testing.T) {
 	repo := &mocks.MemberRepo{FindByIDFunc: memberWith(entities.RoleAdmin, entities.MemberActive), CountAdminsFunc: adminsCount(2)}
 
-	output := useCases.NewUpdateMemberUseCase(repo, repo, repo, &mocks.Guard{}, &audit_mocks.Tx{}).
+	output := useCases.NewUpdateMemberUseCase(repo, &mocks.Guard{}, &audit_mocks.Tx{}).
 		Perform(context.Background(), useCases.UpdateInput{Requester: mocks.NewUserRequester(), Application: uuid.NewV7(), Member: uuid.NewV7(), Role: role(entities.RoleDeveloper)})
 
 	assert.Nil(t, output.Error)
@@ -152,7 +153,7 @@ func whenUpdateMemberIsMissing(t *testing.T) {
 		return entities.Member{}, sql.ErrNoRows
 	}}
 
-	output := useCases.NewUpdateMemberUseCase(repo, repo, repo, &mocks.Guard{}, &audit_mocks.Tx{}).
+	output := useCases.NewUpdateMemberUseCase(repo, &mocks.Guard{}, &audit_mocks.Tx{}).
 		Perform(context.Background(), useCases.UpdateInput{Requester: mocks.NewUserRequester(), Application: uuid.NewV7(), Member: uuid.NewV7(), Role: role(entities.RoleAdmin)})
 
 	if assert.NotNil(t, output.Error) {
@@ -165,7 +166,7 @@ func whenUpdateIsDenied(t *testing.T) {
 	guard := (&mocks.Guard{}).Deny(entities.ForbiddenError())
 	tx := &audit_mocks.Tx{}
 
-	output := useCases.NewUpdateMemberUseCase(repo, repo, repo, guard, tx).
+	output := useCases.NewUpdateMemberUseCase(repo, guard, tx).
 		Perform(context.Background(), useCases.UpdateInput{Requester: mocks.NewUserRequester(), Application: uuid.NewV7(), Member: uuid.NewV7(), Role: role(entities.RoleAdmin)})
 
 	if assert.NotNil(t, output.Error) {
@@ -178,7 +179,7 @@ func whenUpdateIsDenied(t *testing.T) {
 func whenUpdateAuditFails(t *testing.T) {
 	tx := &audit_mocks.Tx{AuditErr: errors.New("disk full")}
 
-	output := useCases.NewUpdateMemberUseCase(&mocks.MemberRepo{FindByIDFunc: memberWith(entities.RoleDeveloper, entities.MemberActive)}, &mocks.MemberRepo{FindByIDFunc: memberWith(entities.RoleDeveloper, entities.MemberActive)}, &mocks.MemberRepo{FindByIDFunc: memberWith(entities.RoleDeveloper, entities.MemberActive)}, &mocks.Guard{}, tx).
+	output := useCases.NewUpdateMemberUseCase(&mocks.MemberRepo{FindByIDFunc: memberWith(entities.RoleDeveloper, entities.MemberActive)}, &mocks.Guard{}, tx).
 		Perform(context.Background(), useCases.UpdateInput{Requester: mocks.NewUserRequester(), Application: uuid.NewV7(), Member: uuid.NewV7(), Role: role(entities.RoleAdmin)})
 
 	if assert.NotNil(t, output.Error) {
@@ -194,11 +195,29 @@ func whenUpdateFailsInDb(t *testing.T) {
 		},
 	}
 
-	output := useCases.NewUpdateMemberUseCase(repo, repo, repo, &mocks.Guard{}, &audit_mocks.Tx{}).
+	output := useCases.NewUpdateMemberUseCase(repo, &mocks.Guard{}, &audit_mocks.Tx{}).
 		Perform(context.Background(), useCases.UpdateInput{Requester: mocks.NewUserRequester(), Application: uuid.NewV7(), Member: uuid.NewV7(), Role: role(entities.RoleAdmin)})
 
 	if assert.NotNil(t, output.Error) {
 		assert.Equal(t, entities.ErrTypeInternal, output.Error.Type)
 		assert.NotContains(t, output.Error.Detail, "segredo-interno")
 	}
+}
+
+func whenUpdateAdminCountFails(t *testing.T) {
+	repo := &mocks.MemberRepo{
+		FindByIDFunc: memberWith(entities.RoleAdmin, entities.MemberActive),
+		CountAdminsFunc: func(context.Context, uuid.UUID) (int, error) {
+			return 0, errors.New("segredo-interno")
+		},
+	}
+
+	output := useCases.NewUpdateMemberUseCase(repo, &mocks.Guard{}, &audit_mocks.Tx{}).
+		Perform(context.Background(), useCases.UpdateInput{Requester: mocks.NewUserRequester(), Application: uuid.NewV7(), Member: uuid.NewV7(), Role: role(entities.RoleDeveloper)})
+
+	if assert.NotNil(t, output.Error) {
+		assert.Equal(t, entities.ErrTypeInternal, output.Error.Type)
+		assert.NotContains(t, output.Error.Detail, "segredo-interno")
+	}
+	assert.Empty(t, repo.Upgraded, "sem saber quantos admins há, nada é alterado")
 }
