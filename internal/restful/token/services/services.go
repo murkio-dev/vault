@@ -6,14 +6,14 @@ import (
 	"uuid"
 
 	"github.com/murkio-dev/vault/internal/entities"
-	"github.com/murkio-dev/vault/pkg/utils"
+	"github.com/murkio-dev/vault/pkg/httpx"
 )
 
 func ParsePath(r *http.Request) (application, member uuid.UUID, e *entities.Error) {
-	if application, e = utils.PathUUID(r, "app"); e != nil {
+	if application, e = httpx.PathUUID(r, "app"); e != nil {
 		return
 	}
-	member, e = utils.PathMember(r)
+	member, e = httpx.PathMember(r)
 	return
 }
 
@@ -21,7 +21,7 @@ func ParseRevoke(r *http.Request) (application, member, token uuid.UUID, e *enti
 	if application, member, e = ParsePath(r); e != nil {
 		return
 	}
-	token, e = utils.PathUUID(r, "id")
+	token, e = httpx.PathUUID(r, "id")
 	return
 }
 
@@ -34,7 +34,7 @@ func ParseCreate(r *http.Request) (application, member uuid.UUID, name string, e
 	if application, member, e = ParsePath(r); e != nil {
 		return
 	}
-	body, e := utils.BindOne[createBody](r)
+	body, e := httpx.BindOne[createBody](r)
 	if e != nil {
 		return
 	}
