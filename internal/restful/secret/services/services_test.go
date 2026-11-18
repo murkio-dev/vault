@@ -19,6 +19,7 @@ func TestParse(t *testing.T) {
 	t.Run("Quando lê a criação.", func(t *testing.T) { whenParsingTheCreate(t) })
 	t.Run("Quando lê a troca de valor e a renomeação.", func(t *testing.T) { whenParsingUpdateAndRename(t) })
 	t.Run("Quando lê o reveal.", func(t *testing.T) { whenParsingTheReveal(t) })
+	t.Run("Quando o caminho é inválido em cada leitura.", func(t *testing.T) { whenPathIsInvalid(t) })
 }
 
 // Functions
@@ -95,4 +96,23 @@ func whenParsingTheReveal(t *testing.T) {
 	assert.Zero(t, none)
 	assert.Equal(t, 4, version)
 	assert.NotNil(t, bad)
+}
+
+func whenPathIsInvalid(t *testing.T) {
+	bad := map[string]string{"app": "nao-e-uuid", "member": "me", "id": uuid.NewV7().String()}
+	badMember := map[string]string{"app": uuid.NewV7().String(), "member": "xyz", "id": uuid.NewV7().String()}
+	badSecret := map[string]string{"app": uuid.NewV7().String(), "member": "me", "id": "nao-e-uuid"}
+
+	_, _, path := services.ParsePath(request("", bad))
+	_, _, memberPath := services.ParsePath(request("", badMember))
+	_, _, _, secretPath := services.ParseSecretPath(request("", bad))
+	_, _, _, badID := services.ParseSecretPath(request("", badSecret))
+	_, _, _, create := services.ParseCreate(request(`{"name":"A","value":"b"}`, bad))
+	_, _, _, _, update := services.ParseUpdate(request(`{"value":"b"}`, bad))
+	_, _, _, _, rename := services.ParseRename(request(`{"name":"A"}`, bad))
+	_, _, _, _, reveal := services.ParseReveal(request(`{}`, bad))
+
+	for name, e := range map[string]*entities.Error{"ParsePath": path, "ParsePath/membro": memberPath, "ParseSecretPath": secretPath, "ParseSecretPath/id": badID, "ParseCreate": create, "ParseUpdate": update, "ParseRename": rename, "ParseReveal": reveal} {
+		assert.NotNil(t, e, name)
+	}
 }
