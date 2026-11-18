@@ -9,22 +9,19 @@ import (
 
 	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	applicationcontracts "github.com/murkio-dev/vault/internal/restful/application/contracts"
 )
 
 // Builder
 
 type DeleteApplicationUseCase struct {
-	Deleter contracts.IApplicationDeleter
-	Guard   contracts.IAccessGuard
-	Tx      contracts.IAuditedTx
+	Repository applicationcontracts.IApplicationRepository
+	Guard      contracts.IAccessGuard
+	Tx         contracts.IAuditedTx
 }
 
-func NewDeleteApplicationUseCase(deleter contracts.IApplicationDeleter, guard contracts.IAccessGuard, tx contracts.IAuditedTx) DeleteApplicationUseCase {
-	return DeleteApplicationUseCase{
-		Deleter: deleter,
-		Guard:   guard,
-		Tx:      tx,
-	}
+func NewDeleteApplicationUseCase(repository applicationcontracts.IApplicationRepository, guard contracts.IAccessGuard, tx contracts.IAuditedTx) DeleteApplicationUseCase {
+	return DeleteApplicationUseCase{Repository: repository, Guard: guard, Tx: tx}
 }
 
 // DTOS
@@ -73,7 +70,7 @@ func (u DeleteApplicationUseCase) Perform(ctx context.Context, input DeleteInput
 			entities.AuditTarget{Type: "application", ID: id.String()}, nil)
 
 		err := u.Tx.Run(ctx, entry, func(ctx context.Context) error {
-			return u.Deleter.Delete(ctx, id)
+			return u.Repository.Delete(ctx, id)
 		})
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
