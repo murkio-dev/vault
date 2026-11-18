@@ -13,7 +13,7 @@ import (
 	"github.com/murkio-dev/vault/internal/restful/invitation/mocks"
 	"github.com/murkio-dev/vault/internal/restful/invitation/useCases"
 	member_mocks "github.com/murkio-dev/vault/internal/restful/member/mocks"
-	"github.com/murkio-dev/vault/pkg/utils"
+	pkgmocks "github.com/murkio-dev/vault/pkg/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -36,7 +36,7 @@ func newCreate(repo *mocks.InvitationRepo, outbox *mocks.OutboxRepo, guard *memb
 }
 
 func validCreate() useCases.CreateInput {
-	return useCases.CreateInput{Requester: member_mocks.NewUserRequester(), Application: uuid.NewV7(), Email: utils.GenRandomEmail(), Role: entities.RoleDeveloper}
+	return useCases.CreateInput{Requester: member_mocks.NewUserRequester(), Application: uuid.NewV7(), Email: pkgmocks.GenRandomEmail(), Role: entities.RoleDeveloper}
 }
 
 func whenCreateBuildSucceeds(t *testing.T) {
@@ -44,7 +44,7 @@ func whenCreateBuildSucceeds(t *testing.T) {
 
 	useCase := newCreate(repo, outbox, guard, tx)
 
-	assert.Equal(t, repo, useCase.Creator)
+	assert.Equal(t, repo, useCase.Repository)
 	assert.Equal(t, outbox, useCase.Outbox)
 	assert.Equal(t, guard, useCase.Guard)
 	assert.Equal(t, tx, useCase.Tx)
