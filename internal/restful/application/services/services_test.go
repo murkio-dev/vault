@@ -20,6 +20,8 @@ func TestParse(t *testing.T) {
 	t.Run("Quando lê os ids.", func(t *testing.T) { whenParsingIDs(t) })
 	t.Run("Quando lê a paginação.", func(t *testing.T) { whenParsingPagination(t) })
 	t.Run("Quando há ids repetidos.", func(t *testing.T) { whenThereAreDuplicatedIDs(t) })
+	t.Run("Quando lê um id cru.", func(t *testing.T) { whenParsingRawID(t) })
+	t.Run("Quando o corpo da alteração é inválido.", func(t *testing.T) { whenChangeBodyIsInvalid(t) })
 }
 
 // Functions
@@ -98,4 +100,32 @@ func whenThereAreDuplicatedIDs(t *testing.T) {
 
 	assert.Equal(t, map[uuid.UUID]bool{a: true}, duplicated)
 	assert.Equal(t, []uuid.UUID{a, b}, services.ApplicationIDs([]entities.Application{{ID: a}, {ID: b}}))
+}
+
+func whenParsingRawID(t *testing.T) {
+	id := uuid.NewV7()
+
+	parsed, e := services.ParseID(id.String())
+	assert.Nil(t, e)
+	assert.Equal(t, id, parsed)
+
+	for _, raw := range []string{"", "nao-e-uuid", id.String() + "x", "' OR 1=1 --"} {
+		parsed, e := services.ParseID(raw)
+
+		assert.Equal(t, uuid.UUID{}, parsed, raw)
+		if assert.NotNil(t, e, raw) {
+			assert.Equal(t, entities.ErrTypeValidation, e.Type, raw)
+			assert.Equal(t, http.StatusBadRequest, e.Status, raw)
+		}
+	}
+}
+
+func whenChangeBodyIsInvalid(t *testing.T) {
+	_, malformed := services.ParseApplicationsForChange(request(http.MethodPut, "{", ""))
+	_, empty := services.ParseApplicationsForChange(request(http.MethodPut, "[]", uuid.NewV7().String()))
+	_, badID := services.ParseApplicationsForChange(request(http.MethodPut, `{"name":"minha-app"}`, "nao-e-uuid"))
+
+	assert.NotNil(t, malformed)
+	assert.NotNil(t, empty)
+	assert.NotNil(t, badID)
 }
