@@ -8,11 +8,11 @@ import (
 	"uuid"
 
 	"github.com/murkio-dev/vault/internal/entities"
-	"github.com/murkio-dev/vault/pkg/utils"
+	"github.com/murkio-dev/vault/pkg/httpx"
 )
 
 func ParseApplications(r *http.Request) ([]entities.Application, *entities.Error) {
-	applications, err := utils.BindBody[entities.Application](r)
+	applications, err := httpx.BindBody[entities.Application](r)
 	if err != nil {
 		e := entities.InvalidRequestBodyError(err)
 		return nil, &e
@@ -48,7 +48,11 @@ func ParseApplicationsForChange(r *http.Request) ([]entities.Application, *entit
 }
 
 func ParsePathID(r *http.Request) (uuid.UUID, *entities.Error) {
-	id, err := uuid.Parse(r.PathValue("id"))
+	return ParseID(r.PathValue("id"))
+}
+
+func ParseID(raw string) (uuid.UUID, *entities.Error) {
+	id, err := uuid.Parse(raw)
 	if err != nil {
 		e := entities.InvalidApplicationIDFormatError(err)
 		return uuid.UUID{}, &e
@@ -65,7 +69,7 @@ func ParseIDs(r *http.Request) ([]uuid.UUID, *entities.Error) {
 		return []uuid.UUID{id}, nil
 	}
 
-	ids, err := utils.BindIDs(r)
+	ids, err := httpx.BindIDs(r)
 	if err != nil {
 		e := entities.InvalidRequestBodyError(err)
 		return nil, &e
