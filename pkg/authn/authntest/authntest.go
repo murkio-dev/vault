@@ -35,7 +35,7 @@ func New(t testing.TB) *Auth {
 
 	a := &Auth{AppID: uuid.NewV7(), kid: uuid.NewV7().String(), priv: priv}
 	a.Server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/v1/applications/"+a.AppID.String()+"/jwks.json" {
+		if r.URL.Path != "/api/v1/applications/"+a.AppID.String()+"/jwks.json" {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
