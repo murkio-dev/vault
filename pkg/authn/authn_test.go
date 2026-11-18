@@ -69,7 +69,7 @@ func whenSignatureIsTampered(t *testing.T) {
 func whenTokenIsGarbage(t *testing.T) {
 	verifier := authntest.New(t).Verifier()
 
-	for _, token := range []string{"", "a.b", "a.b.c", "vt_abc", strings.Repeat("a", 9<<10)} {
+	for _, token := range []string{"", "a.b", "a.b.c", "sk_vt_abc", strings.Repeat("a", 9<<10)} {
 		_, err := verifier.Verify(context.Background(), token)
 		assert.ErrorIs(t, err, authn.ErrInvalidToken)
 	}
