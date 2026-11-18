@@ -6,19 +6,20 @@ import (
 
 	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	invitationcontracts "github.com/murkio-dev/vault/internal/restful/invitation/contracts"
 )
 
 // Builder
 
 type CreateInvitationUseCase struct {
-	Creator contracts.IInvitationCreator
-	Outbox  contracts.IOutboxCreator
-	Guard   contracts.IAccessGuard
-	Tx      contracts.IAuditedTx
+	Repository invitationcontracts.IInvitationRepository
+	Outbox     invitationcontracts.IOutboxRepository
+	Guard      contracts.IAccessGuard
+	Tx         contracts.IAuditedTx
 }
 
-func NewCreateInvitationUseCase(creator contracts.IInvitationCreator, outbox contracts.IOutboxCreator, guard contracts.IAccessGuard, tx contracts.IAuditedTx) CreateInvitationUseCase {
-	return CreateInvitationUseCase{Creator: creator, Outbox: outbox, Guard: guard, Tx: tx}
+func NewCreateInvitationUseCase(repository invitationcontracts.IInvitationRepository, outbox invitationcontracts.IOutboxRepository, guard contracts.IAccessGuard, tx contracts.IAuditedTx) CreateInvitationUseCase {
+	return CreateInvitationUseCase{Repository: repository, Outbox: outbox, Guard: guard, Tx: tx}
 }
 
 // DTOS
@@ -62,7 +63,7 @@ func (u CreateInvitationUseCase) Perform(ctx context.Context, input CreateInput)
 		entities.AuditTarget{Type: "invitation", ID: invitation.ID.String()}, map[string]any{"role": string(invitation.Role)})
 
 	err = u.Tx.Run(ctx, entry, func(ctx context.Context) error {
-		if _, err := u.Creator.Create(ctx, invitation); err != nil {
+		if _, err := u.Repository.Create(ctx, invitation); err != nil {
 			return err
 		}
 		_, err := u.Outbox.Create(ctx, email)
