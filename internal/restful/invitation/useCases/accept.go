@@ -10,22 +10,23 @@ import (
 
 	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	auditcontracts "github.com/murkio-dev/vault/internal/restful/audit/contracts"
+	invitationcontracts "github.com/murkio-dev/vault/internal/restful/invitation/contracts"
+	membercontracts "github.com/murkio-dev/vault/internal/restful/member/contracts"
 )
 
 // Builder
 
 type AcceptInvitationUseCase struct {
-	TokenFinder   contracts.IInvitationTokenFinder
-	Acceptor      contracts.IInvitationAcceptor
-	MemberCreator contracts.IMemberCreator
-	MemberFinder  contracts.IMemberUserFinder
-	Guard         contracts.IAccessGuard
-	Tx            contracts.IAuditedTx
-	Audit         contracts.IAuditLogCreator
+	Repository invitationcontracts.IInvitationRepository
+	Members    membercontracts.IMemberRepository
+	Guard      contracts.IAccessGuard
+	Tx         contracts.IAuditedTx
+	Audit      auditcontracts.IAuditLogRepository
 }
 
-func NewAcceptInvitationUseCase(tokenFinder contracts.IInvitationTokenFinder, acceptor contracts.IInvitationAcceptor, memberCreator contracts.IMemberCreator, memberFinder contracts.IMemberUserFinder, guard contracts.IAccessGuard, tx contracts.IAuditedTx, audit contracts.IAuditLogCreator) AcceptInvitationUseCase {
-	return AcceptInvitationUseCase{TokenFinder: tokenFinder, Acceptor: acceptor, MemberCreator: memberCreator, MemberFinder: memberFinder, Guard: guard, Tx: tx, Audit: audit}
+func NewAcceptInvitationUseCase(repository invitationcontracts.IInvitationRepository, members membercontracts.IMemberRepository, guard contracts.IAccessGuard, tx contracts.IAuditedTx, audit auditcontracts.IAuditLogRepository) AcceptInvitationUseCase {
+	return AcceptInvitationUseCase{Repository: repository, Members: members, Guard: guard, Tx: tx, Audit: audit}
 }
 
 // DTOS
@@ -68,7 +69,7 @@ func (u AcceptInvitationUseCase) Perform(ctx context.Context, input AcceptInput)
 		return AcceptOutput{Error: &notFound}
 	}
 
-	_, err = u.MemberFinder.FindByUser(ctx, invitation.ApplicationID, actor.UserID)
+	_, err = u.Members.FindByUser(ctx, invitation.ApplicationID, actor.UserID)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		internal := entities.InternalServerError(err, nil)
 		return AcceptOutput{Error: &internal}
@@ -85,10 +86,10 @@ func (u AcceptInvitationUseCase) Perform(ctx context.Context, input AcceptInput)
 
 	accepted := entities.Invitation{ID: invitation.ID, ApplicationID: invitation.ApplicationID, AcceptedAt: &now, AcceptedBy: &actor.UserID}
 	err = u.Tx.Run(ctx, entry, func(ctx context.Context) error {
-		if _, err := u.Acceptor.Accept(ctx, accepted); err != nil {
+		if _, err := u.Repository.Accept(ctx, accepted); err != nil {
 			return err
 		}
-		_, err := u.MemberCreator.Create(ctx, member)
+		_, err := u.Members.Create(ctx, member)
 		return err
 	})
 	if err != nil {
@@ -111,7 +112,7 @@ func (u AcceptInvitationUseCase) find(ctx context.Context, token string) (entiti
 		return entities.Invitation{}, sql.ErrNoRows
 	}
 
-	return u.TokenFinder.FindByTokenHash(ctx, entities.HashToken(token))
+	return u.Repository.FindByTokenHash(ctx, entities.HashToken(token))
 }
 
 // deny registra a tentativa que falhou. O alvo é o convite, se o token chegou a
