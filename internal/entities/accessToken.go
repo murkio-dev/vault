@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	SDKTokenPrefix     = "vt_"
+	SDKTokenPrefix     = "sk_vt_"
 	TokenDisplayLength = len(SDKTokenPrefix) + 6
 	MaxTokenNameLength = 100
 	MaxTokenLifetime   = 10 * 365 * 24 * time.Hour
