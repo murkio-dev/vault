@@ -13,6 +13,7 @@ import (
 	"github.com/murkio-dev/vault/internal/restful/application/useCases"
 	audit_mocks "github.com/murkio-dev/vault/internal/restful/audit/mocks"
 	member_mocks "github.com/murkio-dev/vault/internal/restful/member/mocks"
+	secret_mocks "github.com/murkio-dev/vault/internal/restful/secret/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -30,6 +31,9 @@ func TestUpgradeApplication(t *testing.T) {
 	t.Run("Quando a lista de entrada é vazia.", func(t *testing.T) { whenUpgradeEmptyInput(t) })
 	t.Run("Quando recebe um lote misto com sucesso parcial.", func(t *testing.T) { whenUpgradeMixedBatch(t) })
 	t.Run("Quando o nome é omitido no PATCH.", func(t *testing.T) { whenUpgradeNameIsOmitted(t) })
+	t.Run("Quando o acesso é negado.", func(t *testing.T) { whenUpgradeIsDenied(t) })
+	t.Run("Quando a auditoria falha.", func(t *testing.T) { whenUpgradeAuditFails(t) })
+	t.Run("Quando o nome já existe.", func(t *testing.T) { whenUpgradeNameExists(t) })
 }
 
 // Functions
@@ -39,7 +43,7 @@ func whenUpgradeBuildSucceeds(t *testing.T) {
 
 	useCase := useCases.NewUpgradeApplicationUseCase(repo, &member_mocks.Guard{}, &audit_mocks.Tx{})
 
-	assert.Equal(t, repo, useCase.Upgrader)
+	assert.Equal(t, repo, useCase.Repository)
 }
 
 func whenUpgradeOneEntity(t *testing.T) {
@@ -205,4 +209,46 @@ func whenUpgradeNameIsOmitted(t *testing.T) {
 
 	assert.Empty(t, output.Errors, "no PATCH o nome é opcional")
 	assert.Equal(t, 1, len(repo.Upgraded))
+}
+
+func whenUpgradeIsDenied(t *testing.T) {
+	repo, tx := &mocks.ApplicationRepo{}, &audit_mocks.Tx{}
+	denied := (&member_mocks.Guard{}).Deny(entities.NotFoundError("Resource"))
+	app := mocks.NewApp()
+
+	output := useCases.NewUpgradeApplicationUseCase(repo, denied, tx).Perform(context.Background(), useCases.UpgradeInput{Requester: mocks.NewRequester(), Applications: []entities.Application{app}})
+
+	assert.Nil(t, output.Data)
+	if assert.Len(t, output.Errors, 1) {
+		assert.Equal(t, http.StatusNotFound, output.Errors[0].Status)
+	}
+	assert.Empty(t, repo.Upgraded, "negado, o repositório não é chamado")
+	assert.Zero(t, tx.Runs)
+}
+
+func whenUpgradeAuditFails(t *testing.T) {
+	repo, tx := &mocks.ApplicationRepo{}, &audit_mocks.Tx{AuditErr: errors.New("disk full")}
+	app := mocks.NewApp()
+
+	output := useCases.NewUpgradeApplicationUseCase(repo, &member_mocks.Guard{}, tx).Perform(context.Background(), useCases.UpgradeInput{Requester: mocks.NewRequester(), Applications: []entities.Application{app}})
+
+	assert.Nil(t, output.Data, "sem trilha, a mudança falha")
+	if assert.Len(t, output.Errors, 1) {
+		assert.Equal(t, entities.ErrTypeInternal, output.Errors[0].Type)
+		assert.NotContains(t, output.Errors[0].Detail, "disk full")
+	}
+}
+
+func whenUpgradeNameExists(t *testing.T) {
+	repo := &mocks.ApplicationRepo{UpgradeFunc: func(context.Context, entities.Application) (entities.Application, error) {
+		return entities.Application{}, secret_mocks.NewUniqueViolation()
+	}}
+
+	output := useCases.NewUpgradeApplicationUseCase(repo, &member_mocks.Guard{}, &audit_mocks.Tx{}).
+		Perform(context.Background(), useCases.UpgradeInput{Requester: mocks.NewRequester(), Applications: []entities.Application{mocks.NewApp()}})
+
+	assert.Nil(t, output.Data)
+	if assert.Len(t, output.Errors, 1) {
+		assert.Equal(t, http.StatusConflict, output.Errors[0].Status, "a restrição do banco vira conflito, não 500")
+	}
 }
