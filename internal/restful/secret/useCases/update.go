@@ -6,20 +6,20 @@ import (
 
 	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	secretcontracts "github.com/murkio-dev/vault/internal/restful/secret/contracts"
 )
 
 // Builder
 
 type UpdateSecretUseCase struct {
-	OwnerFinder  contracts.ISecretOwnerFinder
-	VersionAdder contracts.ISecretVersionAdder
-	Values       contracts.ISecretValues
-	Guard        contracts.IAccessGuard
-	Tx           contracts.IAuditedTx
+	Repository secretcontracts.ISecretRepository
+	Values     contracts.ISecretValues
+	Guard      contracts.IAccessGuard
+	Tx         contracts.IAuditedTx
 }
 
-func NewUpdateSecretUseCase(ownerFinder contracts.ISecretOwnerFinder, versionAdder contracts.ISecretVersionAdder, values contracts.ISecretValues, guard contracts.IAccessGuard, tx contracts.IAuditedTx) UpdateSecretUseCase {
-	return UpdateSecretUseCase{OwnerFinder: ownerFinder, VersionAdder: versionAdder, Values: values, Guard: guard, Tx: tx}
+func NewUpdateSecretUseCase(repository secretcontracts.ISecretRepository, values contracts.ISecretValues, guard contracts.IAccessGuard, tx contracts.IAuditedTx) UpdateSecretUseCase {
+	return UpdateSecretUseCase{Repository: repository, Values: values, Guard: guard, Tx: tx}
 }
 
 // DTOS
@@ -50,7 +50,7 @@ func (u UpdateSecretUseCase) Perform(ctx context.Context, input UpdateInput) Upd
 		return UpdateOutput{Error: denied}
 	}
 
-	secret, err := u.OwnerFinder.FindByOwner(ctx, input.Application, owner, input.Secret)
+	secret, err := u.Repository.FindByOwner(ctx, input.Application, owner, input.Secret)
 	if err != nil {
 		return UpdateOutput{Error: failure(err)}
 	}
@@ -74,7 +74,7 @@ func (u UpdateSecretUseCase) Perform(ctx context.Context, input UpdateInput) Upd
 
 	var updated entities.Secret
 	err = u.Tx.Run(ctx, entry, func(ctx context.Context) (err error) {
-		updated, err = u.VersionAdder.AddVersion(ctx,
+		updated, err = u.Repository.AddVersion(ctx,
 			entities.SecretWrite{Secret: secret, VersionID: versionID, Ciphertext: ciphertext, Author: input.Requester.Actor.UserID})
 		return err
 	})
