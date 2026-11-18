@@ -6,20 +6,20 @@ import (
 
 	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	tokencontracts "github.com/murkio-dev/vault/internal/restful/token/contracts"
 )
 
-// MaxListed é quantos tokens a listagem devolve (os mais novos).
 const MaxListed = 200
 
 // Builder
 
 type ListTokensUseCase struct {
-	Lister contracts.ITokenLister
-	Guard  contracts.IAccessGuard
+	Repository tokencontracts.ITokenRepository
+	Guard      contracts.IAccessGuard
 }
 
-func NewListTokensUseCase(lister contracts.ITokenLister, guard contracts.IAccessGuard) ListTokensUseCase {
-	return ListTokensUseCase{Lister: lister, Guard: guard}
+func NewListTokensUseCase(repository tokencontracts.ITokenRepository, guard contracts.IAccessGuard) ListTokensUseCase {
+	return ListTokensUseCase{Repository: repository, Guard: guard}
 }
 
 // DTOS
@@ -46,7 +46,7 @@ func (u ListTokensUseCase) Perform(ctx context.Context, input ListInput) ListOut
 		return ListOutput{Error: denied}
 	}
 
-	tokens, _, err := u.Lister.List(ctx, input.Application, owner, MaxListed, 0)
+	tokens, _, err := u.Repository.List(ctx, input.Application, owner, MaxListed, 0)
 	if err != nil {
 		return ListOutput{Error: failure(err)}
 	}
