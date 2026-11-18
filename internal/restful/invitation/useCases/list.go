@@ -7,20 +7,20 @@ import (
 
 	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	invitationcontracts "github.com/murkio-dev/vault/internal/restful/invitation/contracts"
 )
 
-// MaxListed é quantos convites a listagem devolve (os mais novos).
 const MaxListed = 200
 
 // Builder
 
 type ListInvitationsUseCase struct {
-	Lister contracts.IInvitationLister
-	Guard  contracts.IAccessGuard
+	Repository invitationcontracts.IInvitationRepository
+	Guard      contracts.IAccessGuard
 }
 
-func NewListInvitationsUseCase(lister contracts.IInvitationLister, guard contracts.IAccessGuard) ListInvitationsUseCase {
-	return ListInvitationsUseCase{Lister: lister, Guard: guard}
+func NewListInvitationsUseCase(repository invitationcontracts.IInvitationRepository, guard contracts.IAccessGuard) ListInvitationsUseCase {
+	return ListInvitationsUseCase{Repository: repository, Guard: guard}
 }
 
 // DTOS
@@ -43,7 +43,7 @@ func (u ListInvitationsUseCase) Perform(ctx context.Context, input ListInput) Li
 		return ListOutput{Error: denied}
 	}
 
-	invitations, _, err := u.Lister.List(ctx, input.Application, MaxListed, 0)
+	invitations, _, err := u.Repository.List(ctx, input.Application, MaxListed, 0)
 	if err != nil {
 		internal := entities.InternalServerError(err, nil)
 		return ListOutput{Error: &internal}
