@@ -1,7 +1,40 @@
+# Configuração e segredos (só o .env.example vai para o repositório)
 .env
-vault.db
-vault.db-wal
-vault.db-shm
-logs.txt
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Banco e log gerados ao lado do binário
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+*.sqlite
+*.sqlite3
+*.bak*
 *.log
+logs.txt
+
+# Binários e saídas de build/teste
 bin/
+/api
+/vault-api
+*.exe
+*.test
+*.out
+*.prof
+coverage.*
+
+# Temporários
+tmp/
+*.tmp
+
+# Ferramentas locais e editores
+.claude/
+graphify-out/
+.idea/
+.vscode/
+.DS_Store
