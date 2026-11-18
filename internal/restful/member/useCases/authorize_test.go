@@ -30,12 +30,13 @@ func TestAuthorize(t *testing.T) {
 	t.Run("Quando o token do SDK pede o ambiente.", func(t *testing.T) { whenSDKTokenReadsEnv(t) })
 	t.Run("Quando o banco falha.", func(t *testing.T) { whenAuthorizeRepositoryFails(t) })
 	t.Run("Quando gravar a negação falha.", func(t *testing.T) { whenRecordingTheDenialFails(t) })
+	t.Run("Quando o banco falha ao buscar o dono.", func(t *testing.T) { whenOwnerLookupFails(t) })
 }
 
 // Functions
 
 func newUseCase(repo *mocks.MemberRepo, recorder *audit_mocks.AuditRepo) useCases.AuthorizeUseCase {
-	return useCases.NewAuthorizeUseCase(repo, repo, recorder)
+	return useCases.NewAuthorizeUseCase(repo, recorder)
 }
 
 // memberOf devolve o repositório em que a conta do requester é membro da
@@ -60,7 +61,7 @@ func whenAuthorizeBuildSucceeds(t *testing.T) {
 
 	useCase := newUseCase(repo, recorder)
 
-	assert.Equal(t, repo, useCase.Finder)
+	assert.Equal(t, repo, useCase.Repository)
 	assert.Equal(t, recorder, useCase.Audit)
 }
 
@@ -219,5 +220,21 @@ func whenRecordingTheDenialFails(t *testing.T) {
 
 	if assert.NotNil(t, output.Error) {
 		assert.Equal(t, http.StatusForbidden, output.Error.Status, "a ação continua negada mesmo sem gravar a negação")
+	}
+}
+
+func whenOwnerLookupFails(t *testing.T) {
+	requester, app := mocks.NewUserRequester(), uuid.NewV7()
+	repo := memberOf(entities.RoleAdmin, entities.MemberActive, app, requester)
+	repo.FindByIDFunc = func(context.Context, uuid.UUID, uuid.UUID) (entities.Member, error) {
+		return entities.Member{}, errors.New("database is locked: /var/lib/vault.db")
+	}
+
+	output := newUseCase(repo, &audit_mocks.AuditRepo{}).
+		Perform(context.Background(), entities.AuthorizeInput{Requester: requester, Application: app, Action: entities.ActionSecretRead, Owner: uuid.NewV7(), OwnerMustExist: true})
+
+	if assert.NotNil(t, output.Error) {
+		assert.Equal(t, entities.ErrTypeInternal, output.Error.Type, "erro de banco não vira 404")
+		assert.NotContains(t, output.Error.Detail, "vault.db")
 	}
 }
