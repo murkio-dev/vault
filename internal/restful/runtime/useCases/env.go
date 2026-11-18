@@ -9,6 +9,8 @@ import (
 
 	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	auditcontracts "github.com/murkio-dev/vault/internal/restful/audit/contracts"
+	secretcontracts "github.com/murkio-dev/vault/internal/restful/secret/contracts"
 )
 
 const MaxNames = 100
@@ -16,14 +18,14 @@ const MaxNames = 100
 // Builder
 
 type ReadEnvUseCase struct {
-	Secrets contracts.ISecretLister
+	Secrets secretcontracts.ISecretRepository
 	Values  contracts.ISecretValues
 	Guard   contracts.IAccessGuard
 	Tx      contracts.IAuditedTx
-	Audit   contracts.IAuditLogCreator
+	Audit   auditcontracts.IAuditLogRepository
 }
 
-func NewReadEnvUseCase(secrets contracts.ISecretLister, values contracts.ISecretValues, guard contracts.IAccessGuard, tx contracts.IAuditedTx, audit contracts.IAuditLogCreator) ReadEnvUseCase {
+func NewReadEnvUseCase(secrets secretcontracts.ISecretRepository, values contracts.ISecretValues, guard contracts.IAccessGuard, tx contracts.IAuditedTx, audit auditcontracts.IAuditLogRepository) ReadEnvUseCase {
 	return ReadEnvUseCase{Secrets: secrets, Values: values, Guard: guard, Tx: tx, Audit: audit}
 }
 
