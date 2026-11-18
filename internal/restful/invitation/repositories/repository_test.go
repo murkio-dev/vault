@@ -8,7 +8,9 @@ import (
 	"uuid"
 
 	"github.com/murkio-dev/vault/internal/entities"
+	"github.com/murkio-dev/vault/internal/restful/invitation/mocks"
 	"github.com/murkio-dev/vault/internal/restful/invitation/repositories"
+	"github.com/murkio-dev/vault/pkg/sqlite"
 	"github.com/murkio-dev/vault/pkg/sqlite/sqlitetest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -23,6 +25,9 @@ func TestInvitationRepository(t *testing.T) {
 	t.Run("Quando o convite é aceito.", func(t *testing.T) { whenInvitationIsAccepted(t) })
 	t.Run("Quando o convite não está mais pendente.", func(t *testing.T) { whenInvitationIsNotPending(t) })
 	t.Run("Quando o convite é revogado.", func(t *testing.T) { whenInvitationIsRevoked(t) })
+	t.Run("Quando o banco falha.", func(t *testing.T) { whenDatabaseFails(t) })
+	t.Run("Quando enfileira o e-mail do convite.", func(t *testing.T) { whenInvitationEmailIsEnqueued(t) })
+	t.Run("Quando enfileira dentro de uma transação desfeita.", func(t *testing.T) { whenEnqueueIsRolledBack(t) })
 }
 
 // Functions
@@ -153,4 +158,67 @@ func whenInvitationIsRevoked(t *testing.T) {
 	assert.ErrorIs(t, second, sql.ErrNoRows, "revogar um convite já encerrado não existe")
 	_, revokedAt := stored(t, db, invitation.ID)
 	assert.True(t, revokedAt.Valid, "a linha fica, com revoked_at")
+}
+
+func whenDatabaseFails(t *testing.T) {
+	db := sqlitetest.New(t)
+	repo := repositories.NewRepository(db)
+	app, id := uuid.NewV7(), uuid.NewV7()
+	invitation := mocks.NewInvitation()
+	require.NoError(t, db.Close())
+	ctx := context.Background()
+
+	_, create := repo.Create(ctx, invitation)
+	_, _, list := repo.List(ctx, app, 10, 0)
+	_, find := repo.FindByTokenHash(ctx, "hash")
+	_, accept := repo.Accept(ctx, invitation)
+	revoke := repo.Revoke(ctx, app, id)
+
+	for name, err := range map[string]error{"Create": create, "List": list, "FindByTokenHash": find, "Accept": accept, "Revoke": revoke} {
+		assert.Error(t, err, name)
+	}
+}
+
+func newOutbox(t *testing.T) (repositories.OutboxRepository, sqlite.Transactor, uuid.UUID, func(query string) int) {
+	t.Helper()
+	db := sqlitetest.New(t)
+	tenant := sqlitetest.Seed(t, db, "minha-app")
+
+	return repositories.NewOutboxRepository(db), sqlite.NewTransactor(db), tenant.Application, func(query string) int {
+		var n int
+		require.NoError(t, db.QueryRow(query).Scan(&n))
+		return n
+	}
+}
+
+func newEvent(app uuid.UUID) entities.OutboxEvent {
+	invitation, token, _ := entities.NewInvitation(app, "joao@example.com", entities.RoleDeveloper, uuid.NewV7())
+	event, _ := entities.NewInvitationEmail(invitation, token)
+	return event
+}
+
+func whenInvitationEmailIsEnqueued(t *testing.T) {
+	queue, _, app, count := newOutbox(t)
+
+	created, err := queue.Create(context.Background(), newEvent(app))
+
+	require.NoError(t, err)
+	assert.NotEqual(t, uuid.UUID{}, created.ID)
+	assert.Equal(t, 1, count(`SELECT COUNT(*) FROM outbox_events WHERE type = 'email.send' AND exchange = 'messaging.commands' AND envelope = 0 AND published_at IS NULL`))
+
+	_, err = queue.Create(context.Background(), newEvent(uuid.NewV7()))
+	assert.Error(t, err, "application_id precisa existir: a outbox respeita a chave estrangeira")
+}
+
+func whenEnqueueIsRolledBack(t *testing.T) {
+	queue, transactor, app, count := newOutbox(t)
+
+	err := transactor.Do(context.Background(), func(ctx context.Context) error {
+		_, err := queue.Create(ctx, newEvent(app))
+		require.NoError(t, err)
+		return assert.AnError
+	})
+
+	assert.Error(t, err)
+	assert.Zero(t, count(`SELECT COUNT(*) FROM outbox_events`), "a outbox entra e sai com a transação da mudança")
 }
