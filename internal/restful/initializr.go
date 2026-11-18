@@ -7,63 +7,29 @@ import (
 	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/restful/application"
 	"github.com/murkio-dev/vault/internal/restful/audit"
-	audit_repositories "github.com/murkio-dev/vault/internal/restful/audit/repositories"
 	"github.com/murkio-dev/vault/internal/restful/invitation"
 	"github.com/murkio-dev/vault/internal/restful/member"
-	member_repositories "github.com/murkio-dev/vault/internal/restful/member/repositories"
-	member_usecases "github.com/murkio-dev/vault/internal/restful/member/useCases"
 	"github.com/murkio-dev/vault/internal/restful/runtime"
 	"github.com/murkio-dev/vault/internal/restful/secret"
-	secret_repositories "github.com/murkio-dev/vault/internal/restful/secret/repositories"
 	"github.com/murkio-dev/vault/internal/restful/token"
-	token_repositories "github.com/murkio-dev/vault/internal/restful/token/repositories"
-	"github.com/murkio-dev/vault/pkg/audited"
 	"github.com/murkio-dev/vault/pkg/authn"
-	"github.com/murkio-dev/vault/pkg/outbox"
+	"github.com/murkio-dev/vault/pkg/dependencies"
+	"github.com/murkio-dev/vault/pkg/grpcx"
 	"github.com/murkio-dev/vault/pkg/secretbox"
-	"github.com/murkio-dev/vault/pkg/secretvalues"
-	"github.com/murkio-dev/vault/pkg/sqlite"
-	"github.com/murkio-dev/vault/pkg/tokenauth"
 )
-
-// NewShared monta os contratos que os serviços compartilham, sobre o mesmo
-// banco. A API HTTP e o gRPC interno usam cada um o seu, com o mesmo
-// comportamento: as peças são só repositórios sobre o db e não guardam estado.
-func NewShared(db *sql.DB, box *secretbox.Box) (contracts.Shared, authn.TokenAuthenticator) {
-
-	members := member_repositories.NewRepository(db)
-	secrets := secret_repositories.NewRepository(db)
-	versions := secret_repositories.NewVersionRepository(db)
-	tokens := token_repositories.NewRepository(db)
-	recorder := audit_repositories.NewRepository(db)
-
-	shared := contracts.Shared{
-		Guard:            member_usecases.NewAuthorizeUseCase(members, members, recorder),
-		Tx:               audited.New(sqlite.NewTransactor(db), recorder),
-		Values:           secretvalues.NewValues(secrets, versions, versions, versions, box),
-		AuditCreator:     recorder,
-		Outbox:           outbox.New(db),
-		MemberFinder:     members,
-		MemberUserFinder: members,
-		MemberCreator:    members,
-		SecretLister:     secrets,
-	}
-
-	return shared, tokenauth.NewAuthenticator(tokens, tokens)
-}
 
 func Init(db *sql.DB, box *secretbox.Box, publicURL string, mux *http.ServeMux) (authn.TokenAuthenticator, error) {
 
-	shared, tokenAuthenticator := NewShared(db, box)
+	deps, tokenAuthenticator := dependencies.New(db, box)
 
 	initializers := []func() error{
-		func() error { return application.Init(db, shared, mux) },
-		func() error { return member.Init(db, shared, mux) },
-		func() error { return invitation.Init(db, shared, mux) },
-		func() error { return secret.Init(db, shared, mux) },
-		func() error { return token.Init(db, shared, publicURL, mux) },
-		func() error { return runtime.Init(shared, mux) },
-		func() error { return audit.Init(db, shared, mux) },
+		func() error { return application.Init(db, deps, mux) },
+		func() error { return member.Init(db, deps, mux) },
+		func() error { return invitation.Init(db, deps, mux) },
+		func() error { return secret.Init(db, deps, mux) },
+		func() error { return token.Init(db, deps, publicURL, mux) },
+		func() error { return runtime.Init(deps, mux) },
+		func() error { return audit.Init(db, deps, mux) },
 	}
 	for _, initialize := range initializers {
 		if err := initialize(); err != nil {
@@ -72,4 +38,34 @@ func Init(db *sql.DB, box *secretbox.Box, publicURL string, mux *http.ServeMux) 
 	}
 
 	return tokenAuthenticator, nil
+}
+
+// InitGRPC sobe o gRPC interno: abre o listener em 127.0.0.1:port com o
+// interceptor de autenticação e registra os handlers de cada service. Se o
+// registro de algum falhar, o listener é fechado e nada sobe.
+func InitGRPC(db *sql.DB, deps contracts.Dependencies, verifier *authn.Verifier, tokens authn.TokenAuthenticator, publicURL, port string) (*grpcx.Server, error) {
+
+	server, err := grpcx.NewServer(port, verifier, tokens)
+	if err != nil {
+		return nil, err
+	}
+
+	registrar := server.Registrar()
+	initializers := []func() error{
+		func() error { return runtime.InitGRPC(deps, registrar) },
+		func() error { return application.InitGRPC(db, deps, registrar) },
+		func() error { return member.InitGRPC(db, deps, registrar) },
+		func() error { return invitation.InitGRPC(db, deps, registrar) },
+		func() error { return secret.InitGRPC(db, deps, registrar) },
+		func() error { return token.InitGRPC(db, deps, publicURL, registrar) },
+		func() error { return audit.InitGRPC(db, deps, registrar) },
+	}
+	for _, initialize := range initializers {
+		if err := initialize(); err != nil {
+			_ = server.Close()
+			return nil, err
+		}
+	}
+
+	return server, nil
 }
