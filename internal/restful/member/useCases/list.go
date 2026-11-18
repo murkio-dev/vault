@@ -6,18 +6,19 @@ import (
 
 	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
-	"github.com/murkio-dev/vault/pkg/utils"
+	membercontracts "github.com/murkio-dev/vault/internal/restful/member/contracts"
+	"github.com/murkio-dev/vault/pkg/httpx"
 )
 
 // Builder
 
 type ListMembersUseCase struct {
-	Lister contracts.IMemberLister
-	Guard  contracts.IAccessGuard
+	Repository membercontracts.IMemberRepository
+	Guard      contracts.IAccessGuard
 }
 
-func NewListMembersUseCase(lister contracts.IMemberLister, guard contracts.IAccessGuard) ListMembersUseCase {
-	return ListMembersUseCase{Lister: lister, Guard: guard}
+func NewListMembersUseCase(repository membercontracts.IMemberRepository, guard contracts.IAccessGuard) ListMembersUseCase {
+	return ListMembersUseCase{Repository: repository, Guard: guard}
 }
 
 // DTOS
@@ -43,9 +44,9 @@ func (u ListMembersUseCase) Perform(ctx context.Context, input ListInput) ListOu
 		return ListOutput{Error: denied}
 	}
 
-	page, limit, offset := utils.PageWindow(input.Page, input.Limit)
+	page, limit, offset := httpx.PageWindow(input.Page, input.Limit)
 
-	members, total, err := u.Lister.List(ctx, input.Application, limit, offset)
+	members, total, err := u.Repository.List(ctx, input.Application, limit, offset)
 	if err != nil {
 		internal := entities.InternalServerError(err, nil)
 		return ListOutput{Error: &internal}
