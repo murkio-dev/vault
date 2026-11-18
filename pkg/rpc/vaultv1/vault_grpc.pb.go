@@ -29,7 +29,8 @@ const (
 // VaultService é o canal privado do Vault para os outros serviços. Escuta só em
 // 127.0.0.1, fora do Caddy. A credencial é o token do SDK (vt_...) no metadata
 // "authorization" (Bearer vt_...), o mesmo da rota HTTP /api/v1/runtime: o
-// token identifica o membro dono das variáveis. O JWT de pessoa não vale aqui.
+// token identifica o membro dono das variáveis. O JWT de pessoa não vale neste
+// serviço (ele vale no ApplicationService, e só nele).
 type VaultServiceClient interface {
 	// ReadEnv devolve as variáveis do membro dono do token, com as referências
 	// resolvidas. A leitura é auditada: sem trilha, nada sai.
@@ -61,7 +62,8 @@ func (c *vaultServiceClient) ReadEnv(ctx context.Context, in *ReadEnvRequest, op
 // VaultService é o canal privado do Vault para os outros serviços. Escuta só em
 // 127.0.0.1, fora do Caddy. A credencial é o token do SDK (vt_...) no metadata
 // "authorization" (Bearer vt_...), o mesmo da rota HTTP /api/v1/runtime: o
-// token identifica o membro dono das variáveis. O JWT de pessoa não vale aqui.
+// token identifica o membro dono das variáveis. O JWT de pessoa não vale neste
+// serviço (ele vale no ApplicationService, e só nele).
 type VaultServiceServer interface {
 	// ReadEnv devolve as variáveis do membro dono do token, com as referências
 	// resolvidas. A leitura é auditada: sem trilha, nada sai.
@@ -128,6 +130,1466 @@ var VaultService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ReadEnv",
 			Handler:    _VaultService_ReadEnv_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "vault/v1/vault.proto",
+}
+
+const (
+	ApplicationService_CreateApplications_FullMethodName = "/murkio.vault.v1.ApplicationService/CreateApplications"
+	ApplicationService_GetApplication_FullMethodName     = "/murkio.vault.v1.ApplicationService/GetApplication"
+	ApplicationService_ListApplications_FullMethodName   = "/murkio.vault.v1.ApplicationService/ListApplications"
+	ApplicationService_UpdateApplications_FullMethodName = "/murkio.vault.v1.ApplicationService/UpdateApplications"
+	ApplicationService_DeleteApplications_FullMethodName = "/murkio.vault.v1.ApplicationService/DeleteApplications"
+)
+
+// ApplicationServiceClient is the client API for ApplicationService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// ApplicationService administra as aplicações pelo canal privado, com as mesmas
+// regras da rota HTTP /api/v1/applications. A credencial é o JWT de pessoa que
+// o Auth emite, no metadata "authorization" (Bearer <jwt>); o token do SDK
+// (vt_...) não administra nada e recebe Unauthenticated. O dono e as permissões
+// vêm sempre do JWT, nunca do pedido.
+//
+// As escritas aceitam lote: cada item é processado de forma independente. Se
+// todos falham, a chamada devolve o status do primeiro erro. Se ao menos um dá
+// certo, a chamada é OK e a resposta traz os que deram certo e, em errors, um
+// erro por item que falhou.
+type ApplicationServiceClient interface {
+	// CreateApplications cria as aplicações; quem chama vira admin de cada uma.
+	CreateApplications(ctx context.Context, in *CreateApplicationsRequest, opts ...grpc.CallOption) (*ApplicationsResponse, error)
+	// GetApplication devolve uma aplicação de que quem chama é membro; para os
+	// demais é NotFound, exista ela ou não.
+	GetApplication(ctx context.Context, in *GetApplicationRequest, opts ...grpc.CallOption) (*Application, error)
+	// ListApplications lista as aplicações de quem chama (todas, para o admin da
+	// plataforma), com paginação.
+	ListApplications(ctx context.Context, in *ListApplicationsRequest, opts ...grpc.CallOption) (*ListApplicationsResponse, error)
+	// UpdateApplications substitui os dados das aplicações (hoje, o nome).
+	UpdateApplications(ctx context.Context, in *UpdateApplicationsRequest, opts ...grpc.CallOption) (*ApplicationsResponse, error)
+	// DeleteApplications apaga as aplicações e revoga os tokens delas.
+	DeleteApplications(ctx context.Context, in *DeleteApplicationsRequest, opts ...grpc.CallOption) (*DeleteApplicationsResponse, error)
+}
+
+type applicationServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewApplicationServiceClient(cc grpc.ClientConnInterface) ApplicationServiceClient {
+	return &applicationServiceClient{cc}
+}
+
+func (c *applicationServiceClient) CreateApplications(ctx context.Context, in *CreateApplicationsRequest, opts ...grpc.CallOption) (*ApplicationsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ApplicationsResponse)
+	err := c.cc.Invoke(ctx, ApplicationService_CreateApplications_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *applicationServiceClient) GetApplication(ctx context.Context, in *GetApplicationRequest, opts ...grpc.CallOption) (*Application, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Application)
+	err := c.cc.Invoke(ctx, ApplicationService_GetApplication_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *applicationServiceClient) ListApplications(ctx context.Context, in *ListApplicationsRequest, opts ...grpc.CallOption) (*ListApplicationsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListApplicationsResponse)
+	err := c.cc.Invoke(ctx, ApplicationService_ListApplications_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *applicationServiceClient) UpdateApplications(ctx context.Context, in *UpdateApplicationsRequest, opts ...grpc.CallOption) (*ApplicationsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ApplicationsResponse)
+	err := c.cc.Invoke(ctx, ApplicationService_UpdateApplications_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *applicationServiceClient) DeleteApplications(ctx context.Context, in *DeleteApplicationsRequest, opts ...grpc.CallOption) (*DeleteApplicationsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteApplicationsResponse)
+	err := c.cc.Invoke(ctx, ApplicationService_DeleteApplications_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// ApplicationServiceServer is the server API for ApplicationService service.
+// All implementations must embed UnimplementedApplicationServiceServer
+// for forward compatibility.
+//
+// ApplicationService administra as aplicações pelo canal privado, com as mesmas
+// regras da rota HTTP /api/v1/applications. A credencial é o JWT de pessoa que
+// o Auth emite, no metadata "authorization" (Bearer <jwt>); o token do SDK
+// (vt_...) não administra nada e recebe Unauthenticated. O dono e as permissões
+// vêm sempre do JWT, nunca do pedido.
+//
+// As escritas aceitam lote: cada item é processado de forma independente. Se
+// todos falham, a chamada devolve o status do primeiro erro. Se ao menos um dá
+// certo, a chamada é OK e a resposta traz os que deram certo e, em errors, um
+// erro por item que falhou.
+type ApplicationServiceServer interface {
+	// CreateApplications cria as aplicações; quem chama vira admin de cada uma.
+	CreateApplications(context.Context, *CreateApplicationsRequest) (*ApplicationsResponse, error)
+	// GetApplication devolve uma aplicação de que quem chama é membro; para os
+	// demais é NotFound, exista ela ou não.
+	GetApplication(context.Context, *GetApplicationRequest) (*Application, error)
+	// ListApplications lista as aplicações de quem chama (todas, para o admin da
+	// plataforma), com paginação.
+	ListApplications(context.Context, *ListApplicationsRequest) (*ListApplicationsResponse, error)
+	// UpdateApplications substitui os dados das aplicações (hoje, o nome).
+	UpdateApplications(context.Context, *UpdateApplicationsRequest) (*ApplicationsResponse, error)
+	// DeleteApplications apaga as aplicações e revoga os tokens delas.
+	DeleteApplications(context.Context, *DeleteApplicationsRequest) (*DeleteApplicationsResponse, error)
+	mustEmbedUnimplementedApplicationServiceServer()
+}
+
+// UnimplementedApplicationServiceServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedApplicationServiceServer struct{}
+
+func (UnimplementedApplicationServiceServer) CreateApplications(context.Context, *CreateApplicationsRequest) (*ApplicationsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateApplications not implemented")
+}
+func (UnimplementedApplicationServiceServer) GetApplication(context.Context, *GetApplicationRequest) (*Application, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetApplication not implemented")
+}
+func (UnimplementedApplicationServiceServer) ListApplications(context.Context, *ListApplicationsRequest) (*ListApplicationsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListApplications not implemented")
+}
+func (UnimplementedApplicationServiceServer) UpdateApplications(context.Context, *UpdateApplicationsRequest) (*ApplicationsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateApplications not implemented")
+}
+func (UnimplementedApplicationServiceServer) DeleteApplications(context.Context, *DeleteApplicationsRequest) (*DeleteApplicationsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteApplications not implemented")
+}
+func (UnimplementedApplicationServiceServer) mustEmbedUnimplementedApplicationServiceServer() {}
+func (UnimplementedApplicationServiceServer) testEmbeddedByValue()                            {}
+
+// UnsafeApplicationServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ApplicationServiceServer will
+// result in compilation errors.
+type UnsafeApplicationServiceServer interface {
+	mustEmbedUnimplementedApplicationServiceServer()
+}
+
+func RegisterApplicationServiceServer(s grpc.ServiceRegistrar, srv ApplicationServiceServer) {
+	// If the following call panics, it indicates UnimplementedApplicationServiceServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&ApplicationService_ServiceDesc, srv)
+}
+
+func _ApplicationService_CreateApplications_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateApplicationsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ApplicationServiceServer).CreateApplications(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ApplicationService_CreateApplications_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ApplicationServiceServer).CreateApplications(ctx, req.(*CreateApplicationsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ApplicationService_GetApplication_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetApplicationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ApplicationServiceServer).GetApplication(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ApplicationService_GetApplication_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ApplicationServiceServer).GetApplication(ctx, req.(*GetApplicationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ApplicationService_ListApplications_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListApplicationsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ApplicationServiceServer).ListApplications(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ApplicationService_ListApplications_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ApplicationServiceServer).ListApplications(ctx, req.(*ListApplicationsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ApplicationService_UpdateApplications_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateApplicationsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ApplicationServiceServer).UpdateApplications(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ApplicationService_UpdateApplications_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ApplicationServiceServer).UpdateApplications(ctx, req.(*UpdateApplicationsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ApplicationService_DeleteApplications_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteApplicationsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ApplicationServiceServer).DeleteApplications(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ApplicationService_DeleteApplications_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ApplicationServiceServer).DeleteApplications(ctx, req.(*DeleteApplicationsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// ApplicationService_ServiceDesc is the grpc.ServiceDesc for ApplicationService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var ApplicationService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "murkio.vault.v1.ApplicationService",
+	HandlerType: (*ApplicationServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "CreateApplications",
+			Handler:    _ApplicationService_CreateApplications_Handler,
+		},
+		{
+			MethodName: "GetApplication",
+			Handler:    _ApplicationService_GetApplication_Handler,
+		},
+		{
+			MethodName: "ListApplications",
+			Handler:    _ApplicationService_ListApplications_Handler,
+		},
+		{
+			MethodName: "UpdateApplications",
+			Handler:    _ApplicationService_UpdateApplications_Handler,
+		},
+		{
+			MethodName: "DeleteApplications",
+			Handler:    _ApplicationService_DeleteApplications_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "vault/v1/vault.proto",
+}
+
+const (
+	MemberService_ListMembers_FullMethodName  = "/murkio.vault.v1.MemberService/ListMembers"
+	MemberService_GetMe_FullMethodName        = "/murkio.vault.v1.MemberService/GetMe"
+	MemberService_UpdateMember_FullMethodName = "/murkio.vault.v1.MemberService/UpdateMember"
+	MemberService_RemoveMember_FullMethodName = "/murkio.vault.v1.MemberService/RemoveMember"
+)
+
+// MemberServiceClient is the client API for MemberService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// MemberService administra os membros de uma aplicação, com as mesmas regras
+// da rota HTTP /api/v1/applications/{app}/members. Credencial: o JWT de pessoa.
+type MemberServiceClient interface {
+	// ListMembers lista os membros da aplicação, com paginação.
+	ListMembers(ctx context.Context, in *ListMembersRequest, opts ...grpc.CallOption) (*ListMembersResponse, error)
+	// GetMe devolve o vínculo de quem chama com a aplicação.
+	GetMe(ctx context.Context, in *GetMeRequest, opts ...grpc.CallOption) (*Member, error)
+	// UpdateMember muda o papel e/ou o status de um membro. Não deixa a
+	// aplicação sem admin ativo (AlreadyExists, o conflito do HTTP).
+	UpdateMember(ctx context.Context, in *UpdateMemberRequest, opts ...grpc.CallOption) (*Member, error)
+	// RemoveMember remove o membro, revoga os tokens e apaga os segredos dele.
+	RemoveMember(ctx context.Context, in *RemoveMemberRequest, opts ...grpc.CallOption) (*RemoveMemberResponse, error)
+}
+
+type memberServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewMemberServiceClient(cc grpc.ClientConnInterface) MemberServiceClient {
+	return &memberServiceClient{cc}
+}
+
+func (c *memberServiceClient) ListMembers(ctx context.Context, in *ListMembersRequest, opts ...grpc.CallOption) (*ListMembersResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListMembersResponse)
+	err := c.cc.Invoke(ctx, MemberService_ListMembers_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *memberServiceClient) GetMe(ctx context.Context, in *GetMeRequest, opts ...grpc.CallOption) (*Member, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Member)
+	err := c.cc.Invoke(ctx, MemberService_GetMe_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *memberServiceClient) UpdateMember(ctx context.Context, in *UpdateMemberRequest, opts ...grpc.CallOption) (*Member, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Member)
+	err := c.cc.Invoke(ctx, MemberService_UpdateMember_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *memberServiceClient) RemoveMember(ctx context.Context, in *RemoveMemberRequest, opts ...grpc.CallOption) (*RemoveMemberResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RemoveMemberResponse)
+	err := c.cc.Invoke(ctx, MemberService_RemoveMember_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// MemberServiceServer is the server API for MemberService service.
+// All implementations must embed UnimplementedMemberServiceServer
+// for forward compatibility.
+//
+// MemberService administra os membros de uma aplicação, com as mesmas regras
+// da rota HTTP /api/v1/applications/{app}/members. Credencial: o JWT de pessoa.
+type MemberServiceServer interface {
+	// ListMembers lista os membros da aplicação, com paginação.
+	ListMembers(context.Context, *ListMembersRequest) (*ListMembersResponse, error)
+	// GetMe devolve o vínculo de quem chama com a aplicação.
+	GetMe(context.Context, *GetMeRequest) (*Member, error)
+	// UpdateMember muda o papel e/ou o status de um membro. Não deixa a
+	// aplicação sem admin ativo (AlreadyExists, o conflito do HTTP).
+	UpdateMember(context.Context, *UpdateMemberRequest) (*Member, error)
+	// RemoveMember remove o membro, revoga os tokens e apaga os segredos dele.
+	RemoveMember(context.Context, *RemoveMemberRequest) (*RemoveMemberResponse, error)
+	mustEmbedUnimplementedMemberServiceServer()
+}
+
+// UnimplementedMemberServiceServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedMemberServiceServer struct{}
+
+func (UnimplementedMemberServiceServer) ListMembers(context.Context, *ListMembersRequest) (*ListMembersResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListMembers not implemented")
+}
+func (UnimplementedMemberServiceServer) GetMe(context.Context, *GetMeRequest) (*Member, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetMe not implemented")
+}
+func (UnimplementedMemberServiceServer) UpdateMember(context.Context, *UpdateMemberRequest) (*Member, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateMember not implemented")
+}
+func (UnimplementedMemberServiceServer) RemoveMember(context.Context, *RemoveMemberRequest) (*RemoveMemberResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RemoveMember not implemented")
+}
+func (UnimplementedMemberServiceServer) mustEmbedUnimplementedMemberServiceServer() {}
+func (UnimplementedMemberServiceServer) testEmbeddedByValue()                       {}
+
+// UnsafeMemberServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to MemberServiceServer will
+// result in compilation errors.
+type UnsafeMemberServiceServer interface {
+	mustEmbedUnimplementedMemberServiceServer()
+}
+
+func RegisterMemberServiceServer(s grpc.ServiceRegistrar, srv MemberServiceServer) {
+	// If the following call panics, it indicates UnimplementedMemberServiceServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&MemberService_ServiceDesc, srv)
+}
+
+func _MemberService_ListMembers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListMembersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MemberServiceServer).ListMembers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MemberService_ListMembers_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MemberServiceServer).ListMembers(ctx, req.(*ListMembersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MemberService_GetMe_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MemberServiceServer).GetMe(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MemberService_GetMe_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MemberServiceServer).GetMe(ctx, req.(*GetMeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MemberService_UpdateMember_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateMemberRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MemberServiceServer).UpdateMember(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MemberService_UpdateMember_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MemberServiceServer).UpdateMember(ctx, req.(*UpdateMemberRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MemberService_RemoveMember_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemoveMemberRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MemberServiceServer).RemoveMember(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MemberService_RemoveMember_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MemberServiceServer).RemoveMember(ctx, req.(*RemoveMemberRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// MemberService_ServiceDesc is the grpc.ServiceDesc for MemberService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var MemberService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "murkio.vault.v1.MemberService",
+	HandlerType: (*MemberServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "ListMembers",
+			Handler:    _MemberService_ListMembers_Handler,
+		},
+		{
+			MethodName: "GetMe",
+			Handler:    _MemberService_GetMe_Handler,
+		},
+		{
+			MethodName: "UpdateMember",
+			Handler:    _MemberService_UpdateMember_Handler,
+		},
+		{
+			MethodName: "RemoveMember",
+			Handler:    _MemberService_RemoveMember_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "vault/v1/vault.proto",
+}
+
+const (
+	InvitationService_CreateInvitation_FullMethodName = "/murkio.vault.v1.InvitationService/CreateInvitation"
+	InvitationService_ListInvitations_FullMethodName  = "/murkio.vault.v1.InvitationService/ListInvitations"
+	InvitationService_RevokeInvitation_FullMethodName = "/murkio.vault.v1.InvitationService/RevokeInvitation"
+	InvitationService_AcceptInvitation_FullMethodName = "/murkio.vault.v1.InvitationService/AcceptInvitation"
+)
+
+// InvitationServiceClient is the client API for InvitationService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// InvitationService administra os convites de uma aplicação, com as mesmas
+// regras das rotas HTTP de convite. Credencial: o JWT de pessoa.
+type InvitationServiceClient interface {
+	// CreateInvitation cria o convite. O token do convite aparece só nesta
+	// resposta; o banco guarda o hash.
+	CreateInvitation(ctx context.Context, in *CreateInvitationRequest, opts ...grpc.CallOption) (*CreateInvitationResponse, error)
+	// ListInvitations lista os convites da aplicação, com o status de cada um.
+	ListInvitations(ctx context.Context, in *ListInvitationsRequest, opts ...grpc.CallOption) (*ListInvitationsResponse, error)
+	// RevokeInvitation revoga um convite pendente.
+	RevokeInvitation(ctx context.Context, in *RevokeInvitationRequest, opts ...grpc.CallOption) (*RevokeInvitationResponse, error)
+	// AcceptInvitation transforma o convite no vínculo de quem chama com a
+	// aplicação. Token inexistente, vencido, usado ou revogado é NotFound, igual.
+	AcceptInvitation(ctx context.Context, in *AcceptInvitationRequest, opts ...grpc.CallOption) (*Member, error)
+}
+
+type invitationServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewInvitationServiceClient(cc grpc.ClientConnInterface) InvitationServiceClient {
+	return &invitationServiceClient{cc}
+}
+
+func (c *invitationServiceClient) CreateInvitation(ctx context.Context, in *CreateInvitationRequest, opts ...grpc.CallOption) (*CreateInvitationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateInvitationResponse)
+	err := c.cc.Invoke(ctx, InvitationService_CreateInvitation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *invitationServiceClient) ListInvitations(ctx context.Context, in *ListInvitationsRequest, opts ...grpc.CallOption) (*ListInvitationsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListInvitationsResponse)
+	err := c.cc.Invoke(ctx, InvitationService_ListInvitations_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *invitationServiceClient) RevokeInvitation(ctx context.Context, in *RevokeInvitationRequest, opts ...grpc.CallOption) (*RevokeInvitationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RevokeInvitationResponse)
+	err := c.cc.Invoke(ctx, InvitationService_RevokeInvitation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *invitationServiceClient) AcceptInvitation(ctx context.Context, in *AcceptInvitationRequest, opts ...grpc.CallOption) (*Member, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Member)
+	err := c.cc.Invoke(ctx, InvitationService_AcceptInvitation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// InvitationServiceServer is the server API for InvitationService service.
+// All implementations must embed UnimplementedInvitationServiceServer
+// for forward compatibility.
+//
+// InvitationService administra os convites de uma aplicação, com as mesmas
+// regras das rotas HTTP de convite. Credencial: o JWT de pessoa.
+type InvitationServiceServer interface {
+	// CreateInvitation cria o convite. O token do convite aparece só nesta
+	// resposta; o banco guarda o hash.
+	CreateInvitation(context.Context, *CreateInvitationRequest) (*CreateInvitationResponse, error)
+	// ListInvitations lista os convites da aplicação, com o status de cada um.
+	ListInvitations(context.Context, *ListInvitationsRequest) (*ListInvitationsResponse, error)
+	// RevokeInvitation revoga um convite pendente.
+	RevokeInvitation(context.Context, *RevokeInvitationRequest) (*RevokeInvitationResponse, error)
+	// AcceptInvitation transforma o convite no vínculo de quem chama com a
+	// aplicação. Token inexistente, vencido, usado ou revogado é NotFound, igual.
+	AcceptInvitation(context.Context, *AcceptInvitationRequest) (*Member, error)
+	mustEmbedUnimplementedInvitationServiceServer()
+}
+
+// UnimplementedInvitationServiceServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedInvitationServiceServer struct{}
+
+func (UnimplementedInvitationServiceServer) CreateInvitation(context.Context, *CreateInvitationRequest) (*CreateInvitationResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateInvitation not implemented")
+}
+func (UnimplementedInvitationServiceServer) ListInvitations(context.Context, *ListInvitationsRequest) (*ListInvitationsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListInvitations not implemented")
+}
+func (UnimplementedInvitationServiceServer) RevokeInvitation(context.Context, *RevokeInvitationRequest) (*RevokeInvitationResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RevokeInvitation not implemented")
+}
+func (UnimplementedInvitationServiceServer) AcceptInvitation(context.Context, *AcceptInvitationRequest) (*Member, error) {
+	return nil, status.Error(codes.Unimplemented, "method AcceptInvitation not implemented")
+}
+func (UnimplementedInvitationServiceServer) mustEmbedUnimplementedInvitationServiceServer() {}
+func (UnimplementedInvitationServiceServer) testEmbeddedByValue()                           {}
+
+// UnsafeInvitationServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to InvitationServiceServer will
+// result in compilation errors.
+type UnsafeInvitationServiceServer interface {
+	mustEmbedUnimplementedInvitationServiceServer()
+}
+
+func RegisterInvitationServiceServer(s grpc.ServiceRegistrar, srv InvitationServiceServer) {
+	// If the following call panics, it indicates UnimplementedInvitationServiceServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&InvitationService_ServiceDesc, srv)
+}
+
+func _InvitationService_CreateInvitation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateInvitationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InvitationServiceServer).CreateInvitation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InvitationService_CreateInvitation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InvitationServiceServer).CreateInvitation(ctx, req.(*CreateInvitationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _InvitationService_ListInvitations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListInvitationsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InvitationServiceServer).ListInvitations(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InvitationService_ListInvitations_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InvitationServiceServer).ListInvitations(ctx, req.(*ListInvitationsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _InvitationService_RevokeInvitation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RevokeInvitationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InvitationServiceServer).RevokeInvitation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InvitationService_RevokeInvitation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InvitationServiceServer).RevokeInvitation(ctx, req.(*RevokeInvitationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _InvitationService_AcceptInvitation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AcceptInvitationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InvitationServiceServer).AcceptInvitation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InvitationService_AcceptInvitation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InvitationServiceServer).AcceptInvitation(ctx, req.(*AcceptInvitationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// InvitationService_ServiceDesc is the grpc.ServiceDesc for InvitationService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var InvitationService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "murkio.vault.v1.InvitationService",
+	HandlerType: (*InvitationServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "CreateInvitation",
+			Handler:    _InvitationService_CreateInvitation_Handler,
+		},
+		{
+			MethodName: "ListInvitations",
+			Handler:    _InvitationService_ListInvitations_Handler,
+		},
+		{
+			MethodName: "RevokeInvitation",
+			Handler:    _InvitationService_RevokeInvitation_Handler,
+		},
+		{
+			MethodName: "AcceptInvitation",
+			Handler:    _InvitationService_AcceptInvitation_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "vault/v1/vault.proto",
+}
+
+const (
+	TokenService_CreateToken_FullMethodName = "/murkio.vault.v1.TokenService/CreateToken"
+	TokenService_ListTokens_FullMethodName  = "/murkio.vault.v1.TokenService/ListTokens"
+	TokenService_RevokeToken_FullMethodName = "/murkio.vault.v1.TokenService/RevokeToken"
+)
+
+// TokenServiceClient is the client API for TokenService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// TokenService administra os tokens do SDK (vt_...) de um membro, com as
+// mesmas regras das rotas HTTP de token. Credencial: o JWT de pessoa. Em todos
+// os pedidos, member_id aceita o id do membro ou "me" (o membro de quem chama).
+type TokenServiceClient interface {
+	// CreateToken gera o token do membro. O token aparece só nesta resposta; o
+	// banco guarda o hash.
+	CreateToken(ctx context.Context, in *CreateTokenRequest, opts ...grpc.CallOption) (*CreateTokenResponse, error)
+	// ListTokens lista os tokens do membro, inclusive os revogados. Nenhum traz
+	// o token: só o prefixo.
+	ListTokens(ctx context.Context, in *ListTokensRequest, opts ...grpc.CallOption) (*ListTokensResponse, error)
+	// RevokeToken revoga o token; vale na hora.
+	RevokeToken(ctx context.Context, in *RevokeTokenRequest, opts ...grpc.CallOption) (*RevokeTokenResponse, error)
+}
+
+type tokenServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewTokenServiceClient(cc grpc.ClientConnInterface) TokenServiceClient {
+	return &tokenServiceClient{cc}
+}
+
+func (c *tokenServiceClient) CreateToken(ctx context.Context, in *CreateTokenRequest, opts ...grpc.CallOption) (*CreateTokenResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateTokenResponse)
+	err := c.cc.Invoke(ctx, TokenService_CreateToken_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tokenServiceClient) ListTokens(ctx context.Context, in *ListTokensRequest, opts ...grpc.CallOption) (*ListTokensResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListTokensResponse)
+	err := c.cc.Invoke(ctx, TokenService_ListTokens_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *tokenServiceClient) RevokeToken(ctx context.Context, in *RevokeTokenRequest, opts ...grpc.CallOption) (*RevokeTokenResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RevokeTokenResponse)
+	err := c.cc.Invoke(ctx, TokenService_RevokeToken_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// TokenServiceServer is the server API for TokenService service.
+// All implementations must embed UnimplementedTokenServiceServer
+// for forward compatibility.
+//
+// TokenService administra os tokens do SDK (vt_...) de um membro, com as
+// mesmas regras das rotas HTTP de token. Credencial: o JWT de pessoa. Em todos
+// os pedidos, member_id aceita o id do membro ou "me" (o membro de quem chama).
+type TokenServiceServer interface {
+	// CreateToken gera o token do membro. O token aparece só nesta resposta; o
+	// banco guarda o hash.
+	CreateToken(context.Context, *CreateTokenRequest) (*CreateTokenResponse, error)
+	// ListTokens lista os tokens do membro, inclusive os revogados. Nenhum traz
+	// o token: só o prefixo.
+	ListTokens(context.Context, *ListTokensRequest) (*ListTokensResponse, error)
+	// RevokeToken revoga o token; vale na hora.
+	RevokeToken(context.Context, *RevokeTokenRequest) (*RevokeTokenResponse, error)
+	mustEmbedUnimplementedTokenServiceServer()
+}
+
+// UnimplementedTokenServiceServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedTokenServiceServer struct{}
+
+func (UnimplementedTokenServiceServer) CreateToken(context.Context, *CreateTokenRequest) (*CreateTokenResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateToken not implemented")
+}
+func (UnimplementedTokenServiceServer) ListTokens(context.Context, *ListTokensRequest) (*ListTokensResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListTokens not implemented")
+}
+func (UnimplementedTokenServiceServer) RevokeToken(context.Context, *RevokeTokenRequest) (*RevokeTokenResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RevokeToken not implemented")
+}
+func (UnimplementedTokenServiceServer) mustEmbedUnimplementedTokenServiceServer() {}
+func (UnimplementedTokenServiceServer) testEmbeddedByValue()                      {}
+
+// UnsafeTokenServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to TokenServiceServer will
+// result in compilation errors.
+type UnsafeTokenServiceServer interface {
+	mustEmbedUnimplementedTokenServiceServer()
+}
+
+func RegisterTokenServiceServer(s grpc.ServiceRegistrar, srv TokenServiceServer) {
+	// If the following call panics, it indicates UnimplementedTokenServiceServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&TokenService_ServiceDesc, srv)
+}
+
+func _TokenService_CreateToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateTokenRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TokenServiceServer).CreateToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TokenService_CreateToken_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TokenServiceServer).CreateToken(ctx, req.(*CreateTokenRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TokenService_ListTokens_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTokensRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TokenServiceServer).ListTokens(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TokenService_ListTokens_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TokenServiceServer).ListTokens(ctx, req.(*ListTokensRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TokenService_RevokeToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RevokeTokenRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TokenServiceServer).RevokeToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: TokenService_RevokeToken_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TokenServiceServer).RevokeToken(ctx, req.(*RevokeTokenRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// TokenService_ServiceDesc is the grpc.ServiceDesc for TokenService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var TokenService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "murkio.vault.v1.TokenService",
+	HandlerType: (*TokenServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "CreateToken",
+			Handler:    _TokenService_CreateToken_Handler,
+		},
+		{
+			MethodName: "ListTokens",
+			Handler:    _TokenService_ListTokens_Handler,
+		},
+		{
+			MethodName: "RevokeToken",
+			Handler:    _TokenService_RevokeToken_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "vault/v1/vault.proto",
+}
+
+const (
+	SecretService_CreateSecrets_FullMethodName      = "/murkio.vault.v1.SecretService/CreateSecrets"
+	SecretService_ListSecrets_FullMethodName        = "/murkio.vault.v1.SecretService/ListSecrets"
+	SecretService_GetSecret_FullMethodName          = "/murkio.vault.v1.SecretService/GetSecret"
+	SecretService_UpdateSecret_FullMethodName       = "/murkio.vault.v1.SecretService/UpdateSecret"
+	SecretService_RenameSecret_FullMethodName       = "/murkio.vault.v1.SecretService/RenameSecret"
+	SecretService_DeleteSecret_FullMethodName       = "/murkio.vault.v1.SecretService/DeleteSecret"
+	SecretService_ListSecretVersions_FullMethodName = "/murkio.vault.v1.SecretService/ListSecretVersions"
+	SecretService_RevealSecret_FullMethodName       = "/murkio.vault.v1.SecretService/RevealSecret"
+)
+
+// SecretServiceClient is the client API for SecretService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// SecretService administra os segredos da tabela de um membro, com as mesmas
+// regras das rotas HTTP de segredo. Credencial: o JWT de pessoa. Em todos os
+// pedidos, member_id aceita o id do membro ou "me". O valor de um segredo só
+// sai em RevealSecret, e essa leitura é auditada: sem trilha, nada sai.
+type SecretServiceClient interface {
+	// CreateSecrets cria os segredos em lote, com a regra de lote do
+	// ApplicationService (erros por item em errors).
+	CreateSecrets(ctx context.Context, in *CreateSecretsRequest, opts ...grpc.CallOption) (*CreateSecretsResponse, error)
+	// ListSecrets lista os metadados dos segredos do membro, sem valor.
+	ListSecrets(ctx context.Context, in *ListSecretsRequest, opts ...grpc.CallOption) (*ListSecretsResponse, error)
+	// GetSecret devolve os metadados de um segredo, sem valor.
+	GetSecret(ctx context.Context, in *SecretRequest, opts ...grpc.CallOption) (*Secret, error)
+	// UpdateSecret troca o valor criando uma versão nova.
+	UpdateSecret(ctx context.Context, in *UpdateSecretRequest, opts ...grpc.CallOption) (*Secret, error)
+	// RenameSecret muda o nome (a chave do ambiente).
+	RenameSecret(ctx context.Context, in *RenameSecretRequest, opts ...grpc.CallOption) (*Secret, error)
+	// DeleteSecret apaga o segredo; se outros apontam para ele, é AlreadyExists.
+	DeleteSecret(ctx context.Context, in *SecretRequest, opts ...grpc.CallOption) (*DeleteSecretResponse, error)
+	// ListSecretVersions lista as versões (número, autor e data), sem valor.
+	ListSecretVersions(ctx context.Context, in *SecretRequest, opts ...grpc.CallOption) (*ListSecretVersionsResponse, error)
+	// RevealSecret devolve o valor de uma versão.
+	RevealSecret(ctx context.Context, in *RevealSecretRequest, opts ...grpc.CallOption) (*RevealedSecret, error)
+}
+
+type secretServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewSecretServiceClient(cc grpc.ClientConnInterface) SecretServiceClient {
+	return &secretServiceClient{cc}
+}
+
+func (c *secretServiceClient) CreateSecrets(ctx context.Context, in *CreateSecretsRequest, opts ...grpc.CallOption) (*CreateSecretsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateSecretsResponse)
+	err := c.cc.Invoke(ctx, SecretService_CreateSecrets_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *secretServiceClient) ListSecrets(ctx context.Context, in *ListSecretsRequest, opts ...grpc.CallOption) (*ListSecretsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListSecretsResponse)
+	err := c.cc.Invoke(ctx, SecretService_ListSecrets_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *secretServiceClient) GetSecret(ctx context.Context, in *SecretRequest, opts ...grpc.CallOption) (*Secret, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Secret)
+	err := c.cc.Invoke(ctx, SecretService_GetSecret_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *secretServiceClient) UpdateSecret(ctx context.Context, in *UpdateSecretRequest, opts ...grpc.CallOption) (*Secret, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Secret)
+	err := c.cc.Invoke(ctx, SecretService_UpdateSecret_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *secretServiceClient) RenameSecret(ctx context.Context, in *RenameSecretRequest, opts ...grpc.CallOption) (*Secret, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Secret)
+	err := c.cc.Invoke(ctx, SecretService_RenameSecret_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *secretServiceClient) DeleteSecret(ctx context.Context, in *SecretRequest, opts ...grpc.CallOption) (*DeleteSecretResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteSecretResponse)
+	err := c.cc.Invoke(ctx, SecretService_DeleteSecret_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *secretServiceClient) ListSecretVersions(ctx context.Context, in *SecretRequest, opts ...grpc.CallOption) (*ListSecretVersionsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListSecretVersionsResponse)
+	err := c.cc.Invoke(ctx, SecretService_ListSecretVersions_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *secretServiceClient) RevealSecret(ctx context.Context, in *RevealSecretRequest, opts ...grpc.CallOption) (*RevealedSecret, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RevealedSecret)
+	err := c.cc.Invoke(ctx, SecretService_RevealSecret_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// SecretServiceServer is the server API for SecretService service.
+// All implementations must embed UnimplementedSecretServiceServer
+// for forward compatibility.
+//
+// SecretService administra os segredos da tabela de um membro, com as mesmas
+// regras das rotas HTTP de segredo. Credencial: o JWT de pessoa. Em todos os
+// pedidos, member_id aceita o id do membro ou "me". O valor de um segredo só
+// sai em RevealSecret, e essa leitura é auditada: sem trilha, nada sai.
+type SecretServiceServer interface {
+	// CreateSecrets cria os segredos em lote, com a regra de lote do
+	// ApplicationService (erros por item em errors).
+	CreateSecrets(context.Context, *CreateSecretsRequest) (*CreateSecretsResponse, error)
+	// ListSecrets lista os metadados dos segredos do membro, sem valor.
+	ListSecrets(context.Context, *ListSecretsRequest) (*ListSecretsResponse, error)
+	// GetSecret devolve os metadados de um segredo, sem valor.
+	GetSecret(context.Context, *SecretRequest) (*Secret, error)
+	// UpdateSecret troca o valor criando uma versão nova.
+	UpdateSecret(context.Context, *UpdateSecretRequest) (*Secret, error)
+	// RenameSecret muda o nome (a chave do ambiente).
+	RenameSecret(context.Context, *RenameSecretRequest) (*Secret, error)
+	// DeleteSecret apaga o segredo; se outros apontam para ele, é AlreadyExists.
+	DeleteSecret(context.Context, *SecretRequest) (*DeleteSecretResponse, error)
+	// ListSecretVersions lista as versões (número, autor e data), sem valor.
+	ListSecretVersions(context.Context, *SecretRequest) (*ListSecretVersionsResponse, error)
+	// RevealSecret devolve o valor de uma versão.
+	RevealSecret(context.Context, *RevealSecretRequest) (*RevealedSecret, error)
+	mustEmbedUnimplementedSecretServiceServer()
+}
+
+// UnimplementedSecretServiceServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedSecretServiceServer struct{}
+
+func (UnimplementedSecretServiceServer) CreateSecrets(context.Context, *CreateSecretsRequest) (*CreateSecretsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateSecrets not implemented")
+}
+func (UnimplementedSecretServiceServer) ListSecrets(context.Context, *ListSecretsRequest) (*ListSecretsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListSecrets not implemented")
+}
+func (UnimplementedSecretServiceServer) GetSecret(context.Context, *SecretRequest) (*Secret, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetSecret not implemented")
+}
+func (UnimplementedSecretServiceServer) UpdateSecret(context.Context, *UpdateSecretRequest) (*Secret, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateSecret not implemented")
+}
+func (UnimplementedSecretServiceServer) RenameSecret(context.Context, *RenameSecretRequest) (*Secret, error) {
+	return nil, status.Error(codes.Unimplemented, "method RenameSecret not implemented")
+}
+func (UnimplementedSecretServiceServer) DeleteSecret(context.Context, *SecretRequest) (*DeleteSecretResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteSecret not implemented")
+}
+func (UnimplementedSecretServiceServer) ListSecretVersions(context.Context, *SecretRequest) (*ListSecretVersionsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListSecretVersions not implemented")
+}
+func (UnimplementedSecretServiceServer) RevealSecret(context.Context, *RevealSecretRequest) (*RevealedSecret, error) {
+	return nil, status.Error(codes.Unimplemented, "method RevealSecret not implemented")
+}
+func (UnimplementedSecretServiceServer) mustEmbedUnimplementedSecretServiceServer() {}
+func (UnimplementedSecretServiceServer) testEmbeddedByValue()                       {}
+
+// UnsafeSecretServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to SecretServiceServer will
+// result in compilation errors.
+type UnsafeSecretServiceServer interface {
+	mustEmbedUnimplementedSecretServiceServer()
+}
+
+func RegisterSecretServiceServer(s grpc.ServiceRegistrar, srv SecretServiceServer) {
+	// If the following call panics, it indicates UnimplementedSecretServiceServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&SecretService_ServiceDesc, srv)
+}
+
+func _SecretService_CreateSecrets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateSecretsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SecretServiceServer).CreateSecrets(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SecretService_CreateSecrets_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SecretServiceServer).CreateSecrets(ctx, req.(*CreateSecretsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SecretService_ListSecrets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListSecretsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SecretServiceServer).ListSecrets(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SecretService_ListSecrets_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SecretServiceServer).ListSecrets(ctx, req.(*ListSecretsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SecretService_GetSecret_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SecretRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SecretServiceServer).GetSecret(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SecretService_GetSecret_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SecretServiceServer).GetSecret(ctx, req.(*SecretRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SecretService_UpdateSecret_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateSecretRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SecretServiceServer).UpdateSecret(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SecretService_UpdateSecret_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SecretServiceServer).UpdateSecret(ctx, req.(*UpdateSecretRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SecretService_RenameSecret_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RenameSecretRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SecretServiceServer).RenameSecret(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SecretService_RenameSecret_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SecretServiceServer).RenameSecret(ctx, req.(*RenameSecretRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SecretService_DeleteSecret_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SecretRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SecretServiceServer).DeleteSecret(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SecretService_DeleteSecret_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SecretServiceServer).DeleteSecret(ctx, req.(*SecretRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SecretService_ListSecretVersions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SecretRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SecretServiceServer).ListSecretVersions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SecretService_ListSecretVersions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SecretServiceServer).ListSecretVersions(ctx, req.(*SecretRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SecretService_RevealSecret_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RevealSecretRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SecretServiceServer).RevealSecret(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SecretService_RevealSecret_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SecretServiceServer).RevealSecret(ctx, req.(*RevealSecretRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// SecretService_ServiceDesc is the grpc.ServiceDesc for SecretService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var SecretService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "murkio.vault.v1.SecretService",
+	HandlerType: (*SecretServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "CreateSecrets",
+			Handler:    _SecretService_CreateSecrets_Handler,
+		},
+		{
+			MethodName: "ListSecrets",
+			Handler:    _SecretService_ListSecrets_Handler,
+		},
+		{
+			MethodName: "GetSecret",
+			Handler:    _SecretService_GetSecret_Handler,
+		},
+		{
+			MethodName: "UpdateSecret",
+			Handler:    _SecretService_UpdateSecret_Handler,
+		},
+		{
+			MethodName: "RenameSecret",
+			Handler:    _SecretService_RenameSecret_Handler,
+		},
+		{
+			MethodName: "DeleteSecret",
+			Handler:    _SecretService_DeleteSecret_Handler,
+		},
+		{
+			MethodName: "ListSecretVersions",
+			Handler:    _SecretService_ListSecretVersions_Handler,
+		},
+		{
+			MethodName: "RevealSecret",
+			Handler:    _SecretService_RevealSecret_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "vault/v1/vault.proto",
+}
+
+const (
+	AuditService_ListAuditLogs_FullMethodName = "/murkio.vault.v1.AuditService/ListAuditLogs"
+)
+
+// AuditServiceClient is the client API for AuditService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// AuditService lê a trilha de auditoria de uma aplicação, com as mesmas regras
+// da rota HTTP /api/v1/applications/{app}/audit-logs. Credencial: o JWT de
+// pessoa.
+type AuditServiceClient interface {
+	// ListAuditLogs lista a trilha, da mais nova para a mais antiga, com cursor.
+	ListAuditLogs(ctx context.Context, in *ListAuditLogsRequest, opts ...grpc.CallOption) (*ListAuditLogsResponse, error)
+}
+
+type auditServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewAuditServiceClient(cc grpc.ClientConnInterface) AuditServiceClient {
+	return &auditServiceClient{cc}
+}
+
+func (c *auditServiceClient) ListAuditLogs(ctx context.Context, in *ListAuditLogsRequest, opts ...grpc.CallOption) (*ListAuditLogsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListAuditLogsResponse)
+	err := c.cc.Invoke(ctx, AuditService_ListAuditLogs_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// AuditServiceServer is the server API for AuditService service.
+// All implementations must embed UnimplementedAuditServiceServer
+// for forward compatibility.
+//
+// AuditService lê a trilha de auditoria de uma aplicação, com as mesmas regras
+// da rota HTTP /api/v1/applications/{app}/audit-logs. Credencial: o JWT de
+// pessoa.
+type AuditServiceServer interface {
+	// ListAuditLogs lista a trilha, da mais nova para a mais antiga, com cursor.
+	ListAuditLogs(context.Context, *ListAuditLogsRequest) (*ListAuditLogsResponse, error)
+	mustEmbedUnimplementedAuditServiceServer()
+}
+
+// UnimplementedAuditServiceServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedAuditServiceServer struct{}
+
+func (UnimplementedAuditServiceServer) ListAuditLogs(context.Context, *ListAuditLogsRequest) (*ListAuditLogsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListAuditLogs not implemented")
+}
+func (UnimplementedAuditServiceServer) mustEmbedUnimplementedAuditServiceServer() {}
+func (UnimplementedAuditServiceServer) testEmbeddedByValue()                      {}
+
+// UnsafeAuditServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to AuditServiceServer will
+// result in compilation errors.
+type UnsafeAuditServiceServer interface {
+	mustEmbedUnimplementedAuditServiceServer()
+}
+
+func RegisterAuditServiceServer(s grpc.ServiceRegistrar, srv AuditServiceServer) {
+	// If the following call panics, it indicates UnimplementedAuditServiceServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&AuditService_ServiceDesc, srv)
+}
+
+func _AuditService_ListAuditLogs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAuditLogsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuditServiceServer).ListAuditLogs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuditService_ListAuditLogs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuditServiceServer).ListAuditLogs(ctx, req.(*ListAuditLogsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// AuditService_ServiceDesc is the grpc.ServiceDesc for AuditService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var AuditService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "murkio.vault.v1.AuditService",
+	HandlerType: (*AuditServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "ListAuditLogs",
+			Handler:    _AuditService_ListAuditLogs_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
