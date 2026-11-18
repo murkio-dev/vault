@@ -1,0 +1,444 @@
+syntax = "proto3";
+
+package murkio.vault.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/murkio-dev/vault/pkg/rpc/vaultv1;vaultv1";
+
+service VaultService {
+  rpc ReadEnv(ReadEnvRequest) returns (ReadEnvResponse);
+}
+
+message ReadEnvRequest {
+  string uri_id = 1;
+  repeated string names = 2;
+}
+
+message ReadEnvResponse {
+  string uri_id = 1;
+  repeated Variable variables = 2;
+}
+
+message Variable {
+  string name = 1;
+  string type = 2;
+  int32 version = 3;
+  string value = 4;
+}
+
+service ApplicationService {
+  rpc CreateApplications(CreateApplicationsRequest) returns (ApplicationsResponse);
+  rpc GetApplication(GetApplicationRequest) returns (Application);
+  rpc ListApplications(ListApplicationsRequest) returns (ListApplicationsResponse);
+  rpc UpdateApplications(UpdateApplicationsRequest) returns (ApplicationsResponse);
+  rpc DeleteApplications(DeleteApplicationsRequest) returns (DeleteApplicationsResponse);
+}
+
+message Application {
+  string id = 1;
+  string name = 2;
+  string created_by = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+}
+
+message ItemError {
+  int32 status = 1;
+  string type = 2;
+  string title = 3;
+  string detail = 4;
+}
+
+message NewApplication {
+  string name = 1;
+}
+
+message CreateApplicationsRequest {
+  repeated NewApplication applications = 1;
+}
+
+message GetApplicationRequest {
+  string id = 1;
+}
+
+message ListApplicationsRequest {
+  int32 page = 1;
+  int32 limit = 2;
+}
+
+message Page {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 total = 3;
+  bool has_next = 4;
+  bool has_prev = 5;
+}
+
+message ListApplicationsResponse {
+  repeated Application applications = 1;
+  Page page = 2;
+}
+
+message ApplicationChange {
+  string id = 1;
+  string name = 2;
+}
+
+message UpdateApplicationsRequest {
+  repeated ApplicationChange applications = 1;
+}
+
+message DeleteApplicationsRequest {
+  repeated string ids = 1;
+}
+
+message ApplicationsResponse {
+  repeated Application applications = 1;
+  repeated ItemError errors = 2;
+}
+
+message DeleteApplicationsResponse {
+  repeated string ids = 1;
+  repeated ItemError errors = 2;
+}
+
+// MemberService administra os membros de uma aplicação, com as mesmas regras
+// da rota HTTP /api/v1/applications/{app}/members. Credencial: o JWT de pessoa.
+service MemberService {
+  // ListMembers lista os membros da aplicação, com paginação.
+  rpc ListMembers(ListMembersRequest) returns (ListMembersResponse);
+  // GetMe devolve o vínculo de quem chama com a aplicação.
+  rpc GetMe(GetMeRequest) returns (Member);
+  // UpdateMember muda o papel e/ou o status de um membro. Não deixa a
+  // aplicação sem admin ativo (AlreadyExists, o conflito do HTTP).
+  rpc UpdateMember(UpdateMemberRequest) returns (Member);
+  // RemoveMember remove o membro, revoga os tokens e apaga os segredos dele.
+  rpc RemoveMember(RemoveMemberRequest) returns (RemoveMemberResponse);
+}
+
+message Member {
+  string id = 1;
+  string application_id = 2;
+  string user_id = 3;
+  string uri_id = 4;
+  string role = 5;
+  string status = 6;
+  // invited_by fica vazio para quem criou a aplicação.
+  string invited_by = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+}
+
+message ListMembersRequest {
+  string application_id = 1;
+  // page começa em 1; zero usa a primeira página.
+  int32 page = 2;
+  // limit é o tamanho da página; zero usa o máximo (150).
+  int32 limit = 3;
+}
+
+message ListMembersResponse {
+  repeated Member members = 1;
+  Page page = 2;
+}
+
+message GetMeRequest {
+  string application_id = 1;
+}
+
+message UpdateMemberRequest {
+  string application_id = 1;
+  string member_id = 2;
+  // role e status são opcionais: campo ausente não muda.
+  optional string role = 3;
+  optional string status = 4;
+}
+
+message RemoveMemberRequest {
+  string application_id = 1;
+  string member_id = 2;
+}
+
+message RemoveMemberResponse {}
+
+// InvitationService administra os convites de uma aplicação, com as mesmas
+// regras das rotas HTTP de convite. Credencial: o JWT de pessoa.
+service InvitationService {
+  // CreateInvitation cria o convite. O token do convite aparece só nesta
+  // resposta; o banco guarda o hash.
+  rpc CreateInvitation(CreateInvitationRequest) returns (CreateInvitationResponse);
+  // ListInvitations lista os convites da aplicação, com o status de cada um.
+  rpc ListInvitations(ListInvitationsRequest) returns (ListInvitationsResponse);
+  // RevokeInvitation revoga um convite pendente.
+  rpc RevokeInvitation(RevokeInvitationRequest) returns (RevokeInvitationResponse);
+  // AcceptInvitation transforma o convite no vínculo de quem chama com a
+  // aplicação. Token inexistente, vencido, usado ou revogado é NotFound, igual.
+  rpc AcceptInvitation(AcceptInvitationRequest) returns (Member);
+}
+
+message Invitation {
+  string id = 1;
+  string application_id = 2;
+  string email = 3;
+  string role = 4;
+  google.protobuf.Timestamp expires_at = 5;
+  string created_by = 6;
+  string accepted_by = 7;
+  google.protobuf.Timestamp accepted_at = 8;
+  google.protobuf.Timestamp revoked_at = 9;
+  google.protobuf.Timestamp created_at = 10;
+  // status (pending, accepted, revoked, expired) vem só na listagem.
+  string status = 11;
+}
+
+message CreateInvitationRequest {
+  string application_id = 1;
+  string email = 2;
+  string role = 3;
+}
+
+message CreateInvitationResponse {
+  Invitation invitation = 1;
+  string token = 2;
+}
+
+message ListInvitationsRequest {
+  string application_id = 1;
+}
+
+message ListInvitationsResponse {
+  repeated Invitation invitations = 1;
+}
+
+message RevokeInvitationRequest {
+  string application_id = 1;
+  string invitation_id = 2;
+}
+
+message RevokeInvitationResponse {}
+
+message AcceptInvitationRequest {
+  string token = 1;
+}
+
+// TokenService administra os tokens do SDK (vt_...) de um membro, com as
+// mesmas regras das rotas HTTP de token. Credencial: o JWT de pessoa. Em todos
+// os pedidos, member_id aceita o id do membro ou "me" (o membro de quem chama).
+service TokenService {
+  // CreateToken gera o token do membro. O token aparece só nesta resposta; o
+  // banco guarda o hash.
+  rpc CreateToken(CreateTokenRequest) returns (CreateTokenResponse);
+  // ListTokens lista os tokens do membro, inclusive os revogados. Nenhum traz
+  // o token: só o prefixo.
+  rpc ListTokens(ListTokensRequest) returns (ListTokensResponse);
+  // RevokeToken revoga o token; vale na hora.
+  rpc RevokeToken(RevokeTokenRequest) returns (RevokeTokenResponse);
+}
+
+message AccessToken {
+  string id = 1;
+  string application_id = 2;
+  string member_id = 3;
+  string uri_id = 4;
+  string name = 5;
+  string prefix = 6;
+  google.protobuf.Timestamp expires_at = 7;
+  google.protobuf.Timestamp last_used_at = 8;
+  google.protobuf.Timestamp revoked_at = 9;
+  google.protobuf.Timestamp created_at = 10;
+}
+
+message CreateTokenRequest {
+  string application_id = 1;
+  string member_id = 2;
+  string name = 3;
+  // expires_at é opcional: ausente, o token não vence.
+  google.protobuf.Timestamp expires_at = 4;
+}
+
+message CreateTokenResponse {
+  AccessToken access_token = 1;
+  string token = 2;
+  string uri = 3;
+}
+
+message ListTokensRequest {
+  string application_id = 1;
+  string member_id = 2;
+}
+
+message ListTokensResponse {
+  repeated AccessToken access_tokens = 1;
+}
+
+message RevokeTokenRequest {
+  string application_id = 1;
+  string member_id = 2;
+  string token_id = 3;
+}
+
+message RevokeTokenResponse {}
+
+// SecretService administra os segredos da tabela de um membro, com as mesmas
+// regras das rotas HTTP de segredo. Credencial: o JWT de pessoa. Em todos os
+// pedidos, member_id aceita o id do membro ou "me". O valor de um segredo só
+// sai em RevealSecret, e essa leitura é auditada: sem trilha, nada sai.
+service SecretService {
+  // CreateSecrets cria os segredos em lote, com a regra de lote do
+  // ApplicationService (erros por item em errors).
+  rpc CreateSecrets(CreateSecretsRequest) returns (CreateSecretsResponse);
+  // ListSecrets lista os metadados dos segredos do membro, sem valor.
+  rpc ListSecrets(ListSecretsRequest) returns (ListSecretsResponse);
+  // GetSecret devolve os metadados de um segredo, sem valor.
+  rpc GetSecret(SecretRequest) returns (Secret);
+  // UpdateSecret troca o valor criando uma versão nova.
+  rpc UpdateSecret(UpdateSecretRequest) returns (Secret);
+  // RenameSecret muda o nome (a chave do ambiente).
+  rpc RenameSecret(RenameSecretRequest) returns (Secret);
+  // DeleteSecret apaga o segredo; se outros apontam para ele, é AlreadyExists.
+  rpc DeleteSecret(SecretRequest) returns (DeleteSecretResponse);
+  // ListSecretVersions lista as versões (número, autor e data), sem valor.
+  rpc ListSecretVersions(SecretRequest) returns (ListSecretVersionsResponse);
+  // RevealSecret devolve o valor de uma versão.
+  rpc RevealSecret(RevealSecretRequest) returns (RevealedSecret);
+}
+
+message Secret {
+  string id = 1;
+  string application_id = 2;
+  string member_id = 3;
+  string name = 4;
+  string type = 5;
+  string source = 6;
+  // reference_secret_id fica vazio no segredo estático.
+  string reference_secret_id = 7;
+  int32 version = 8;
+  string created_by = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+}
+
+message SecretDraft {
+  string name = 1;
+  string type = 2;
+  string source = 3;
+  string value = 4;
+  // reference_secret_id só vale para source "reference".
+  optional string reference_secret_id = 5;
+}
+
+message CreateSecretsRequest {
+  string application_id = 1;
+  string member_id = 2;
+  repeated SecretDraft items = 3;
+}
+
+message CreateSecretsResponse {
+  repeated Secret secrets = 1;
+  repeated ItemError errors = 2;
+}
+
+message ListSecretsRequest {
+  string application_id = 1;
+  string member_id = 2;
+}
+
+message ListSecretsResponse {
+  repeated Secret secrets = 1;
+}
+
+message SecretRequest {
+  string application_id = 1;
+  string member_id = 2;
+  string secret_id = 3;
+}
+
+message UpdateSecretRequest {
+  string application_id = 1;
+  string member_id = 2;
+  string secret_id = 3;
+  string value = 4;
+}
+
+message RenameSecretRequest {
+  string application_id = 1;
+  string member_id = 2;
+  string secret_id = 3;
+  string name = 4;
+}
+
+message DeleteSecretResponse {}
+
+message SecretVersion {
+  int32 version = 1;
+  string created_by = 2;
+  google.protobuf.Timestamp created_at = 3;
+}
+
+message ListSecretVersionsResponse {
+  repeated SecretVersion versions = 1;
+}
+
+message RevealSecretRequest {
+  string application_id = 1;
+  string member_id = 2;
+  string secret_id = 3;
+  // version zero é a atual.
+  int32 version = 4;
+}
+
+message RevealedSecret {
+  string id = 1;
+  string name = 2;
+  int32 version = 3;
+  string value = 4;
+}
+
+// AuditService lê a trilha de auditoria de uma aplicação, com as mesmas regras
+// da rota HTTP /api/v1/applications/{app}/audit-logs. Credencial: o JWT de
+// pessoa.
+service AuditService {
+  // ListAuditLogs lista a trilha, da mais nova para a mais antiga, com cursor.
+  rpc ListAuditLogs(ListAuditLogsRequest) returns (ListAuditLogsResponse);
+}
+
+message AuditLog {
+  string id = 1;
+  string application_id = 2;
+  string actor_type = 3;
+  string actor_id = 4;
+  string token_id = 5;
+  string action = 6;
+  string outcome = 7;
+  string target_type = 8;
+  string target_id = 9;
+  string ip = 10;
+  string user_agent = 11;
+  string request_id = 12;
+  // metadata é o JSON da linha, como na API HTTP.
+  string metadata = 13;
+  google.protobuf.Timestamp created_at = 14;
+}
+
+message ListAuditLogsRequest {
+  string application_id = 1;
+  // limit zero usa o padrão.
+  int32 limit = 2;
+  // cursor é o next_cursor da página anterior; vazio começa do início.
+  string cursor = 3;
+  // Os filtros são opcionais: vazio não filtra.
+  string actor_id = 4;
+  // outcome: "allowed" ou "denied".
+  string outcome = 5;
+  string action = 6;
+  string target_id = 7;
+  google.protobuf.Timestamp from = 8;
+  google.protobuf.Timestamp to = 9;
+}
+
+message ListAuditLogsResponse {
+  repeated AuditLog logs = 1;
+  // next_cursor fica vazio na última página.
+  string next_cursor = 2;
+}
