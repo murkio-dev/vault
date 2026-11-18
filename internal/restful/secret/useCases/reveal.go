@@ -6,19 +6,20 @@ import (
 
 	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	secretcontracts "github.com/murkio-dev/vault/internal/restful/secret/contracts"
 )
 
 // Builder
 
 type RevealSecretUseCase struct {
-	OwnerFinder contracts.ISecretOwnerFinder
-	Values      contracts.ISecretValues
-	Guard       contracts.IAccessGuard
-	Tx          contracts.IAuditedTx
+	Repository secretcontracts.ISecretRepository
+	Values     contracts.ISecretValues
+	Guard      contracts.IAccessGuard
+	Tx         contracts.IAuditedTx
 }
 
-func NewRevealSecretUseCase(ownerFinder contracts.ISecretOwnerFinder, values contracts.ISecretValues, guard contracts.IAccessGuard, tx contracts.IAuditedTx) RevealSecretUseCase {
-	return RevealSecretUseCase{OwnerFinder: ownerFinder, Values: values, Guard: guard, Tx: tx}
+func NewRevealSecretUseCase(repository secretcontracts.ISecretRepository, values contracts.ISecretValues, guard contracts.IAccessGuard, tx contracts.IAuditedTx) RevealSecretUseCase {
+	return RevealSecretUseCase{Repository: repository, Values: values, Guard: guard, Tx: tx}
 }
 
 // DTOS
@@ -53,7 +54,7 @@ func (u RevealSecretUseCase) Perform(ctx context.Context, input RevealInput) Rev
 		return RevealOutput{Error: denied}
 	}
 
-	secret, err := u.OwnerFinder.FindByOwner(ctx, input.Application, owner, input.Secret)
+	secret, err := u.Repository.FindByOwner(ctx, input.Application, owner, input.Secret)
 	if err != nil {
 		return RevealOutput{Error: failure(err)}
 	}
