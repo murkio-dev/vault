@@ -5,26 +5,26 @@ import (
 	"uuid"
 
 	"github.com/murkio-dev/vault/internal/entities"
-	"github.com/murkio-dev/vault/pkg/utils"
+	"github.com/murkio-dev/vault/pkg/httpx"
 )
 
 func ParseApplication(r *http.Request) (uuid.UUID, *entities.Error) {
-	return utils.PathUUID(r, "app")
+	return httpx.PathUUID(r, "app")
 }
 
 func ParseList(r *http.Request) (application uuid.UUID, page, limit int, e *entities.Error) {
-	if application, e = utils.PathUUID(r, "app"); e != nil {
+	if application, e = httpx.PathUUID(r, "app"); e != nil {
 		return
 	}
-	page, limit, e = utils.Pagination(r)
+	page, limit, e = httpx.Pagination(r)
 	return
 }
 
 func ParseMember(r *http.Request) (application, member uuid.UUID, e *entities.Error) {
-	if application, e = utils.PathUUID(r, "app"); e != nil {
+	if application, e = httpx.PathUUID(r, "app"); e != nil {
 		return
 	}
-	member, e = utils.PathUUID(r, "member")
+	member, e = httpx.PathUUID(r, "member")
 	return
 }
 
@@ -37,7 +37,7 @@ func ParseUpdate(r *http.Request) (application, member uuid.UUID, role *entities
 	if application, member, e = ParseMember(r); e != nil {
 		return
 	}
-	body, e := utils.BindOne[updateBody](r)
+	body, e := httpx.BindOne[updateBody](r)
 	if e != nil {
 		return
 	}
