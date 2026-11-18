@@ -6,20 +6,19 @@ import (
 
 	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	membercontracts "github.com/murkio-dev/vault/internal/restful/member/contracts"
 )
 
 // Builder
 
 type RemoveMemberUseCase struct {
-	Finder       contracts.IMemberFinder
-	AdminCounter contracts.IMemberAdminCounter
-	Deleter      contracts.IMemberDeleter
-	Guard        contracts.IAccessGuard
-	Tx           contracts.IAuditedTx
+	Repository membercontracts.IMemberRepository
+	Guard      contracts.IAccessGuard
+	Tx         contracts.IAuditedTx
 }
 
-func NewRemoveMemberUseCase(finder contracts.IMemberFinder, adminCounter contracts.IMemberAdminCounter, deleter contracts.IMemberDeleter, guard contracts.IAccessGuard, tx contracts.IAuditedTx) RemoveMemberUseCase {
-	return RemoveMemberUseCase{Finder: finder, AdminCounter: adminCounter, Deleter: deleter, Guard: guard, Tx: tx}
+func NewRemoveMemberUseCase(repository membercontracts.IMemberRepository, guard contracts.IAccessGuard, tx contracts.IAuditedTx) RemoveMemberUseCase {
+	return RemoveMemberUseCase{Repository: repository, Guard: guard, Tx: tx}
 }
 
 // DTOS
@@ -48,18 +47,18 @@ func (u RemoveMemberUseCase) Perform(ctx context.Context, input RemoveInput) Rem
 		entities.AuditTarget{Type: "member", ID: input.Member.String()}, nil)
 
 	err := u.Tx.Run(ctx, entry, func(ctx context.Context) error {
-		member, err := u.Finder.FindById(ctx, input.Application, input.Member)
+		member, err := u.Repository.FindById(ctx, input.Application, input.Member)
 		if err != nil {
 			return err
 		}
 
 		if member.Role == entities.RoleAdmin && member.Active() {
-			if err := ensureAnotherAdmin(ctx, u.AdminCounter, input.Application); err != nil {
+			if err := ensureAnotherAdmin(ctx, u.Repository, input.Application); err != nil {
 				return err
 			}
 		}
 
-		return u.Deleter.Delete(ctx, input.Application, input.Member)
+		return u.Repository.Delete(ctx, input.Application, input.Member)
 	})
 	if err != nil {
 		return RemoveOutput{Error: failure(err)}
