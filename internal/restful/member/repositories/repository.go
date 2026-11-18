@@ -6,8 +6,8 @@ import (
 	"time"
 	"uuid"
 
-	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	membercontracts "github.com/murkio-dev/vault/internal/restful/member/contracts"
 	"github.com/murkio-dev/vault/pkg/sqlite"
 )
 
@@ -21,21 +21,12 @@ func NewRepository(db *sql.DB) MemberRepository {
 	return MemberRepository{DB: db}
 }
 
-var (
-	_ contracts.IMemberCreator      = MemberRepository{}
-	_ contracts.IMemberFinder       = MemberRepository{}
-	_ contracts.IMemberUserFinder   = MemberRepository{}
-	_ contracts.IMemberLister       = MemberRepository{}
-	_ contracts.IMemberAdminCounter = MemberRepository{}
-	_ contracts.IMemberUpgrader     = MemberRepository{}
-	_ contracts.IMemberDeleter      = MemberRepository{}
-)
+var _ membercontracts.IMemberRepository = MemberRepository{}
 
 // Functions
 
 const memberColumns = "id, application_id, user_id, uri_id, role, status, invited_by, created_at, updated_at"
 
-// Create grava o membro na aplicação dele (Member.ApplicationID).
 func (r MemberRepository) Create(ctx context.Context, member entities.Member) (entities.Member, error) {
 	if err := entities.Require(member.ApplicationID); err != nil {
 		return entities.Member{}, err
@@ -84,7 +75,6 @@ func (r MemberRepository) FindByUser(ctx context.Context, application, user uuid
 		application.String(), user.String()))
 }
 
-// List lista os membros da aplicação.
 func (r MemberRepository) List(ctx context.Context, application uuid.UUID, limit, offset int) ([]entities.Member, int, error) {
 	if err := entities.Require(application); err != nil {
 		return nil, 0, err
@@ -116,7 +106,6 @@ func (r MemberRepository) List(ctx context.Context, application uuid.UUID, limit
 	return members, total, rows.Err()
 }
 
-// CountActiveAdmins conta os admins ativos da aplicação.
 func (r MemberRepository) CountActiveAdmins(ctx context.Context, application uuid.UUID) (int, error) {
 	if err := entities.Require(application); err != nil {
 		return 0, err
