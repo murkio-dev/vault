@@ -8,20 +8,18 @@ import (
 
 	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	applicationcontracts "github.com/murkio-dev/vault/internal/restful/application/contracts"
 )
 
 // Builder
 
 type GetApplicationByIDUseCase struct {
-	Finder contracts.IApplicationFinder
-	Guard  contracts.IAccessGuard
+	Repository applicationcontracts.IApplicationRepository
+	Guard      contracts.IAccessGuard
 }
 
-func NewGetApplicationByIDUseCase(finder contracts.IApplicationFinder, guard contracts.IAccessGuard) GetApplicationByIDUseCase {
-	return GetApplicationByIDUseCase{
-		Finder: finder,
-		Guard:  guard,
-	}
+func NewGetApplicationByIDUseCase(repository applicationcontracts.IApplicationRepository, guard contracts.IAccessGuard) GetApplicationByIDUseCase {
+	return GetApplicationByIDUseCase{Repository: repository, Guard: guard}
 }
 
 // DTOS
@@ -44,7 +42,7 @@ func (u GetApplicationByIDUseCase) Perform(ctx context.Context, input GetByIDInp
 		return GetByIDOutput{Error: denied}
 	}
 
-	data, err := u.Finder.FindById(ctx, input.Application)
+	data, err := u.Repository.FindById(ctx, input.Application)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			notFoundErr := entities.ApplicationNotFoundError(input.Application)
