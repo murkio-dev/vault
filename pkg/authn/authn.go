@@ -1,6 +1,6 @@
 // Package authn verifica o access token que o Auth emite para as pessoas (JWT
 // EdDSA, assinado com a chave Ed25519 da aplicação do Vault no Auth),
-// localmente, com o JWKS público em {AUTH_URL}/v1/applications/{id}/jwks.json.
+// localmente, com o JWKS público em {AUTH_URL}/api/v1/applications/{id}/jwks.json.
 // Não chama o Auth por requisição: o JWKS fica em cache.
 //
 // Diferente do messaging, que aceita qualquer aplicação, o Vault confia em uma
@@ -172,7 +172,7 @@ type KeySet struct {
 
 func newKeySet(baseURL string, appID uuid.UUID) *KeySet {
 	return &KeySet{
-		url: strings.TrimRight(baseURL, "/") + "/v1/applications/" + appID.String() + "/jwks.json",
+		url: strings.TrimRight(baseURL, "/") + "/api/v1/applications/" + appID.String() + "/jwks.json",
 		client: &http.Client{
 			Timeout: 5 * time.Second,
 			CheckRedirect: func(*http.Request, []*http.Request) error {
