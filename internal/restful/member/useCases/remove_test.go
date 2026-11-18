@@ -32,9 +32,9 @@ func TestRemoveMember(t *testing.T) {
 func whenRemoveBuildSucceeds(t *testing.T) {
 	repo, guard, tx := &mocks.MemberRepo{}, &mocks.Guard{}, &audit_mocks.Tx{}
 
-	useCase := useCases.NewRemoveMemberUseCase(repo, repo, repo, guard, tx)
+	useCase := useCases.NewRemoveMemberUseCase(repo, guard, tx)
 
-	assert.Equal(t, repo, useCase.Finder)
+	assert.Equal(t, repo, useCase.Repository)
 	assert.Equal(t, guard, useCase.Guard)
 	assert.Equal(t, tx, useCase.Tx)
 }
@@ -43,7 +43,7 @@ func whenRemoveSucceeds(t *testing.T) {
 	repo := &mocks.MemberRepo{FindByIDFunc: memberWith(entities.RoleDeveloper, entities.MemberActive)}
 	tx := &audit_mocks.Tx{}
 
-	output := useCases.NewRemoveMemberUseCase(repo, repo, repo, &mocks.Guard{}, tx).
+	output := useCases.NewRemoveMemberUseCase(repo, &mocks.Guard{}, tx).
 		Perform(context.Background(), useCases.RemoveInput{Requester: mocks.NewUserRequester(), Application: uuid.NewV7(), Member: uuid.NewV7()})
 
 	assert.Nil(t, output.Error)
@@ -57,7 +57,7 @@ func whenRemoveTheLastAdmin(t *testing.T) {
 		CountAdminsFunc: adminsCount(1),
 	}
 
-	output := useCases.NewRemoveMemberUseCase(repo, repo, repo, &mocks.Guard{}, &audit_mocks.Tx{}).
+	output := useCases.NewRemoveMemberUseCase(repo, &mocks.Guard{}, &audit_mocks.Tx{}).
 		Perform(context.Background(), useCases.RemoveInput{Requester: mocks.NewUserRequester(), Application: uuid.NewV7(), Member: uuid.NewV7()})
 
 	if assert.NotNil(t, output.Error) {
@@ -69,7 +69,7 @@ func whenRemoveTheLastAdmin(t *testing.T) {
 func whenRemoveAdminWithAnotherOne(t *testing.T) {
 	repo := &mocks.MemberRepo{FindByIDFunc: memberWith(entities.RoleAdmin, entities.MemberActive), CountAdminsFunc: adminsCount(2)}
 
-	output := useCases.NewRemoveMemberUseCase(repo, repo, repo, &mocks.Guard{}, &audit_mocks.Tx{}).
+	output := useCases.NewRemoveMemberUseCase(repo, &mocks.Guard{}, &audit_mocks.Tx{}).
 		Perform(context.Background(), useCases.RemoveInput{Requester: mocks.NewUserRequester(), Application: uuid.NewV7(), Member: uuid.NewV7()})
 
 	assert.Nil(t, output.Error)
@@ -81,7 +81,7 @@ func whenRemoveMemberIsMissing(t *testing.T) {
 		return entities.Member{}, sql.ErrNoRows
 	}}
 
-	output := useCases.NewRemoveMemberUseCase(repo, repo, repo, &mocks.Guard{}, &audit_mocks.Tx{}).
+	output := useCases.NewRemoveMemberUseCase(repo, &mocks.Guard{}, &audit_mocks.Tx{}).
 		Perform(context.Background(), useCases.RemoveInput{Requester: mocks.NewUserRequester(), Application: uuid.NewV7(), Member: uuid.NewV7()})
 
 	if assert.NotNil(t, output.Error) {
@@ -93,7 +93,7 @@ func whenRemoveIsDenied(t *testing.T) {
 	repo := &mocks.MemberRepo{}
 	guard := (&mocks.Guard{}).Deny(entities.ForbiddenError())
 
-	output := useCases.NewRemoveMemberUseCase(repo, repo, repo, guard, &audit_mocks.Tx{}).
+	output := useCases.NewRemoveMemberUseCase(repo, guard, &audit_mocks.Tx{}).
 		Perform(context.Background(), useCases.RemoveInput{Requester: mocks.NewUserRequester(), Application: uuid.NewV7(), Member: uuid.NewV7()})
 
 	if assert.NotNil(t, output.Error) {
@@ -108,7 +108,7 @@ func whenRemoveFailsInDb(t *testing.T) {
 		DeleteFunc:   func(context.Context, uuid.UUID, uuid.UUID) error { return errors.New("segredo-interno") },
 	}
 
-	output := useCases.NewRemoveMemberUseCase(repo, repo, repo, &mocks.Guard{}, &audit_mocks.Tx{}).
+	output := useCases.NewRemoveMemberUseCase(repo, &mocks.Guard{}, &audit_mocks.Tx{}).
 		Perform(context.Background(), useCases.RemoveInput{Requester: mocks.NewUserRequester(), Application: uuid.NewV7(), Member: uuid.NewV7()})
 
 	if assert.NotNil(t, output.Error) {
