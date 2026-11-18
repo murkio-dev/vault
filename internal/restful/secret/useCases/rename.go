@@ -6,19 +6,19 @@ import (
 
 	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	secretcontracts "github.com/murkio-dev/vault/internal/restful/secret/contracts"
 )
 
 // Builder
 
 type RenameSecretUseCase struct {
-	OwnerFinder contracts.ISecretOwnerFinder
-	Renamer     contracts.ISecretRenamer
-	Guard       contracts.IAccessGuard
-	Tx          contracts.IAuditedTx
+	Repository secretcontracts.ISecretRepository
+	Guard      contracts.IAccessGuard
+	Tx         contracts.IAuditedTx
 }
 
-func NewRenameSecretUseCase(ownerFinder contracts.ISecretOwnerFinder, renamer contracts.ISecretRenamer, guard contracts.IAccessGuard, tx contracts.IAuditedTx) RenameSecretUseCase {
-	return RenameSecretUseCase{OwnerFinder: ownerFinder, Renamer: renamer, Guard: guard, Tx: tx}
+func NewRenameSecretUseCase(repository secretcontracts.ISecretRepository, guard contracts.IAccessGuard, tx contracts.IAuditedTx) RenameSecretUseCase {
+	return RenameSecretUseCase{Repository: repository, Guard: guard, Tx: tx}
 }
 
 // DTOS
@@ -51,7 +51,7 @@ func (u RenameSecretUseCase) Perform(ctx context.Context, input RenameInput) Ren
 		return RenameOutput{Error: invalid("name", err.Error())}
 	}
 
-	secret, err := u.OwnerFinder.FindByOwner(ctx, input.Application, owner, input.Secret)
+	secret, err := u.Repository.FindByOwner(ctx, input.Application, owner, input.Secret)
 	if err != nil {
 		return RenameOutput{Error: failure(err)}
 	}
@@ -62,7 +62,7 @@ func (u RenameSecretUseCase) Perform(ctx context.Context, input RenameInput) Ren
 	var renamed entities.Secret
 	err = u.Tx.Run(ctx, entry, func(ctx context.Context) (err error) {
 		secret.Name = input.Name
-		renamed, err = u.Renamer.Rename(ctx, entities.SecretWrite{Secret: secret})
+		renamed, err = u.Repository.Rename(ctx, entities.SecretWrite{Secret: secret})
 		return err
 	})
 	if err != nil {
