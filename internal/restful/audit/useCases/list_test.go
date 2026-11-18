@@ -47,7 +47,7 @@ func whenListBuildSucceeds(t *testing.T) {
 
 	useCase := useCases.NewListAuditLogsUseCase(repo, guard)
 
-	assert.Equal(t, repo, useCase.Lister)
+	assert.Equal(t, repo, useCase.Repository)
 	assert.Equal(t, guard, useCase.Guard)
 }
 

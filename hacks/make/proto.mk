@@ -1,10 +1,11 @@
-PROTO_DIR := ../proto
+PROTO_DIR := proto
 PROTO_OUT := pkg/rpc
 
 .PHONY: proto
 
-# Regera o código do gRPC interno a partir de ../proto (fonte compartilhada pelos
-# serviços). O código gerado é versionado: nunca se gera no boot nem no build.
+# Regera o código do gRPC interno a partir de proto/ (o vault é dono do contrato
+# vault.proto; os clientes copiam esse arquivo). O código gerado é versionado:
+# nunca se gera no boot nem no build.
 # Precisa de protoc, protoc-gen-go e protoc-gen-go-grpc no PATH.
 proto:
 	@rm -rf $(PROTO_OUT)/vaultv1 && mkdir -p $(PROTO_OUT)/vaultv1

@@ -24,6 +24,7 @@ func TestMemberRepository(t *testing.T) {
 	t.Run("Quando conta os admins ativos.", func(t *testing.T) { whenCountingActiveAdmins(t) })
 	t.Run("Quando troca o papel e o status.", func(t *testing.T) { whenUpgrading(t) })
 	t.Run("Quando remove o membro.", func(t *testing.T) { whenDeleteCascades(t) })
+	t.Run("Quando o banco falha.", func(t *testing.T) { whenDatabaseFails(t) })
 }
 
 // Functions
@@ -147,7 +148,7 @@ func whenDeleteCascades(t *testing.T) {
 	a := sqlitetest.Seed(t, db, "app-a")
 	dev := add(t, repo, a.Application, entities.RoleDeveloper)
 	now := time.Now().UTC()
-	_, err := db.Exec(`INSERT INTO access_tokens (id, application_id, member_id, name, prefix, token_hash, created_by, created_at) VALUES ('t', ?, ?, 'n', 'vt_x', 'h', 'u', ?)`, a.Application.String(), dev.ID.String(), now)
+	_, err := db.Exec(`INSERT INTO access_tokens (id, application_id, member_id, name, prefix, token_hash, created_by, created_at) VALUES ('t', ?, ?, 'n', 'sk_vt_x', 'h', 'u', ?)`, a.Application.String(), dev.ID.String(), now)
 	require.NoError(t, err)
 	_, err = db.Exec(`INSERT INTO secrets (id, application_id, member_id, name, type, source, created_by, created_at) VALUES ('s', ?, ?, 'A', 'string', 'static', 'u', ?)`, a.Application.String(), dev.ID.String(), now)
 	require.NoError(t, err)
@@ -162,4 +163,25 @@ func whenDeleteCascades(t *testing.T) {
 	_, findErr := repo.FindById(context.Background(), a.Application, dev.ID)
 	assert.ErrorIs(t, findErr, sql.ErrNoRows)
 	assert.ErrorIs(t, repo.Delete(context.Background(), a.Application, dev.ID), sql.ErrNoRows, "apagar de novo não existe")
+}
+
+func whenDatabaseFails(t *testing.T) {
+	db := sqlitetest.New(t)
+	repo := repositories.NewRepository(db)
+	app, id := uuid.NewV7(), uuid.NewV7()
+	member := entities.NewMember(app, uuid.NewV7(), entities.RoleAdmin, nil)
+	require.NoError(t, db.Close())
+	ctx := context.Background()
+
+	_, create := repo.Create(ctx, member)
+	_, find := repo.FindById(ctx, app, id)
+	_, findUser := repo.FindByUser(ctx, app, id)
+	_, _, list := repo.List(ctx, app, 10, 0)
+	_, count := repo.CountActiveAdmins(ctx, app)
+	_, upgrade := repo.Upgrade(ctx, member)
+	remove := repo.Delete(ctx, app, id)
+
+	for name, err := range map[string]error{"Create": create, "FindById": find, "FindByUser": findUser, "List": list, "CountActiveAdmins": count, "Upgrade": upgrade, "Delete": remove} {
+		assert.Error(t, err, name)
+	}
 }

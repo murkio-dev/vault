@@ -12,7 +12,7 @@
 - Antes de pensar em uma lib, resolva com a stdlib. Se a stdlib não resolver, implemente em `pkg/<nome>/` e cubra com testes.
 - Não adicione `require` novo no `go.mod`. Se achar que é inevitável, pare e peça aprovação explícita antes. IA não decide isso sozinha.
 - A implementação própria não pode abrir mão de segurança nem de qualidade: validar entrada, tratar todos os erros, sem `panic` em fluxo normal, com testes (`testing.md`) e sem copiar trechos de bibliotecas sem entender o que fazem.
-- Testes usam apenas o pacote `testing` da stdlib.
+- Testes usam o pacote `testing` da stdlib com `testify` (`assert` e `require`, exceção aprovada abaixo).
 - Ferramentas de desenvolvimento que não entram no binário (ex.: `gofmt`, `go vet`) são permitidas.
 
 ## Exceções aprovadas
@@ -21,9 +21,11 @@ Só estas dependências de terceiros são permitidas. Qualquer outra exige aprov
 | Dependência | Uso | Por que é exceção |
 |---|---|---|
 | `modernc.org/sqlite` | driver do `database/sql` em `pkg/sqlite` | a stdlib não tem driver de SQLite. É Go puro (sem CGO), então compila para FreeBSD em binário único |
-| `go.yaml.in/yaml/v2` | decodificar e renderizar YAML em `pkg/utils` | não há alternativa na stdlib |
-| `google.golang.org/grpc` | servidor gRPC interno em `internal/rpc` | a stdlib não tem gRPC. Uso restrito ao tráfego privado entre serviços, em `127.0.0.1` e porta separada da HTTP; a API pública continua em `net/http` |
-| `google.golang.org/protobuf` | mensagens do gRPC em `pkg/rpc` (código gerado de `../proto`) | exigido pelo gRPC; a stdlib não tem protobuf |
-| `github.com/stretchr/testify` | `assert` nos testes | só entra em arquivos `_test.go`, então **não vai para o binário** |
+| `go.yaml.in/yaml/v2` | decodificar e renderizar YAML em `pkg/httpx` | não há alternativa na stdlib |
+| `google.golang.org/grpc` | servidor gRPC interno em `pkg/grpcx`, handlers em `restful/<service>/grpc_controllers` e os helpers `grpcx.Requester`/`grpcx.Error` em `pkg/grpcx` | a stdlib não tem gRPC. Uso restrito ao tráfego privado entre serviços, em `127.0.0.1` e porta separada da HTTP; a API pública continua em `net/http` |
+| `google.golang.org/protobuf` | mensagens do gRPC em `pkg/rpc` (código gerado de `proto/`) | exigido pelo gRPC; a stdlib não tem protobuf |
+| `github.com/stretchr/testify` | `assert` e `require` nos testes | só entra em arquivos `_test.go`, então **não vai para o binário** |
 
-Dentro das exceções, use só o necessário (por exemplo, `testify/assert`, sem `mock` e `suite`). Dependências indiretas que vierem delas são aceitas, mas não use diretamente.
+Dentro das exceções, use só o necessário (por exemplo, `testify/assert` e `testify/require`, sem `mock` e `suite`). Dependências indiretas que vierem delas são aceitas, mas não use diretamente.
+
+`google.golang.org/grpc` e `google.golang.org/protobuf` são importados direto pelo código: no `go.mod` ficam no bloco de `require` direto (um `go mod tidy` ajusta, se estiverem como `// indirect`).

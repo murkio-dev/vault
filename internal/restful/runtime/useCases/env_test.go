@@ -10,8 +10,8 @@ import (
 	"uuid"
 
 	"github.com/murkio-dev/vault/internal/entities"
-	audit_mocks "github.com/murkio-dev/vault/internal/restful/audit/mocks"
 	member_mocks "github.com/murkio-dev/vault/internal/restful/member/mocks"
+	"github.com/murkio-dev/vault/internal/restful/runtime/mocks"
 	"github.com/murkio-dev/vault/internal/restful/runtime/useCases"
 	secret_mocks "github.com/murkio-dev/vault/internal/restful/secret/mocks"
 	"github.com/stretchr/testify/assert"
@@ -36,72 +36,51 @@ func TestReadEnv(t *testing.T) {
 // Functions
 
 type envRig struct {
-	secrets *secret_mocks.SecretRepo
-	values  *secret_mocks.Values
-	guard   *member_mocks.Guard
-	tx      *audit_mocks.Tx
-	audit   *audit_mocks.AuditRepo
-	member  entities.Member
+	*mocks.EnvRig
 	useCase useCases.ReadEnvUseCase
 }
 
 func newEnvRig() *envRig {
-	member := member_mocks.NewMember(entities.RoleDeveloper)
-	rig := &envRig{
-		secrets: &secret_mocks.SecretRepo{}, values: &secret_mocks.Values{ValueResult: "valor-secreto"},
-		guard: &member_mocks.Guard{Member: member}, tx: &audit_mocks.Tx{}, audit: &audit_mocks.AuditRepo{}, member: member,
-	}
-	rig.useCase = useCases.NewReadEnvUseCase(rig.secrets, rig.values, rig.guard, rig.tx, rig.audit)
-	return rig
-}
-
-func (r *envRig) withSecrets(names ...string) {
-	r.secrets.ListFunc = func(context.Context, uuid.UUID, uuid.UUID, int, int) ([]entities.Secret, int, error) {
-		list := make([]entities.Secret, len(names))
-		for i, name := range names {
-			list[i] = secret_mocks.NewSecret()
-			list[i].Name = name
-		}
-		return list, len(list), nil
-	}
+	mock := mocks.NewEnvRig()
+	return &envRig{EnvRig: mock, useCase: useCases.NewReadEnvUseCase(mock.Secrets, mock.Values, mock.Guard, mock.Tx, mock.Audit)}
 }
 
 func (r *envRig) input(names ...string) useCases.ReadEnvInput {
-	return useCases.ReadEnvInput{Requester: member_mocks.NewTokenRequester(r.member), UriID: r.member.UriID, Names: names}
+	return useCases.ReadEnvInput{Requester: member_mocks.NewTokenRequester(r.Member), UriID: r.Member.UriID, Names: names}
 }
 
 func whenEnvBuildSucceeds(t *testing.T) {
 	rig := newEnvRig()
 
-	assert.Equal(t, rig.secrets, rig.useCase.Secrets)
-	assert.Equal(t, rig.values, rig.useCase.Values)
-	assert.Equal(t, rig.guard, rig.useCase.Guard)
-	assert.Equal(t, rig.tx, rig.useCase.Tx)
-	assert.Equal(t, rig.audit, rig.useCase.Audit)
+	assert.Equal(t, rig.Secrets, rig.useCase.Secrets)
+	assert.Equal(t, rig.Values, rig.useCase.Values)
+	assert.Equal(t, rig.Guard, rig.useCase.Guard)
+	assert.Equal(t, rig.Tx, rig.useCase.Tx)
+	assert.Equal(t, rig.Audit, rig.useCase.Audit)
 }
 
 func whenEnvSucceeds(t *testing.T) {
 	rig := newEnvRig()
-	rig.withSecrets("DATABASE_URL", "API_KEY")
+	rig.WithSecrets("DATABASE_URL", "API_KEY")
 
 	output := rig.useCase.Perform(context.Background(), rig.input())
 
 	assert.Nil(t, output.Error)
-	assert.Equal(t, rig.member.UriID, output.Data.UriID)
+	assert.Equal(t, rig.Member.UriID, output.Data.UriID)
 	if assert.Len(t, output.Data.Variables, 2) {
 		assert.Equal(t, "DATABASE_URL", output.Data.Variables[0].Name)
 		assert.Equal(t, "valor-secreto", output.Data.Variables[0].Value)
 	}
-	assert.Equal(t, []entities.Action{entities.ActionEnvRead}, rig.guard.Actions())
-	if assert.Len(t, rig.tx.Entries, 1) {
-		assert.Equal(t, entities.AuditEnvRead, rig.tx.Entries[0].Action)
-		assert.NotContains(t, string(rig.tx.Entries[0].Metadata), "valor-secreto", "a trilha nunca leva o valor")
+	assert.Equal(t, []entities.Action{entities.ActionEnvRead}, rig.Guard.Actions())
+	if assert.Len(t, rig.Tx.Entries, 1) {
+		assert.Equal(t, entities.AuditEnvRead, rig.Tx.Entries[0].Action)
+		assert.NotContains(t, string(rig.Tx.Entries[0].Metadata), "valor-secreto", "a trilha nunca leva o valor")
 	}
 }
 
 func whenEnvIsFiltered(t *testing.T) {
 	rig := newEnvRig()
-	rig.withSecrets("DATABASE_URL", "API_KEY")
+	rig.WithSecrets("DATABASE_URL", "API_KEY")
 
 	output := rig.useCase.Perform(context.Background(), rig.input("API_KEY", "NAO_EXISTE"))
 
@@ -119,21 +98,21 @@ func whenEnvIsEmpty(t *testing.T) {
 	assert.Nil(t, output.Error)
 	assert.NotNil(t, output.Data.Variables, "sem segredos é lista vazia, não nula")
 	assert.Empty(t, output.Data.Variables)
-	assert.Len(t, rig.tx.Entries, 1, "a leitura é auditada mesmo vazia")
+	assert.Len(t, rig.Tx.Entries, 1, "a leitura é auditada mesmo vazia")
 }
 
 func whenEnvReferenceLostItsTarget(t *testing.T) {
 	rig := newEnvRig()
-	rig.withSecrets("GONE", "OK")
+	rig.WithSecrets("GONE", "OK")
 	calls := 0
-	rig.values.ValueErr = nil
-	rig.secrets.ListFunc = func(context.Context, uuid.UUID, uuid.UUID, int, int) ([]entities.Secret, int, error) {
+	rig.Values.ValueErr = nil
+	rig.Secrets.ListFunc = func(context.Context, uuid.UUID, uuid.UUID, int, int) ([]entities.Secret, int, error) {
 		gone, ok := secret_mocks.NewSecret(), secret_mocks.NewSecret()
 		gone.Name, ok.Name = "GONE", "OK"
 		return []entities.Secret{gone, ok}, 2, nil
 	}
-	failing := &failOnFirst{inner: rig.values, calls: &calls}
-	useCase := useCases.NewReadEnvUseCase(rig.secrets, failing, rig.guard, rig.tx, rig.audit)
+	failing := &failOnFirst{inner: rig.Values, calls: &calls}
+	useCase := useCases.NewReadEnvUseCase(rig.Secrets, failing, rig.Guard, rig.Tx, rig.Audit)
 
 	output := useCase.Perform(context.Background(), rig.input())
 
@@ -163,9 +142,9 @@ func (f *failOnFirst) Value(ctx context.Context, secret entities.Secret, version
 
 func whenEnvURIDoesNotMatch(t *testing.T) {
 	rig := newEnvRig()
-	rig.withSecrets("A")
+	rig.WithSecrets("A")
 	input := rig.input()
-	input.UriID = strings.Repeat("0", len(rig.member.UriID))
+	input.UriID = strings.Repeat("0", len(rig.Member.UriID))
 
 	output := rig.useCase.Perform(context.Background(), input)
 
@@ -173,21 +152,21 @@ func whenEnvURIDoesNotMatch(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, output.Error.Status)
 	}
 	assert.Empty(t, output.Data.Variables)
-	assert.Empty(t, rig.tx.Entries)
-	if assert.Len(t, rig.audit.Created, 1) {
-		assert.Equal(t, entities.AuditAccessDenied, rig.audit.Created[0].Action, "a tentativa fica na trilha")
+	assert.Empty(t, rig.Tx.Entries)
+	if assert.Len(t, rig.Audit.Created, 1) {
+		assert.Equal(t, entities.AuditAccessDenied, rig.Audit.Created[0].Action, "a tentativa fica na trilha")
 	}
 }
 
 func whenEnvRequesterIsNotAToken(t *testing.T) {
 	rig := newEnvRig()
 
-	output := rig.useCase.Perform(context.Background(), useCases.ReadEnvInput{Requester: member_mocks.NewUserRequester(), UriID: rig.member.UriID})
+	output := rig.useCase.Perform(context.Background(), useCases.ReadEnvInput{Requester: member_mocks.NewUserRequester(), UriID: rig.Member.UriID})
 
 	if assert.NotNil(t, output.Error) {
 		assert.Equal(t, http.StatusUnauthorized, output.Error.Status, "o JWT não lê o runtime")
 	}
-	assert.Zero(t, rig.guard.Calls)
+	assert.Zero(t, rig.Guard.Calls)
 }
 
 func whenEnvAsksForTooManyNames(t *testing.T) {
@@ -202,20 +181,20 @@ func whenEnvAsksForTooManyNames(t *testing.T) {
 
 func whenEnvIsDenied(t *testing.T) {
 	rig := newEnvRig()
-	rig.guard.Deny(entities.ForbiddenError())
+	rig.Guard.Deny(entities.ForbiddenError())
 
 	output := rig.useCase.Perform(context.Background(), rig.input())
 
 	if assert.NotNil(t, output.Error) {
 		assert.Equal(t, http.StatusForbidden, output.Error.Status)
 	}
-	assert.Zero(t, rig.tx.Runs)
+	assert.Zero(t, rig.Tx.Runs)
 }
 
 func whenEnvAuditFails(t *testing.T) {
 	rig := newEnvRig()
-	rig.withSecrets("A")
-	rig.tx.AuditErr = errors.New("disk full")
+	rig.WithSecrets("A")
+	rig.Tx.AuditErr = errors.New("disk full")
 
 	output := rig.useCase.Perform(context.Background(), rig.input())
 
@@ -227,12 +206,12 @@ func whenEnvAuditFails(t *testing.T) {
 
 func whenEnvFails(t *testing.T) {
 	list := newEnvRig()
-	list.secrets.ListFunc = func(context.Context, uuid.UUID, uuid.UUID, int, int) ([]entities.Secret, int, error) {
+	list.Secrets.ListFunc = func(context.Context, uuid.UUID, uuid.UUID, int, int) ([]entities.Secret, int, error) {
 		return nil, 0, errors.New("segredo-interno")
 	}
 	decrypt := newEnvRig()
-	decrypt.withSecrets("A")
-	decrypt.values.ValueErr = errors.New("segredo-interno")
+	decrypt.WithSecrets("A")
+	decrypt.Values.ValueErr = errors.New("segredo-interno")
 
 	for name, rig := range map[string]*envRig{"listagem": list, "decifragem": decrypt} {
 		output := rig.useCase.Perform(context.Background(), rig.input())

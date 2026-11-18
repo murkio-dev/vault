@@ -10,22 +10,22 @@ import (
 
 	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	membercontracts "github.com/murkio-dev/vault/internal/restful/member/contracts"
+	tokencontracts "github.com/murkio-dev/vault/internal/restful/token/contracts"
 )
 
 // Builder
 
 type CreateTokenUseCase struct {
-	Creator      contracts.ITokenCreator
-	MemberFinder contracts.IMemberFinder
-	Guard        contracts.IAccessGuard
-	Tx           contracts.IAuditedTx
-	// PublicURL é a base pública do Vault (config do deploy); a URI do SDK é
-	// PublicURL + "/" + uri_id do membro. Vazia, a URI é só "/<uri_id>".
-	PublicURL string
+	Repository tokencontracts.ITokenRepository
+	Members    membercontracts.IMemberRepository
+	Guard      contracts.IAccessGuard
+	Tx         contracts.IAuditedTx
+	PublicURL  string
 }
 
-func NewCreateTokenUseCase(creator contracts.ITokenCreator, memberFinder contracts.IMemberFinder, guard contracts.IAccessGuard, tx contracts.IAuditedTx, publicURL string) CreateTokenUseCase {
-	return CreateTokenUseCase{Creator: creator, MemberFinder: memberFinder, Guard: guard, Tx: tx, PublicURL: strings.TrimRight(publicURL, "/")}
+func NewCreateTokenUseCase(repository tokencontracts.ITokenRepository, members membercontracts.IMemberRepository, guard contracts.IAccessGuard, tx contracts.IAuditedTx, publicURL string) CreateTokenUseCase {
+	return CreateTokenUseCase{Repository: repository, Members: members, Guard: guard, Tx: tx, PublicURL: strings.TrimRight(publicURL, "/")}
 }
 
 // DTOS
@@ -56,7 +56,7 @@ func (u CreateTokenUseCase) Perform(ctx context.Context, input CreateInput) Crea
 
 	ctx = entities.WithActor(ctx, input.Requester.Actor)
 
-	member, err := u.MemberFinder.FindById(ctx, input.Application, owner)
+	member, err := u.Members.FindById(ctx, input.Application, owner)
 	if err != nil {
 		return CreateOutput{Error: failure(err)}
 	}
@@ -76,7 +76,7 @@ func (u CreateTokenUseCase) Perform(ctx context.Context, input CreateInput) Crea
 		map[string]any{"name": token.Name, "prefix": token.Prefix, "member_id": owner.String()})
 
 	err = u.Tx.Run(ctx, entry, func(ctx context.Context) error {
-		_, err := u.Creator.Create(ctx, token)
+		_, err := u.Repository.Create(ctx, token)
 		return err
 	})
 	if err != nil {

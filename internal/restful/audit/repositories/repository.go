@@ -8,8 +8,8 @@ import (
 	"time"
 	"uuid"
 
-	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	auditcontracts "github.com/murkio-dev/vault/internal/restful/audit/contracts"
 	"github.com/murkio-dev/vault/pkg/sqlite"
 )
 
@@ -23,11 +23,7 @@ func NewRepository(db *sql.DB) AuditRepository {
 	return AuditRepository{DB: db}
 }
 
-var (
-	_ contracts.IAuditLogCreator = AuditRepository{}
-	_ contracts.IAuditLogLister  = AuditRepository{}
-	_ contracts.IAuditLogPurger  = AuditRepository{}
-)
+var _ auditcontracts.IAuditLogRepository = AuditRepository{}
 
 // Functions
 

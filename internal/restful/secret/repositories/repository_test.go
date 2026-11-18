@@ -7,6 +7,7 @@ import (
 	"uuid"
 
 	"github.com/murkio-dev/vault/internal/entities"
+	"github.com/murkio-dev/vault/internal/restful/secret/mocks"
 	"github.com/murkio-dev/vault/internal/restful/secret/repositories"
 	"github.com/murkio-dev/vault/pkg/sqlite/sqlitetest"
 	"github.com/stretchr/testify/assert"
@@ -27,6 +28,7 @@ func TestSecretRepository(t *testing.T) {
 	t.Run("Quando renomeia e apaga.", func(t *testing.T) { whenRenamingAndDeleting(t) })
 	t.Run("Quando lê as versões.", func(t *testing.T) { whenListingVersions(t) })
 	t.Run("Quando recifra uma versão.", func(t *testing.T) { whenResealing(t) })
+	t.Run("Quando o banco falha.", func(t *testing.T) { whenDatabaseFails(t) })
 }
 
 // Functions
@@ -286,4 +288,32 @@ func whenResealing(t *testing.T) {
 	assert.Equal(t, []byte("novo"), after.Ciphertext)
 	assert.ErrorIs(t, missing, sql.ErrNoRows)
 	assert.Error(t, immutable, "o banco só aceita trocar o ciphertext de uma versão")
+}
+
+func whenDatabaseFails(t *testing.T) {
+	db := sqlitetest.New(t)
+	secrets := repositories.NewRepository(db)
+	versions := repositories.NewVersionRepository(db)
+	app, owner, id := uuid.NewV7(), uuid.NewV7(), uuid.NewV7()
+	write := mocks.NewWrite()
+	require.NoError(t, db.Close())
+	ctx := context.Background()
+
+	_, create := secrets.Create(ctx, write)
+	_, find := secrets.FindById(ctx, app, id)
+	_, findOwner := secrets.FindByOwner(ctx, app, owner, id)
+	_, _, list := secrets.List(ctx, app, owner, 10, 0)
+	_, count := secrets.Count(ctx, app, owner)
+	_, references := secrets.CountReferences(ctx, app, id)
+	_, add := secrets.AddVersion(ctx, write)
+	_, rename := secrets.Rename(ctx, write)
+	remove := secrets.Delete(ctx, app, id)
+	_, _, versionList := versions.List(ctx, app, id, 10, 0)
+	_, current := versions.FindCurrent(ctx, app, id)
+	_, numbered := versions.FindByNumber(ctx, app, id, 1)
+	_, reseal := versions.Reseal(ctx, app, id, entities.SecretVersion{ID: uuid.NewV7()})
+
+	for name, err := range map[string]error{"Create": create, "FindById": find, "FindByOwner": findOwner, "List": list, "Count": count, "CountReferences": references, "AddVersion": add, "Rename": rename, "Delete": remove, "versions.List": versionList, "FindCurrent": current, "FindByNumber": numbered, "Reseal": reseal} {
+		assert.Error(t, err, name)
+	}
 }

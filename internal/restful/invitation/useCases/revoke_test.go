@@ -37,7 +37,7 @@ func whenRevokeBuildSucceeds(t *testing.T) {
 
 	useCase := useCases.NewRevokeInvitationUseCase(repo, guard, tx)
 
-	assert.Equal(t, repo, useCase.Revoker)
+	assert.Equal(t, repo, useCase.Repository)
 	assert.Equal(t, guard, useCase.Guard)
 	assert.Equal(t, tx, useCase.Tx)
 }

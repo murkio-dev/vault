@@ -1,6 +1,6 @@
 # Regras: comentários
 
-Comentário é exceção, não regra. O código deve se explicar pelos nomes e pela arquitetura; só se comenta o que é **específico e diferente do padrão da arquitetura**.
+Comentário é exceção, não regra. O código deve se explicar pelos nomes e pela arquitetura; só se comenta o que é **específico e diferente do padrão da arquitetura**. Há dois níveis: o **godoc completo** (5 linhas ou mais, abaixo) para função ou tipo com comportamento próprio, e o **comentário curto** (1 a 4 linhas) só para o *porquê* não óbvio de uma linha, consulta ou decisão (uma regra de concorrência, uma ordem que importa, um limite). O curto não descreve o que o código já diz e não substitui o godoc de uma função que precisa dele.
 
 ## Marcadores de seção (obrigatórios)
 Só os arquivos predefinidos pela arquitetura (abaixo) usam marcadores. Eles seguem a mesma ordem de blocos, separados por comentários de uma linha, exatamente com estes nomes:
@@ -12,13 +12,13 @@ Só os arquivos predefinidos pela arquitetura (abaixo) usam marcadores. Eles seg
 | `*_test.go` | `// Main test`, `// Functions` (e `// Mocks` ou `// Helpers` quando houver) |
 | `mocks/*.go` | `// Mocks`, `// Helpers` |
 
-Os marcadores não contam como "comentário explicativo": são estrutura e valem em todo arquivo novo desses tipos. Os controllers (`controller.go`) e os demais arquivos (`cmd/`, `entities/`, `contracts/`, `pkg/`, `services/`, `initializr.go`, `migrations/`) não usam marcadores.
+Os marcadores não contam como "comentário explicativo": são estrutura e valem em todo arquivo novo desses tipos. Arquivo auxiliar dentro dessas pastas (`useCases/errors.go`, `repositories/helpers.go`) e um `useCases/authorize.go` cujos DTOs moram em `entities/` não levam os marcadores que não se aplicam a eles (por exemplo, sem `// DTOS` quando não há DTO no arquivo). Os controllers (`controller.go`) e os demais arquivos (`cmd/`, `entities/`, `contracts/`, `pkg/`, `services/`, `initializr.go`, `migrations/`) não usam marcadores.
 
 ## Quando comentar
-Comente apenas funções (ou tipos) com comportamento próprio, que **não** seguem o molde padrão do service. Exemplos que pedem comentário: `utils.unwrapSingle`, `negotiateFormat`, `BindIDs` e `callerOrigin`. Exemplos que **não** pedem: `Perform` de um use case, `Create`/`Delete` de repository, handlers de controller, construtores `New...`, getters e DTOs.
+Comente apenas funções (ou tipos) com comportamento próprio, que **não** seguem o molde padrão do service. Exemplos que pedem comentário: `unwrapSingle` (em `pkg/httpx`), `negotiateFormat`, `BindIDs`, `BindBody` e `callerOrigin`. Exemplos que **não** pedem: `Perform` de um use case, `Create`/`Delete` de repository, handlers de controller, construtores `New...`, getters e DTOs.
 
 ## Formato do comentário
-- Mínimo de **5 linhas**. Comentário menor que isso não deve existir: ou se escreve o completo, ou não se comenta.
+- Godoc: mínimo de **5 linhas**. Um godoc menor que isso não deve existir: ou se escreve o completo, ou se usa o comentário curto (só para o *porquê* de uma linha ou consulta), ou não se comenta.
 - Vai logo acima da função, no formato godoc (começa com o nome da função).
 - Deve cobrir, nesta ordem:
   1. O que a função faz e **por que** ela existe.

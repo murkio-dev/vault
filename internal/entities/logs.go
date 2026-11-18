@@ -9,6 +9,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/murkio-dev/vault/pkg/cappedfile"
 )
 
 type Logs struct {
@@ -29,7 +31,10 @@ type Logs struct {
 	Dependencies map[string]bool `json:"service.dependencies,omitempty"`
 }
 
-const DefaultLogPath = "logs.txt"
+const (
+	DefaultLogPath = "vault.log"
+	MaxLogLines    = 1000
+)
 
 const (
 	TypeBoot          = "boot"
@@ -85,14 +90,7 @@ func (d Domain) Write(l Logs) error {
 		defer d.mu.Unlock()
 	}
 
-	f, err := os.OpenFile(d.Path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	_, err = f.Write(line)
-	return err
+	return cappedfile.Append(d.Path, line, MaxLogLines)
 }
 
 func (d Domain) Boot(l Logs) error {

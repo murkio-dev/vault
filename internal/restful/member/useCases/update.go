@@ -8,20 +8,19 @@ import (
 
 	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	membercontracts "github.com/murkio-dev/vault/internal/restful/member/contracts"
 )
 
 // Builder
 
 type UpdateMemberUseCase struct {
-	Finder       contracts.IMemberFinder
-	Upgrader     contracts.IMemberUpgrader
-	AdminCounter contracts.IMemberAdminCounter
-	Guard        contracts.IAccessGuard
-	Tx           contracts.IAuditedTx
+	Repository membercontracts.IMemberRepository
+	Guard      contracts.IAccessGuard
+	Tx         contracts.IAuditedTx
 }
 
-func NewUpdateMemberUseCase(finder contracts.IMemberFinder, upgrader contracts.IMemberUpgrader, adminCounter contracts.IMemberAdminCounter, guard contracts.IAccessGuard, tx contracts.IAuditedTx) UpdateMemberUseCase {
-	return UpdateMemberUseCase{Finder: finder, Upgrader: upgrader, AdminCounter: adminCounter, Guard: guard, Tx: tx}
+func NewUpdateMemberUseCase(repository membercontracts.IMemberRepository, guard contracts.IAccessGuard, tx contracts.IAuditedTx) UpdateMemberUseCase {
+	return UpdateMemberUseCase{Repository: repository, Guard: guard, Tx: tx}
 }
 
 // DTOS
@@ -76,7 +75,7 @@ func (u UpdateMemberUseCase) Perform(ctx context.Context, input UpdateInput) Upd
 
 	var updated entities.Member
 	err := u.Tx.Run(ctx, entry, func(ctx context.Context) error {
-		member, err := u.Finder.FindById(ctx, input.Application, input.Member)
+		member, err := u.Repository.FindById(ctx, input.Application, input.Member)
 		if err != nil {
 			return err
 		}
@@ -96,7 +95,7 @@ func (u UpdateMemberUseCase) Perform(ctx context.Context, input UpdateInput) Upd
 			}
 		}
 
-		updated, err = u.Upgrader.Upgrade(ctx, change)
+		updated, err = u.Repository.Upgrade(ctx, change)
 		return err
 	})
 	if err != nil {
@@ -106,12 +105,11 @@ func (u UpdateMemberUseCase) Perform(ctx context.Context, input UpdateInput) Upd
 	return UpdateOutput{Data: updated}
 }
 
-// ensureAnotherAdmin conta os admins ativos da aplicação (CountActiveAdmins) e recusa se este for o único.
 func (u UpdateMemberUseCase) ensureAnotherAdmin(ctx context.Context, application uuid.UUID) error {
-	return ensureAnotherAdmin(ctx, u.AdminCounter, application)
+	return ensureAnotherAdmin(ctx, u.Repository, application)
 }
 
-func ensureAnotherAdmin(ctx context.Context, counter contracts.IMemberAdminCounter, application uuid.UUID) error {
+func ensureAnotherAdmin(ctx context.Context, counter membercontracts.IMemberRepository, application uuid.UUID) error {
 	admins, err := counter.CountActiveAdmins(ctx, application)
 	if err != nil {
 		return err

@@ -6,17 +6,18 @@ import (
 
 	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	secretcontracts "github.com/murkio-dev/vault/internal/restful/secret/contracts"
 )
 
 // Builder
 
 type ListSecretsUseCase struct {
-	Lister contracts.ISecretLister
-	Guard  contracts.IAccessGuard
+	Repository secretcontracts.ISecretRepository
+	Guard      contracts.IAccessGuard
 }
 
-func NewListSecretsUseCase(lister contracts.ISecretLister, guard contracts.IAccessGuard) ListSecretsUseCase {
-	return ListSecretsUseCase{Lister: lister, Guard: guard}
+func NewListSecretsUseCase(repository secretcontracts.ISecretRepository, guard contracts.IAccessGuard) ListSecretsUseCase {
+	return ListSecretsUseCase{Repository: repository, Guard: guard}
 }
 
 // DTOS
@@ -43,7 +44,7 @@ func (u ListSecretsUseCase) Perform(ctx context.Context, input ListInput) ListOu
 		return ListOutput{Error: denied}
 	}
 
-	secrets, _, err := u.Lister.List(ctx, input.Application, owner, entities.MaxSecretsPerTable, 0)
+	secrets, _, err := u.Repository.List(ctx, input.Application, owner, entities.MaxSecretsPerTable, 0)
 	if err != nil {
 		return ListOutput{Error: failure(err)}
 	}

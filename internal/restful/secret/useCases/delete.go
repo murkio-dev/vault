@@ -6,20 +6,19 @@ import (
 
 	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	secretcontracts "github.com/murkio-dev/vault/internal/restful/secret/contracts"
 )
 
 // Builder
 
 type DeleteSecretUseCase struct {
-	OwnerFinder      contracts.ISecretOwnerFinder
-	ReferenceCounter contracts.ISecretReferenceCounter
-	Deleter          contracts.ISecretDeleter
-	Guard            contracts.IAccessGuard
-	Tx               contracts.IAuditedTx
+	Repository secretcontracts.ISecretRepository
+	Guard      contracts.IAccessGuard
+	Tx         contracts.IAuditedTx
 }
 
-func NewDeleteSecretUseCase(ownerFinder contracts.ISecretOwnerFinder, referenceCounter contracts.ISecretReferenceCounter, deleter contracts.ISecretDeleter, guard contracts.IAccessGuard, tx contracts.IAuditedTx) DeleteSecretUseCase {
-	return DeleteSecretUseCase{OwnerFinder: ownerFinder, ReferenceCounter: referenceCounter, Deleter: deleter, Guard: guard, Tx: tx}
+func NewDeleteSecretUseCase(repository secretcontracts.ISecretRepository, guard contracts.IAccessGuard, tx contracts.IAuditedTx) DeleteSecretUseCase {
+	return DeleteSecretUseCase{Repository: repository, Guard: guard, Tx: tx}
 }
 
 // DTOS
@@ -39,8 +38,7 @@ type DeleteOutput struct {
 
 // Perform apaga o segredo (soft delete: as versões cifradas ficam para a
 // auditoria). Se outros segredos apontam para ele, é conflito: apagá-lo
-// quebraria o runtime deles. A contagem (o total do List filtrado por
-// ReferenceOf) e o delete estão na mesma transação.
+// quebraria o runtime deles. A contagem (CountReferences) e o delete estão na mesma transação.
 func (u DeleteSecretUseCase) Perform(ctx context.Context, input DeleteInput) DeleteOutput {
 
 	owner, denied := authorizeOwner(u.Guard, ctx, input.Requester, input.Application, input.Member, entities.ActionSecretWrite)
@@ -48,7 +46,7 @@ func (u DeleteSecretUseCase) Perform(ctx context.Context, input DeleteInput) Del
 		return DeleteOutput{Error: denied}
 	}
 
-	secret, err := u.OwnerFinder.FindByOwner(ctx, input.Application, owner, input.Secret)
+	secret, err := u.Repository.FindByOwner(ctx, input.Application, owner, input.Secret)
 	if err != nil {
 		return DeleteOutput{Error: failure(err)}
 	}
@@ -57,14 +55,14 @@ func (u DeleteSecretUseCase) Perform(ctx context.Context, input DeleteInput) Del
 		entities.AuditTarget{Type: "secret", ID: secret.ID.String()}, map[string]any{"name": secret.Name, "member_id": owner.String()})
 
 	err = u.Tx.Run(ctx, entry, func(ctx context.Context) error {
-		references, err := u.ReferenceCounter.CountReferences(ctx, input.Application, secret.ID)
+		references, err := u.Repository.CountReferences(ctx, input.Application, secret.ID)
 		if err != nil {
 			return err
 		}
 		if references > 0 {
 			return errHasReferences
 		}
-		return u.Deleter.Delete(ctx, input.Application, secret.ID)
+		return u.Repository.Delete(ctx, input.Application, secret.ID)
 	})
 	if err != nil {
 		return DeleteOutput{Error: failure(err)}

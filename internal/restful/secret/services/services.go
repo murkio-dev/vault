@@ -6,14 +6,14 @@ import (
 	"uuid"
 
 	"github.com/murkio-dev/vault/internal/entities"
-	"github.com/murkio-dev/vault/pkg/utils"
+	"github.com/murkio-dev/vault/pkg/httpx"
 )
 
 func ParsePath(r *http.Request) (application, member uuid.UUID, e *entities.Error) {
-	if application, e = utils.PathUUID(r, "app"); e != nil {
+	if application, e = httpx.PathUUID(r, "app"); e != nil {
 		return
 	}
-	member, e = utils.PathMember(r)
+	member, e = httpx.PathMember(r)
 	return
 }
 
@@ -21,7 +21,7 @@ func ParseSecretPath(r *http.Request) (application, member, secret uuid.UUID, e 
 	if application, member, e = ParsePath(r); e != nil {
 		return
 	}
-	secret, e = utils.PathUUID(r, "id")
+	secret, e = httpx.PathUUID(r, "id")
 	return
 }
 
@@ -30,7 +30,7 @@ func ParseCreate(r *http.Request) (application, member uuid.UUID, items []entiti
 		return
 	}
 
-	items, err := utils.BindJSON[entities.SecretDraft](r)
+	items, err := httpx.BindJSON[entities.SecretDraft](r)
 	if err != nil || len(items) == 0 {
 		invalid := entities.InvalidRequestBodyError(errors.New("the request body must be a JSON object or list with known fields"))
 		return uuid.UUID{}, uuid.UUID{}, nil, &invalid
@@ -47,7 +47,7 @@ func ParseUpdate(r *http.Request) (application, member, secret uuid.UUID, value 
 	if application, member, secret, e = ParseSecretPath(r); e != nil {
 		return
 	}
-	body, e := utils.BindOne[updateBody](r)
+	body, e := httpx.BindOne[updateBody](r)
 	if e != nil {
 		return
 	}
@@ -62,7 +62,7 @@ func ParseRename(r *http.Request) (application, member, secret uuid.UUID, name s
 	if application, member, secret, e = ParseSecretPath(r); e != nil {
 		return
 	}
-	body, e := utils.BindOne[renameBody](r)
+	body, e := httpx.BindOne[renameBody](r)
 	if e != nil {
 		return
 	}
@@ -77,7 +77,7 @@ func ParseReveal(r *http.Request) (application, member, secret uuid.UUID, versio
 	if application, member, secret, e = ParseSecretPath(r); e != nil {
 		return
 	}
-	body, e := utils.BindOptional[revealBody](r)
+	body, e := httpx.BindOptional[revealBody](r)
 	if e != nil {
 		return
 	}

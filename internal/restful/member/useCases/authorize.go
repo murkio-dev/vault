@@ -8,18 +8,19 @@ import (
 
 	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	auditcontracts "github.com/murkio-dev/vault/internal/restful/audit/contracts"
+	membercontracts "github.com/murkio-dev/vault/internal/restful/member/contracts"
 )
 
 // Builder
 
 type AuthorizeUseCase struct {
-	Finder     contracts.IMemberFinder
-	UserFinder contracts.IMemberUserFinder
-	Audit      contracts.IAuditLogCreator
+	Repository membercontracts.IMemberRepository
+	Audit      auditcontracts.IAuditLogRepository
 }
 
-func NewAuthorizeUseCase(finder contracts.IMemberFinder, userFinder contracts.IMemberUserFinder, audit contracts.IAuditLogCreator) AuthorizeUseCase {
-	return AuthorizeUseCase{Finder: finder, UserFinder: userFinder, Audit: audit}
+func NewAuthorizeUseCase(repository membercontracts.IMemberRepository, audit auditcontracts.IAuditLogRepository) AuthorizeUseCase {
+	return AuthorizeUseCase{Repository: repository, Audit: audit}
 }
 
 var _ contracts.IAccessGuard = AuthorizeUseCase{}
@@ -100,7 +101,7 @@ func (u AuthorizeUseCase) allowed(ctx context.Context, input entities.AuthorizeI
 		return output
 	}
 
-	if _, err := u.Finder.FindById(ctx, input.Application, owner); err != nil {
+	if _, err := u.Repository.FindById(ctx, input.Application, owner); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			output.Error = &notFound
 			return output
@@ -116,8 +117,8 @@ func (u AuthorizeUseCase) allowed(ctx context.Context, input entities.AuthorizeI
 // pessoa é achada pela conta, entre os membros da aplicação.
 func (u AuthorizeUseCase) find(ctx context.Context, actor entities.Actor, application uuid.UUID) (entities.Member, error) {
 	if actor.Kind == entities.ActorToken {
-		return u.Finder.FindById(ctx, application, actor.MemberID)
+		return u.Repository.FindById(ctx, application, actor.MemberID)
 	}
 
-	return u.UserFinder.FindByUser(ctx, application, actor.UserID)
+	return u.Repository.FindByUser(ctx, application, actor.UserID)
 }

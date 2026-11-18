@@ -5,18 +5,18 @@ import (
 	"uuid"
 
 	"github.com/murkio-dev/vault/internal/entities"
-	"github.com/murkio-dev/vault/pkg/utils"
+	"github.com/murkio-dev/vault/pkg/httpx"
 )
 
 func ParseApplication(r *http.Request) (uuid.UUID, *entities.Error) {
-	return utils.PathUUID(r, "app")
+	return httpx.PathUUID(r, "app")
 }
 
 func ParseRevoke(r *http.Request) (application, invitation uuid.UUID, e *entities.Error) {
-	if application, e = utils.PathUUID(r, "app"); e != nil {
+	if application, e = httpx.PathUUID(r, "app"); e != nil {
 		return
 	}
-	invitation, e = utils.PathUUID(r, "id")
+	invitation, e = httpx.PathUUID(r, "id")
 	return
 }
 
@@ -26,10 +26,10 @@ type createBody struct {
 }
 
 func ParseCreate(r *http.Request) (application uuid.UUID, email string, role entities.Role, e *entities.Error) {
-	if application, e = utils.PathUUID(r, "app"); e != nil {
+	if application, e = httpx.PathUUID(r, "app"); e != nil {
 		return
 	}
-	body, e := utils.BindOne[createBody](r)
+	body, e := httpx.BindOne[createBody](r)
 	if e != nil {
 		return
 	}
@@ -41,7 +41,7 @@ type acceptBody struct {
 }
 
 func ParseAccept(r *http.Request) (string, *entities.Error) {
-	body, e := utils.BindOne[acceptBody](r)
+	body, e := httpx.BindOne[acceptBody](r)
 	if e != nil {
 		return "", e
 	}

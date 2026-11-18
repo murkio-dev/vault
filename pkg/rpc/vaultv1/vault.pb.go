@@ -9,6 +9,7 @@ package vaultv1
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -196,11 +197,3232 @@ func (x *Variable) GetValue() string {
 	return ""
 }
 
+type Application struct {
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	Id        string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name      string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	CreatedBy string                 `protobuf:"bytes,3,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
+	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	// updated_at fica ausente enquanto a aplicação nunca foi alterada.
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Application) Reset() {
+	*x = Application{}
+	mi := &file_vault_v1_vault_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Application) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Application) ProtoMessage() {}
+
+func (x *Application) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Application.ProtoReflect.Descriptor instead.
+func (*Application) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *Application) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *Application) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Application) GetCreatedBy() string {
+	if x != nil {
+		return x.CreatedBy
+	}
+	return ""
+}
+
+func (x *Application) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *Application) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return nil
+}
+
+// ItemError é o erro de um item do lote, com os mesmos campos públicos do erro
+// da API HTTP (RFC 9457). status é o status HTTP equivalente.
+type ItemError struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Status        int32                  `protobuf:"varint,1,opt,name=status,proto3" json:"status,omitempty"`
+	Type          string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	Title         string                 `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
+	Detail        string                 `protobuf:"bytes,4,opt,name=detail,proto3" json:"detail,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ItemError) Reset() {
+	*x = ItemError{}
+	mi := &file_vault_v1_vault_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ItemError) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ItemError) ProtoMessage() {}
+
+func (x *ItemError) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ItemError.ProtoReflect.Descriptor instead.
+func (*ItemError) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *ItemError) GetStatus() int32 {
+	if x != nil {
+		return x.Status
+	}
+	return 0
+}
+
+func (x *ItemError) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *ItemError) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *ItemError) GetDetail() string {
+	if x != nil {
+		return x.Detail
+	}
+	return ""
+}
+
+type NewApplication struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *NewApplication) Reset() {
+	*x = NewApplication{}
+	mi := &file_vault_v1_vault_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *NewApplication) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*NewApplication) ProtoMessage() {}
+
+func (x *NewApplication) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NewApplication.ProtoReflect.Descriptor instead.
+func (*NewApplication) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *NewApplication) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type CreateApplicationsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Applications  []*NewApplication      `protobuf:"bytes,1,rep,name=applications,proto3" json:"applications,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateApplicationsRequest) Reset() {
+	*x = CreateApplicationsRequest{}
+	mi := &file_vault_v1_vault_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateApplicationsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateApplicationsRequest) ProtoMessage() {}
+
+func (x *CreateApplicationsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateApplicationsRequest.ProtoReflect.Descriptor instead.
+func (*CreateApplicationsRequest) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *CreateApplicationsRequest) GetApplications() []*NewApplication {
+	if x != nil {
+		return x.Applications
+	}
+	return nil
+}
+
+type GetApplicationRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetApplicationRequest) Reset() {
+	*x = GetApplicationRequest{}
+	mi := &file_vault_v1_vault_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetApplicationRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetApplicationRequest) ProtoMessage() {}
+
+func (x *GetApplicationRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetApplicationRequest.ProtoReflect.Descriptor instead.
+func (*GetApplicationRequest) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *GetApplicationRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type ListApplicationsRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// page começa em 1; zero usa a primeira página.
+	Page int32 `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"`
+	// limit é o tamanho da página; zero ou acima do máximo usa o máximo (150).
+	Limit         int32 `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListApplicationsRequest) Reset() {
+	*x = ListApplicationsRequest{}
+	mi := &file_vault_v1_vault_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListApplicationsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListApplicationsRequest) ProtoMessage() {}
+
+func (x *ListApplicationsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListApplicationsRequest.ProtoReflect.Descriptor instead.
+func (*ListApplicationsRequest) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *ListApplicationsRequest) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *ListApplicationsRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+type Page struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Page          int32                  `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"`
+	Limit         int32                  `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
+	Total         int32                  `protobuf:"varint,3,opt,name=total,proto3" json:"total,omitempty"`
+	HasNext       bool                   `protobuf:"varint,4,opt,name=has_next,json=hasNext,proto3" json:"has_next,omitempty"`
+	HasPrev       bool                   `protobuf:"varint,5,opt,name=has_prev,json=hasPrev,proto3" json:"has_prev,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Page) Reset() {
+	*x = Page{}
+	mi := &file_vault_v1_vault_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Page) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Page) ProtoMessage() {}
+
+func (x *Page) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Page.ProtoReflect.Descriptor instead.
+func (*Page) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *Page) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *Page) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+func (x *Page) GetTotal() int32 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
+func (x *Page) GetHasNext() bool {
+	if x != nil {
+		return x.HasNext
+	}
+	return false
+}
+
+func (x *Page) GetHasPrev() bool {
+	if x != nil {
+		return x.HasPrev
+	}
+	return false
+}
+
+type ListApplicationsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Applications  []*Application         `protobuf:"bytes,1,rep,name=applications,proto3" json:"applications,omitempty"`
+	Page          *Page                  `protobuf:"bytes,2,opt,name=page,proto3" json:"page,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListApplicationsResponse) Reset() {
+	*x = ListApplicationsResponse{}
+	mi := &file_vault_v1_vault_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListApplicationsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListApplicationsResponse) ProtoMessage() {}
+
+func (x *ListApplicationsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListApplicationsResponse.ProtoReflect.Descriptor instead.
+func (*ListApplicationsResponse) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *ListApplicationsResponse) GetApplications() []*Application {
+	if x != nil {
+		return x.Applications
+	}
+	return nil
+}
+
+func (x *ListApplicationsResponse) GetPage() *Page {
+	if x != nil {
+		return x.Page
+	}
+	return nil
+}
+
+type ApplicationChange struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ApplicationChange) Reset() {
+	*x = ApplicationChange{}
+	mi := &file_vault_v1_vault_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ApplicationChange) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ApplicationChange) ProtoMessage() {}
+
+func (x *ApplicationChange) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ApplicationChange.ProtoReflect.Descriptor instead.
+func (*ApplicationChange) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *ApplicationChange) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *ApplicationChange) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type UpdateApplicationsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Applications  []*ApplicationChange   `protobuf:"bytes,1,rep,name=applications,proto3" json:"applications,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateApplicationsRequest) Reset() {
+	*x = UpdateApplicationsRequest{}
+	mi := &file_vault_v1_vault_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateApplicationsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateApplicationsRequest) ProtoMessage() {}
+
+func (x *UpdateApplicationsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateApplicationsRequest.ProtoReflect.Descriptor instead.
+func (*UpdateApplicationsRequest) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *UpdateApplicationsRequest) GetApplications() []*ApplicationChange {
+	if x != nil {
+		return x.Applications
+	}
+	return nil
+}
+
+type DeleteApplicationsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Ids           []string               `protobuf:"bytes,1,rep,name=ids,proto3" json:"ids,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteApplicationsRequest) Reset() {
+	*x = DeleteApplicationsRequest{}
+	mi := &file_vault_v1_vault_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteApplicationsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteApplicationsRequest) ProtoMessage() {}
+
+func (x *DeleteApplicationsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteApplicationsRequest.ProtoReflect.Descriptor instead.
+func (*DeleteApplicationsRequest) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *DeleteApplicationsRequest) GetIds() []string {
+	if x != nil {
+		return x.Ids
+	}
+	return nil
+}
+
+type ApplicationsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Applications  []*Application         `protobuf:"bytes,1,rep,name=applications,proto3" json:"applications,omitempty"`
+	Errors        []*ItemError           `protobuf:"bytes,2,rep,name=errors,proto3" json:"errors,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ApplicationsResponse) Reset() {
+	*x = ApplicationsResponse{}
+	mi := &file_vault_v1_vault_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ApplicationsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ApplicationsResponse) ProtoMessage() {}
+
+func (x *ApplicationsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ApplicationsResponse.ProtoReflect.Descriptor instead.
+func (*ApplicationsResponse) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *ApplicationsResponse) GetApplications() []*Application {
+	if x != nil {
+		return x.Applications
+	}
+	return nil
+}
+
+func (x *ApplicationsResponse) GetErrors() []*ItemError {
+	if x != nil {
+		return x.Errors
+	}
+	return nil
+}
+
+type DeleteApplicationsResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// ids traz as aplicações apagadas.
+	Ids           []string     `protobuf:"bytes,1,rep,name=ids,proto3" json:"ids,omitempty"`
+	Errors        []*ItemError `protobuf:"bytes,2,rep,name=errors,proto3" json:"errors,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteApplicationsResponse) Reset() {
+	*x = DeleteApplicationsResponse{}
+	mi := &file_vault_v1_vault_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteApplicationsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteApplicationsResponse) ProtoMessage() {}
+
+func (x *DeleteApplicationsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteApplicationsResponse.ProtoReflect.Descriptor instead.
+func (*DeleteApplicationsResponse) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *DeleteApplicationsResponse) GetIds() []string {
+	if x != nil {
+		return x.Ids
+	}
+	return nil
+}
+
+func (x *DeleteApplicationsResponse) GetErrors() []*ItemError {
+	if x != nil {
+		return x.Errors
+	}
+	return nil
+}
+
+type Member struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	ApplicationId string                 `protobuf:"bytes,2,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	UriId         string                 `protobuf:"bytes,4,opt,name=uri_id,json=uriId,proto3" json:"uri_id,omitempty"`
+	Role          string                 `protobuf:"bytes,5,opt,name=role,proto3" json:"role,omitempty"`
+	Status        string                 `protobuf:"bytes,6,opt,name=status,proto3" json:"status,omitempty"`
+	// invited_by fica vazio para quem criou a aplicação.
+	InvitedBy     string                 `protobuf:"bytes,7,opt,name=invited_by,json=invitedBy,proto3" json:"invited_by,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Member) Reset() {
+	*x = Member{}
+	mi := &file_vault_v1_vault_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Member) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Member) ProtoMessage() {}
+
+func (x *Member) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Member.ProtoReflect.Descriptor instead.
+func (*Member) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *Member) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *Member) GetApplicationId() string {
+	if x != nil {
+		return x.ApplicationId
+	}
+	return ""
+}
+
+func (x *Member) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *Member) GetUriId() string {
+	if x != nil {
+		return x.UriId
+	}
+	return ""
+}
+
+func (x *Member) GetRole() string {
+	if x != nil {
+		return x.Role
+	}
+	return ""
+}
+
+func (x *Member) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *Member) GetInvitedBy() string {
+	if x != nil {
+		return x.InvitedBy
+	}
+	return ""
+}
+
+func (x *Member) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *Member) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return nil
+}
+
+type ListMembersRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ApplicationId string                 `protobuf:"bytes,1,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
+	// page começa em 1; zero usa a primeira página.
+	Page int32 `protobuf:"varint,2,opt,name=page,proto3" json:"page,omitempty"`
+	// limit é o tamanho da página; zero usa o máximo (150).
+	Limit         int32 `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListMembersRequest) Reset() {
+	*x = ListMembersRequest{}
+	mi := &file_vault_v1_vault_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListMembersRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListMembersRequest) ProtoMessage() {}
+
+func (x *ListMembersRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListMembersRequest.ProtoReflect.Descriptor instead.
+func (*ListMembersRequest) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *ListMembersRequest) GetApplicationId() string {
+	if x != nil {
+		return x.ApplicationId
+	}
+	return ""
+}
+
+func (x *ListMembersRequest) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *ListMembersRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+type ListMembersResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Members       []*Member              `protobuf:"bytes,1,rep,name=members,proto3" json:"members,omitempty"`
+	Page          *Page                  `protobuf:"bytes,2,opt,name=page,proto3" json:"page,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListMembersResponse) Reset() {
+	*x = ListMembersResponse{}
+	mi := &file_vault_v1_vault_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListMembersResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListMembersResponse) ProtoMessage() {}
+
+func (x *ListMembersResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListMembersResponse.ProtoReflect.Descriptor instead.
+func (*ListMembersResponse) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *ListMembersResponse) GetMembers() []*Member {
+	if x != nil {
+		return x.Members
+	}
+	return nil
+}
+
+func (x *ListMembersResponse) GetPage() *Page {
+	if x != nil {
+		return x.Page
+	}
+	return nil
+}
+
+type GetMeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ApplicationId string                 `protobuf:"bytes,1,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetMeRequest) Reset() {
+	*x = GetMeRequest{}
+	mi := &file_vault_v1_vault_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetMeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetMeRequest) ProtoMessage() {}
+
+func (x *GetMeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetMeRequest.ProtoReflect.Descriptor instead.
+func (*GetMeRequest) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *GetMeRequest) GetApplicationId() string {
+	if x != nil {
+		return x.ApplicationId
+	}
+	return ""
+}
+
+type UpdateMemberRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ApplicationId string                 `protobuf:"bytes,1,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
+	MemberId      string                 `protobuf:"bytes,2,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
+	// role e status são opcionais: campo ausente não muda.
+	Role          *string `protobuf:"bytes,3,opt,name=role,proto3,oneof" json:"role,omitempty"`
+	Status        *string `protobuf:"bytes,4,opt,name=status,proto3,oneof" json:"status,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateMemberRequest) Reset() {
+	*x = UpdateMemberRequest{}
+	mi := &file_vault_v1_vault_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateMemberRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateMemberRequest) ProtoMessage() {}
+
+func (x *UpdateMemberRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateMemberRequest.ProtoReflect.Descriptor instead.
+func (*UpdateMemberRequest) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *UpdateMemberRequest) GetApplicationId() string {
+	if x != nil {
+		return x.ApplicationId
+	}
+	return ""
+}
+
+func (x *UpdateMemberRequest) GetMemberId() string {
+	if x != nil {
+		return x.MemberId
+	}
+	return ""
+}
+
+func (x *UpdateMemberRequest) GetRole() string {
+	if x != nil && x.Role != nil {
+		return *x.Role
+	}
+	return ""
+}
+
+func (x *UpdateMemberRequest) GetStatus() string {
+	if x != nil && x.Status != nil {
+		return *x.Status
+	}
+	return ""
+}
+
+type RemoveMemberRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ApplicationId string                 `protobuf:"bytes,1,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
+	MemberId      string                 `protobuf:"bytes,2,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RemoveMemberRequest) Reset() {
+	*x = RemoveMemberRequest{}
+	mi := &file_vault_v1_vault_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RemoveMemberRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RemoveMemberRequest) ProtoMessage() {}
+
+func (x *RemoveMemberRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RemoveMemberRequest.ProtoReflect.Descriptor instead.
+func (*RemoveMemberRequest) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *RemoveMemberRequest) GetApplicationId() string {
+	if x != nil {
+		return x.ApplicationId
+	}
+	return ""
+}
+
+func (x *RemoveMemberRequest) GetMemberId() string {
+	if x != nil {
+		return x.MemberId
+	}
+	return ""
+}
+
+type RemoveMemberResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RemoveMemberResponse) Reset() {
+	*x = RemoveMemberResponse{}
+	mi := &file_vault_v1_vault_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RemoveMemberResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RemoveMemberResponse) ProtoMessage() {}
+
+func (x *RemoveMemberResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RemoveMemberResponse.ProtoReflect.Descriptor instead.
+func (*RemoveMemberResponse) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{22}
+}
+
+type Invitation struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	ApplicationId string                 `protobuf:"bytes,2,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
+	Email         string                 `protobuf:"bytes,3,opt,name=email,proto3" json:"email,omitempty"`
+	Role          string                 `protobuf:"bytes,4,opt,name=role,proto3" json:"role,omitempty"`
+	ExpiresAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	CreatedBy     string                 `protobuf:"bytes,6,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
+	AcceptedBy    string                 `protobuf:"bytes,7,opt,name=accepted_by,json=acceptedBy,proto3" json:"accepted_by,omitempty"`
+	AcceptedAt    *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=accepted_at,json=acceptedAt,proto3" json:"accepted_at,omitempty"`
+	RevokedAt     *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=revoked_at,json=revokedAt,proto3" json:"revoked_at,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	// status (pending, accepted, revoked, expired) vem só na listagem.
+	Status        string `protobuf:"bytes,11,opt,name=status,proto3" json:"status,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Invitation) Reset() {
+	*x = Invitation{}
+	mi := &file_vault_v1_vault_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Invitation) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Invitation) ProtoMessage() {}
+
+func (x *Invitation) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Invitation.ProtoReflect.Descriptor instead.
+func (*Invitation) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *Invitation) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *Invitation) GetApplicationId() string {
+	if x != nil {
+		return x.ApplicationId
+	}
+	return ""
+}
+
+func (x *Invitation) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *Invitation) GetRole() string {
+	if x != nil {
+		return x.Role
+	}
+	return ""
+}
+
+func (x *Invitation) GetExpiresAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ExpiresAt
+	}
+	return nil
+}
+
+func (x *Invitation) GetCreatedBy() string {
+	if x != nil {
+		return x.CreatedBy
+	}
+	return ""
+}
+
+func (x *Invitation) GetAcceptedBy() string {
+	if x != nil {
+		return x.AcceptedBy
+	}
+	return ""
+}
+
+func (x *Invitation) GetAcceptedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.AcceptedAt
+	}
+	return nil
+}
+
+func (x *Invitation) GetRevokedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.RevokedAt
+	}
+	return nil
+}
+
+func (x *Invitation) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *Invitation) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+type CreateInvitationRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ApplicationId string                 `protobuf:"bytes,1,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
+	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
+	Role          string                 `protobuf:"bytes,3,opt,name=role,proto3" json:"role,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateInvitationRequest) Reset() {
+	*x = CreateInvitationRequest{}
+	mi := &file_vault_v1_vault_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateInvitationRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateInvitationRequest) ProtoMessage() {}
+
+func (x *CreateInvitationRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateInvitationRequest.ProtoReflect.Descriptor instead.
+func (*CreateInvitationRequest) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *CreateInvitationRequest) GetApplicationId() string {
+	if x != nil {
+		return x.ApplicationId
+	}
+	return ""
+}
+
+func (x *CreateInvitationRequest) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *CreateInvitationRequest) GetRole() string {
+	if x != nil {
+		return x.Role
+	}
+	return ""
+}
+
+type CreateInvitationResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Invitation    *Invitation            `protobuf:"bytes,1,opt,name=invitation,proto3" json:"invitation,omitempty"`
+	Token         string                 `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateInvitationResponse) Reset() {
+	*x = CreateInvitationResponse{}
+	mi := &file_vault_v1_vault_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateInvitationResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateInvitationResponse) ProtoMessage() {}
+
+func (x *CreateInvitationResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateInvitationResponse.ProtoReflect.Descriptor instead.
+func (*CreateInvitationResponse) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *CreateInvitationResponse) GetInvitation() *Invitation {
+	if x != nil {
+		return x.Invitation
+	}
+	return nil
+}
+
+func (x *CreateInvitationResponse) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
+type ListInvitationsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ApplicationId string                 `protobuf:"bytes,1,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListInvitationsRequest) Reset() {
+	*x = ListInvitationsRequest{}
+	mi := &file_vault_v1_vault_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListInvitationsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListInvitationsRequest) ProtoMessage() {}
+
+func (x *ListInvitationsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListInvitationsRequest.ProtoReflect.Descriptor instead.
+func (*ListInvitationsRequest) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *ListInvitationsRequest) GetApplicationId() string {
+	if x != nil {
+		return x.ApplicationId
+	}
+	return ""
+}
+
+type ListInvitationsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Invitations   []*Invitation          `protobuf:"bytes,1,rep,name=invitations,proto3" json:"invitations,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListInvitationsResponse) Reset() {
+	*x = ListInvitationsResponse{}
+	mi := &file_vault_v1_vault_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListInvitationsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListInvitationsResponse) ProtoMessage() {}
+
+func (x *ListInvitationsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListInvitationsResponse.ProtoReflect.Descriptor instead.
+func (*ListInvitationsResponse) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *ListInvitationsResponse) GetInvitations() []*Invitation {
+	if x != nil {
+		return x.Invitations
+	}
+	return nil
+}
+
+type RevokeInvitationRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ApplicationId string                 `protobuf:"bytes,1,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
+	InvitationId  string                 `protobuf:"bytes,2,opt,name=invitation_id,json=invitationId,proto3" json:"invitation_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RevokeInvitationRequest) Reset() {
+	*x = RevokeInvitationRequest{}
+	mi := &file_vault_v1_vault_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RevokeInvitationRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RevokeInvitationRequest) ProtoMessage() {}
+
+func (x *RevokeInvitationRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RevokeInvitationRequest.ProtoReflect.Descriptor instead.
+func (*RevokeInvitationRequest) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *RevokeInvitationRequest) GetApplicationId() string {
+	if x != nil {
+		return x.ApplicationId
+	}
+	return ""
+}
+
+func (x *RevokeInvitationRequest) GetInvitationId() string {
+	if x != nil {
+		return x.InvitationId
+	}
+	return ""
+}
+
+type RevokeInvitationResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RevokeInvitationResponse) Reset() {
+	*x = RevokeInvitationResponse{}
+	mi := &file_vault_v1_vault_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RevokeInvitationResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RevokeInvitationResponse) ProtoMessage() {}
+
+func (x *RevokeInvitationResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RevokeInvitationResponse.ProtoReflect.Descriptor instead.
+func (*RevokeInvitationResponse) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{29}
+}
+
+type AcceptInvitationRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AcceptInvitationRequest) Reset() {
+	*x = AcceptInvitationRequest{}
+	mi := &file_vault_v1_vault_proto_msgTypes[30]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AcceptInvitationRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AcceptInvitationRequest) ProtoMessage() {}
+
+func (x *AcceptInvitationRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[30]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AcceptInvitationRequest.ProtoReflect.Descriptor instead.
+func (*AcceptInvitationRequest) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *AcceptInvitationRequest) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
+type AccessToken struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	ApplicationId string                 `protobuf:"bytes,2,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
+	MemberId      string                 `protobuf:"bytes,3,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
+	UriId         string                 `protobuf:"bytes,4,opt,name=uri_id,json=uriId,proto3" json:"uri_id,omitempty"`
+	Name          string                 `protobuf:"bytes,5,opt,name=name,proto3" json:"name,omitempty"`
+	Prefix        string                 `protobuf:"bytes,6,opt,name=prefix,proto3" json:"prefix,omitempty"`
+	ExpiresAt     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	LastUsedAt    *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=last_used_at,json=lastUsedAt,proto3" json:"last_used_at,omitempty"`
+	RevokedAt     *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=revoked_at,json=revokedAt,proto3" json:"revoked_at,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AccessToken) Reset() {
+	*x = AccessToken{}
+	mi := &file_vault_v1_vault_proto_msgTypes[31]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AccessToken) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AccessToken) ProtoMessage() {}
+
+func (x *AccessToken) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[31]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AccessToken.ProtoReflect.Descriptor instead.
+func (*AccessToken) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{31}
+}
+
+func (x *AccessToken) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *AccessToken) GetApplicationId() string {
+	if x != nil {
+		return x.ApplicationId
+	}
+	return ""
+}
+
+func (x *AccessToken) GetMemberId() string {
+	if x != nil {
+		return x.MemberId
+	}
+	return ""
+}
+
+func (x *AccessToken) GetUriId() string {
+	if x != nil {
+		return x.UriId
+	}
+	return ""
+}
+
+func (x *AccessToken) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *AccessToken) GetPrefix() string {
+	if x != nil {
+		return x.Prefix
+	}
+	return ""
+}
+
+func (x *AccessToken) GetExpiresAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ExpiresAt
+	}
+	return nil
+}
+
+func (x *AccessToken) GetLastUsedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.LastUsedAt
+	}
+	return nil
+}
+
+func (x *AccessToken) GetRevokedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.RevokedAt
+	}
+	return nil
+}
+
+func (x *AccessToken) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+type CreateTokenRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ApplicationId string                 `protobuf:"bytes,1,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
+	MemberId      string                 `protobuf:"bytes,2,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	// expires_at é opcional: ausente, o token não vence.
+	ExpiresAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateTokenRequest) Reset() {
+	*x = CreateTokenRequest{}
+	mi := &file_vault_v1_vault_proto_msgTypes[32]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateTokenRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateTokenRequest) ProtoMessage() {}
+
+func (x *CreateTokenRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[32]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateTokenRequest.ProtoReflect.Descriptor instead.
+func (*CreateTokenRequest) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{32}
+}
+
+func (x *CreateTokenRequest) GetApplicationId() string {
+	if x != nil {
+		return x.ApplicationId
+	}
+	return ""
+}
+
+func (x *CreateTokenRequest) GetMemberId() string {
+	if x != nil {
+		return x.MemberId
+	}
+	return ""
+}
+
+func (x *CreateTokenRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *CreateTokenRequest) GetExpiresAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ExpiresAt
+	}
+	return nil
+}
+
+type CreateTokenResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AccessToken   *AccessToken           `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	Token         string                 `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
+	Uri           string                 `protobuf:"bytes,3,opt,name=uri,proto3" json:"uri,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateTokenResponse) Reset() {
+	*x = CreateTokenResponse{}
+	mi := &file_vault_v1_vault_proto_msgTypes[33]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateTokenResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateTokenResponse) ProtoMessage() {}
+
+func (x *CreateTokenResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[33]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateTokenResponse.ProtoReflect.Descriptor instead.
+func (*CreateTokenResponse) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{33}
+}
+
+func (x *CreateTokenResponse) GetAccessToken() *AccessToken {
+	if x != nil {
+		return x.AccessToken
+	}
+	return nil
+}
+
+func (x *CreateTokenResponse) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
+func (x *CreateTokenResponse) GetUri() string {
+	if x != nil {
+		return x.Uri
+	}
+	return ""
+}
+
+type ListTokensRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ApplicationId string                 `protobuf:"bytes,1,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
+	MemberId      string                 `protobuf:"bytes,2,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListTokensRequest) Reset() {
+	*x = ListTokensRequest{}
+	mi := &file_vault_v1_vault_proto_msgTypes[34]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListTokensRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListTokensRequest) ProtoMessage() {}
+
+func (x *ListTokensRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[34]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListTokensRequest.ProtoReflect.Descriptor instead.
+func (*ListTokensRequest) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{34}
+}
+
+func (x *ListTokensRequest) GetApplicationId() string {
+	if x != nil {
+		return x.ApplicationId
+	}
+	return ""
+}
+
+func (x *ListTokensRequest) GetMemberId() string {
+	if x != nil {
+		return x.MemberId
+	}
+	return ""
+}
+
+type ListTokensResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AccessTokens  []*AccessToken         `protobuf:"bytes,1,rep,name=access_tokens,json=accessTokens,proto3" json:"access_tokens,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListTokensResponse) Reset() {
+	*x = ListTokensResponse{}
+	mi := &file_vault_v1_vault_proto_msgTypes[35]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListTokensResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListTokensResponse) ProtoMessage() {}
+
+func (x *ListTokensResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[35]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListTokensResponse.ProtoReflect.Descriptor instead.
+func (*ListTokensResponse) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{35}
+}
+
+func (x *ListTokensResponse) GetAccessTokens() []*AccessToken {
+	if x != nil {
+		return x.AccessTokens
+	}
+	return nil
+}
+
+type RevokeTokenRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ApplicationId string                 `protobuf:"bytes,1,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
+	MemberId      string                 `protobuf:"bytes,2,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
+	TokenId       string                 `protobuf:"bytes,3,opt,name=token_id,json=tokenId,proto3" json:"token_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RevokeTokenRequest) Reset() {
+	*x = RevokeTokenRequest{}
+	mi := &file_vault_v1_vault_proto_msgTypes[36]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RevokeTokenRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RevokeTokenRequest) ProtoMessage() {}
+
+func (x *RevokeTokenRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[36]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RevokeTokenRequest.ProtoReflect.Descriptor instead.
+func (*RevokeTokenRequest) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{36}
+}
+
+func (x *RevokeTokenRequest) GetApplicationId() string {
+	if x != nil {
+		return x.ApplicationId
+	}
+	return ""
+}
+
+func (x *RevokeTokenRequest) GetMemberId() string {
+	if x != nil {
+		return x.MemberId
+	}
+	return ""
+}
+
+func (x *RevokeTokenRequest) GetTokenId() string {
+	if x != nil {
+		return x.TokenId
+	}
+	return ""
+}
+
+type RevokeTokenResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RevokeTokenResponse) Reset() {
+	*x = RevokeTokenResponse{}
+	mi := &file_vault_v1_vault_proto_msgTypes[37]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RevokeTokenResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RevokeTokenResponse) ProtoMessage() {}
+
+func (x *RevokeTokenResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[37]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RevokeTokenResponse.ProtoReflect.Descriptor instead.
+func (*RevokeTokenResponse) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{37}
+}
+
+type Secret struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	ApplicationId string                 `protobuf:"bytes,2,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
+	MemberId      string                 `protobuf:"bytes,3,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
+	Name          string                 `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty"`
+	Type          string                 `protobuf:"bytes,5,opt,name=type,proto3" json:"type,omitempty"`
+	Source        string                 `protobuf:"bytes,6,opt,name=source,proto3" json:"source,omitempty"`
+	// reference_secret_id fica vazio no segredo estático.
+	ReferenceSecretId string                 `protobuf:"bytes,7,opt,name=reference_secret_id,json=referenceSecretId,proto3" json:"reference_secret_id,omitempty"`
+	Version           int32                  `protobuf:"varint,8,opt,name=version,proto3" json:"version,omitempty"`
+	CreatedBy         string                 `protobuf:"bytes,9,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
+	CreatedAt         *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt         *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *Secret) Reset() {
+	*x = Secret{}
+	mi := &file_vault_v1_vault_proto_msgTypes[38]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Secret) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Secret) ProtoMessage() {}
+
+func (x *Secret) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[38]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Secret.ProtoReflect.Descriptor instead.
+func (*Secret) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{38}
+}
+
+func (x *Secret) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *Secret) GetApplicationId() string {
+	if x != nil {
+		return x.ApplicationId
+	}
+	return ""
+}
+
+func (x *Secret) GetMemberId() string {
+	if x != nil {
+		return x.MemberId
+	}
+	return ""
+}
+
+func (x *Secret) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Secret) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *Secret) GetSource() string {
+	if x != nil {
+		return x.Source
+	}
+	return ""
+}
+
+func (x *Secret) GetReferenceSecretId() string {
+	if x != nil {
+		return x.ReferenceSecretId
+	}
+	return ""
+}
+
+func (x *Secret) GetVersion() int32 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
+}
+
+func (x *Secret) GetCreatedBy() string {
+	if x != nil {
+		return x.CreatedBy
+	}
+	return ""
+}
+
+func (x *Secret) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *Secret) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return nil
+}
+
+type SecretDraft struct {
+	state  protoimpl.MessageState `protogen:"open.v1"`
+	Name   string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Type   string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	Source string                 `protobuf:"bytes,3,opt,name=source,proto3" json:"source,omitempty"`
+	Value  string                 `protobuf:"bytes,4,opt,name=value,proto3" json:"value,omitempty"`
+	// reference_secret_id só vale para source "reference".
+	ReferenceSecretId *string `protobuf:"bytes,5,opt,name=reference_secret_id,json=referenceSecretId,proto3,oneof" json:"reference_secret_id,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *SecretDraft) Reset() {
+	*x = SecretDraft{}
+	mi := &file_vault_v1_vault_proto_msgTypes[39]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SecretDraft) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SecretDraft) ProtoMessage() {}
+
+func (x *SecretDraft) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[39]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SecretDraft.ProtoReflect.Descriptor instead.
+func (*SecretDraft) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{39}
+}
+
+func (x *SecretDraft) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *SecretDraft) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *SecretDraft) GetSource() string {
+	if x != nil {
+		return x.Source
+	}
+	return ""
+}
+
+func (x *SecretDraft) GetValue() string {
+	if x != nil {
+		return x.Value
+	}
+	return ""
+}
+
+func (x *SecretDraft) GetReferenceSecretId() string {
+	if x != nil && x.ReferenceSecretId != nil {
+		return *x.ReferenceSecretId
+	}
+	return ""
+}
+
+type CreateSecretsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ApplicationId string                 `protobuf:"bytes,1,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
+	MemberId      string                 `protobuf:"bytes,2,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
+	Items         []*SecretDraft         `protobuf:"bytes,3,rep,name=items,proto3" json:"items,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateSecretsRequest) Reset() {
+	*x = CreateSecretsRequest{}
+	mi := &file_vault_v1_vault_proto_msgTypes[40]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateSecretsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateSecretsRequest) ProtoMessage() {}
+
+func (x *CreateSecretsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[40]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateSecretsRequest.ProtoReflect.Descriptor instead.
+func (*CreateSecretsRequest) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{40}
+}
+
+func (x *CreateSecretsRequest) GetApplicationId() string {
+	if x != nil {
+		return x.ApplicationId
+	}
+	return ""
+}
+
+func (x *CreateSecretsRequest) GetMemberId() string {
+	if x != nil {
+		return x.MemberId
+	}
+	return ""
+}
+
+func (x *CreateSecretsRequest) GetItems() []*SecretDraft {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
+type CreateSecretsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Secrets       []*Secret              `protobuf:"bytes,1,rep,name=secrets,proto3" json:"secrets,omitempty"`
+	Errors        []*ItemError           `protobuf:"bytes,2,rep,name=errors,proto3" json:"errors,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateSecretsResponse) Reset() {
+	*x = CreateSecretsResponse{}
+	mi := &file_vault_v1_vault_proto_msgTypes[41]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateSecretsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateSecretsResponse) ProtoMessage() {}
+
+func (x *CreateSecretsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[41]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateSecretsResponse.ProtoReflect.Descriptor instead.
+func (*CreateSecretsResponse) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{41}
+}
+
+func (x *CreateSecretsResponse) GetSecrets() []*Secret {
+	if x != nil {
+		return x.Secrets
+	}
+	return nil
+}
+
+func (x *CreateSecretsResponse) GetErrors() []*ItemError {
+	if x != nil {
+		return x.Errors
+	}
+	return nil
+}
+
+type ListSecretsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ApplicationId string                 `protobuf:"bytes,1,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
+	MemberId      string                 `protobuf:"bytes,2,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListSecretsRequest) Reset() {
+	*x = ListSecretsRequest{}
+	mi := &file_vault_v1_vault_proto_msgTypes[42]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListSecretsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListSecretsRequest) ProtoMessage() {}
+
+func (x *ListSecretsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[42]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListSecretsRequest.ProtoReflect.Descriptor instead.
+func (*ListSecretsRequest) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{42}
+}
+
+func (x *ListSecretsRequest) GetApplicationId() string {
+	if x != nil {
+		return x.ApplicationId
+	}
+	return ""
+}
+
+func (x *ListSecretsRequest) GetMemberId() string {
+	if x != nil {
+		return x.MemberId
+	}
+	return ""
+}
+
+type ListSecretsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Secrets       []*Secret              `protobuf:"bytes,1,rep,name=secrets,proto3" json:"secrets,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListSecretsResponse) Reset() {
+	*x = ListSecretsResponse{}
+	mi := &file_vault_v1_vault_proto_msgTypes[43]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListSecretsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListSecretsResponse) ProtoMessage() {}
+
+func (x *ListSecretsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[43]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListSecretsResponse.ProtoReflect.Descriptor instead.
+func (*ListSecretsResponse) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{43}
+}
+
+func (x *ListSecretsResponse) GetSecrets() []*Secret {
+	if x != nil {
+		return x.Secrets
+	}
+	return nil
+}
+
+type SecretRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ApplicationId string                 `protobuf:"bytes,1,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
+	MemberId      string                 `protobuf:"bytes,2,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
+	SecretId      string                 `protobuf:"bytes,3,opt,name=secret_id,json=secretId,proto3" json:"secret_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SecretRequest) Reset() {
+	*x = SecretRequest{}
+	mi := &file_vault_v1_vault_proto_msgTypes[44]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SecretRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SecretRequest) ProtoMessage() {}
+
+func (x *SecretRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[44]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SecretRequest.ProtoReflect.Descriptor instead.
+func (*SecretRequest) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{44}
+}
+
+func (x *SecretRequest) GetApplicationId() string {
+	if x != nil {
+		return x.ApplicationId
+	}
+	return ""
+}
+
+func (x *SecretRequest) GetMemberId() string {
+	if x != nil {
+		return x.MemberId
+	}
+	return ""
+}
+
+func (x *SecretRequest) GetSecretId() string {
+	if x != nil {
+		return x.SecretId
+	}
+	return ""
+}
+
+type UpdateSecretRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ApplicationId string                 `protobuf:"bytes,1,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
+	MemberId      string                 `protobuf:"bytes,2,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
+	SecretId      string                 `protobuf:"bytes,3,opt,name=secret_id,json=secretId,proto3" json:"secret_id,omitempty"`
+	Value         string                 `protobuf:"bytes,4,opt,name=value,proto3" json:"value,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateSecretRequest) Reset() {
+	*x = UpdateSecretRequest{}
+	mi := &file_vault_v1_vault_proto_msgTypes[45]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateSecretRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateSecretRequest) ProtoMessage() {}
+
+func (x *UpdateSecretRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[45]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateSecretRequest.ProtoReflect.Descriptor instead.
+func (*UpdateSecretRequest) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{45}
+}
+
+func (x *UpdateSecretRequest) GetApplicationId() string {
+	if x != nil {
+		return x.ApplicationId
+	}
+	return ""
+}
+
+func (x *UpdateSecretRequest) GetMemberId() string {
+	if x != nil {
+		return x.MemberId
+	}
+	return ""
+}
+
+func (x *UpdateSecretRequest) GetSecretId() string {
+	if x != nil {
+		return x.SecretId
+	}
+	return ""
+}
+
+func (x *UpdateSecretRequest) GetValue() string {
+	if x != nil {
+		return x.Value
+	}
+	return ""
+}
+
+type RenameSecretRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ApplicationId string                 `protobuf:"bytes,1,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
+	MemberId      string                 `protobuf:"bytes,2,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
+	SecretId      string                 `protobuf:"bytes,3,opt,name=secret_id,json=secretId,proto3" json:"secret_id,omitempty"`
+	Name          string                 `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RenameSecretRequest) Reset() {
+	*x = RenameSecretRequest{}
+	mi := &file_vault_v1_vault_proto_msgTypes[46]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RenameSecretRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RenameSecretRequest) ProtoMessage() {}
+
+func (x *RenameSecretRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[46]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RenameSecretRequest.ProtoReflect.Descriptor instead.
+func (*RenameSecretRequest) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{46}
+}
+
+func (x *RenameSecretRequest) GetApplicationId() string {
+	if x != nil {
+		return x.ApplicationId
+	}
+	return ""
+}
+
+func (x *RenameSecretRequest) GetMemberId() string {
+	if x != nil {
+		return x.MemberId
+	}
+	return ""
+}
+
+func (x *RenameSecretRequest) GetSecretId() string {
+	if x != nil {
+		return x.SecretId
+	}
+	return ""
+}
+
+func (x *RenameSecretRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type DeleteSecretResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteSecretResponse) Reset() {
+	*x = DeleteSecretResponse{}
+	mi := &file_vault_v1_vault_proto_msgTypes[47]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteSecretResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteSecretResponse) ProtoMessage() {}
+
+func (x *DeleteSecretResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[47]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteSecretResponse.ProtoReflect.Descriptor instead.
+func (*DeleteSecretResponse) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{47}
+}
+
+type SecretVersion struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Version       int32                  `protobuf:"varint,1,opt,name=version,proto3" json:"version,omitempty"`
+	CreatedBy     string                 `protobuf:"bytes,2,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SecretVersion) Reset() {
+	*x = SecretVersion{}
+	mi := &file_vault_v1_vault_proto_msgTypes[48]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SecretVersion) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SecretVersion) ProtoMessage() {}
+
+func (x *SecretVersion) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[48]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SecretVersion.ProtoReflect.Descriptor instead.
+func (*SecretVersion) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{48}
+}
+
+func (x *SecretVersion) GetVersion() int32 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
+}
+
+func (x *SecretVersion) GetCreatedBy() string {
+	if x != nil {
+		return x.CreatedBy
+	}
+	return ""
+}
+
+func (x *SecretVersion) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+type ListSecretVersionsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Versions      []*SecretVersion       `protobuf:"bytes,1,rep,name=versions,proto3" json:"versions,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListSecretVersionsResponse) Reset() {
+	*x = ListSecretVersionsResponse{}
+	mi := &file_vault_v1_vault_proto_msgTypes[49]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListSecretVersionsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListSecretVersionsResponse) ProtoMessage() {}
+
+func (x *ListSecretVersionsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[49]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListSecretVersionsResponse.ProtoReflect.Descriptor instead.
+func (*ListSecretVersionsResponse) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{49}
+}
+
+func (x *ListSecretVersionsResponse) GetVersions() []*SecretVersion {
+	if x != nil {
+		return x.Versions
+	}
+	return nil
+}
+
+type RevealSecretRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ApplicationId string                 `protobuf:"bytes,1,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
+	MemberId      string                 `protobuf:"bytes,2,opt,name=member_id,json=memberId,proto3" json:"member_id,omitempty"`
+	SecretId      string                 `protobuf:"bytes,3,opt,name=secret_id,json=secretId,proto3" json:"secret_id,omitempty"`
+	// version zero é a atual.
+	Version       int32 `protobuf:"varint,4,opt,name=version,proto3" json:"version,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RevealSecretRequest) Reset() {
+	*x = RevealSecretRequest{}
+	mi := &file_vault_v1_vault_proto_msgTypes[50]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RevealSecretRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RevealSecretRequest) ProtoMessage() {}
+
+func (x *RevealSecretRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[50]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RevealSecretRequest.ProtoReflect.Descriptor instead.
+func (*RevealSecretRequest) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{50}
+}
+
+func (x *RevealSecretRequest) GetApplicationId() string {
+	if x != nil {
+		return x.ApplicationId
+	}
+	return ""
+}
+
+func (x *RevealSecretRequest) GetMemberId() string {
+	if x != nil {
+		return x.MemberId
+	}
+	return ""
+}
+
+func (x *RevealSecretRequest) GetSecretId() string {
+	if x != nil {
+		return x.SecretId
+	}
+	return ""
+}
+
+func (x *RevealSecretRequest) GetVersion() int32 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
+}
+
+type RevealedSecret struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Version       int32                  `protobuf:"varint,3,opt,name=version,proto3" json:"version,omitempty"`
+	Value         string                 `protobuf:"bytes,4,opt,name=value,proto3" json:"value,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RevealedSecret) Reset() {
+	*x = RevealedSecret{}
+	mi := &file_vault_v1_vault_proto_msgTypes[51]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RevealedSecret) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RevealedSecret) ProtoMessage() {}
+
+func (x *RevealedSecret) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[51]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RevealedSecret.ProtoReflect.Descriptor instead.
+func (*RevealedSecret) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{51}
+}
+
+func (x *RevealedSecret) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *RevealedSecret) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *RevealedSecret) GetVersion() int32 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
+}
+
+func (x *RevealedSecret) GetValue() string {
+	if x != nil {
+		return x.Value
+	}
+	return ""
+}
+
+type AuditLog struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	ApplicationId string                 `protobuf:"bytes,2,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
+	ActorType     string                 `protobuf:"bytes,3,opt,name=actor_type,json=actorType,proto3" json:"actor_type,omitempty"`
+	ActorId       string                 `protobuf:"bytes,4,opt,name=actor_id,json=actorId,proto3" json:"actor_id,omitempty"`
+	TokenId       string                 `protobuf:"bytes,5,opt,name=token_id,json=tokenId,proto3" json:"token_id,omitempty"`
+	Action        string                 `protobuf:"bytes,6,opt,name=action,proto3" json:"action,omitempty"`
+	Outcome       string                 `protobuf:"bytes,7,opt,name=outcome,proto3" json:"outcome,omitempty"`
+	TargetType    string                 `protobuf:"bytes,8,opt,name=target_type,json=targetType,proto3" json:"target_type,omitempty"`
+	TargetId      string                 `protobuf:"bytes,9,opt,name=target_id,json=targetId,proto3" json:"target_id,omitempty"`
+	Ip            string                 `protobuf:"bytes,10,opt,name=ip,proto3" json:"ip,omitempty"`
+	UserAgent     string                 `protobuf:"bytes,11,opt,name=user_agent,json=userAgent,proto3" json:"user_agent,omitempty"`
+	RequestId     string                 `protobuf:"bytes,12,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	// metadata é o JSON da linha, como na API HTTP.
+	Metadata      string                 `protobuf:"bytes,13,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,14,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AuditLog) Reset() {
+	*x = AuditLog{}
+	mi := &file_vault_v1_vault_proto_msgTypes[52]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AuditLog) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuditLog) ProtoMessage() {}
+
+func (x *AuditLog) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[52]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuditLog.ProtoReflect.Descriptor instead.
+func (*AuditLog) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{52}
+}
+
+func (x *AuditLog) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *AuditLog) GetApplicationId() string {
+	if x != nil {
+		return x.ApplicationId
+	}
+	return ""
+}
+
+func (x *AuditLog) GetActorType() string {
+	if x != nil {
+		return x.ActorType
+	}
+	return ""
+}
+
+func (x *AuditLog) GetActorId() string {
+	if x != nil {
+		return x.ActorId
+	}
+	return ""
+}
+
+func (x *AuditLog) GetTokenId() string {
+	if x != nil {
+		return x.TokenId
+	}
+	return ""
+}
+
+func (x *AuditLog) GetAction() string {
+	if x != nil {
+		return x.Action
+	}
+	return ""
+}
+
+func (x *AuditLog) GetOutcome() string {
+	if x != nil {
+		return x.Outcome
+	}
+	return ""
+}
+
+func (x *AuditLog) GetTargetType() string {
+	if x != nil {
+		return x.TargetType
+	}
+	return ""
+}
+
+func (x *AuditLog) GetTargetId() string {
+	if x != nil {
+		return x.TargetId
+	}
+	return ""
+}
+
+func (x *AuditLog) GetIp() string {
+	if x != nil {
+		return x.Ip
+	}
+	return ""
+}
+
+func (x *AuditLog) GetUserAgent() string {
+	if x != nil {
+		return x.UserAgent
+	}
+	return ""
+}
+
+func (x *AuditLog) GetRequestId() string {
+	if x != nil {
+		return x.RequestId
+	}
+	return ""
+}
+
+func (x *AuditLog) GetMetadata() string {
+	if x != nil {
+		return x.Metadata
+	}
+	return ""
+}
+
+func (x *AuditLog) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+type ListAuditLogsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ApplicationId string                 `protobuf:"bytes,1,opt,name=application_id,json=applicationId,proto3" json:"application_id,omitempty"`
+	// limit zero usa o padrão.
+	Limit int32 `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
+	// cursor é o next_cursor da página anterior; vazio começa do início.
+	Cursor string `protobuf:"bytes,3,opt,name=cursor,proto3" json:"cursor,omitempty"`
+	// Os filtros são opcionais: vazio não filtra.
+	ActorId string `protobuf:"bytes,4,opt,name=actor_id,json=actorId,proto3" json:"actor_id,omitempty"`
+	// outcome: "allowed" ou "denied".
+	Outcome       string                 `protobuf:"bytes,5,opt,name=outcome,proto3" json:"outcome,omitempty"`
+	Action        string                 `protobuf:"bytes,6,opt,name=action,proto3" json:"action,omitempty"`
+	TargetId      string                 `protobuf:"bytes,7,opt,name=target_id,json=targetId,proto3" json:"target_id,omitempty"`
+	From          *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=from,proto3" json:"from,omitempty"`
+	To            *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=to,proto3" json:"to,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListAuditLogsRequest) Reset() {
+	*x = ListAuditLogsRequest{}
+	mi := &file_vault_v1_vault_proto_msgTypes[53]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListAuditLogsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListAuditLogsRequest) ProtoMessage() {}
+
+func (x *ListAuditLogsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[53]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListAuditLogsRequest.ProtoReflect.Descriptor instead.
+func (*ListAuditLogsRequest) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{53}
+}
+
+func (x *ListAuditLogsRequest) GetApplicationId() string {
+	if x != nil {
+		return x.ApplicationId
+	}
+	return ""
+}
+
+func (x *ListAuditLogsRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+func (x *ListAuditLogsRequest) GetCursor() string {
+	if x != nil {
+		return x.Cursor
+	}
+	return ""
+}
+
+func (x *ListAuditLogsRequest) GetActorId() string {
+	if x != nil {
+		return x.ActorId
+	}
+	return ""
+}
+
+func (x *ListAuditLogsRequest) GetOutcome() string {
+	if x != nil {
+		return x.Outcome
+	}
+	return ""
+}
+
+func (x *ListAuditLogsRequest) GetAction() string {
+	if x != nil {
+		return x.Action
+	}
+	return ""
+}
+
+func (x *ListAuditLogsRequest) GetTargetId() string {
+	if x != nil {
+		return x.TargetId
+	}
+	return ""
+}
+
+func (x *ListAuditLogsRequest) GetFrom() *timestamppb.Timestamp {
+	if x != nil {
+		return x.From
+	}
+	return nil
+}
+
+func (x *ListAuditLogsRequest) GetTo() *timestamppb.Timestamp {
+	if x != nil {
+		return x.To
+	}
+	return nil
+}
+
+type ListAuditLogsResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Logs  []*AuditLog            `protobuf:"bytes,1,rep,name=logs,proto3" json:"logs,omitempty"`
+	// next_cursor fica vazio na última página.
+	NextCursor    string `protobuf:"bytes,2,opt,name=next_cursor,json=nextCursor,proto3" json:"next_cursor,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListAuditLogsResponse) Reset() {
+	*x = ListAuditLogsResponse{}
+	mi := &file_vault_v1_vault_proto_msgTypes[54]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListAuditLogsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListAuditLogsResponse) ProtoMessage() {}
+
+func (x *ListAuditLogsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_vault_proto_msgTypes[54]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListAuditLogsResponse.ProtoReflect.Descriptor instead.
+func (*ListAuditLogsResponse) Descriptor() ([]byte, []int) {
+	return file_vault_v1_vault_proto_rawDescGZIP(), []int{54}
+}
+
+func (x *ListAuditLogsResponse) GetLogs() []*AuditLog {
+	if x != nil {
+		return x.Logs
+	}
+	return nil
+}
+
+func (x *ListAuditLogsResponse) GetNextCursor() string {
+	if x != nil {
+		return x.NextCursor
+	}
+	return ""
+}
+
 var File_vault_v1_vault_proto protoreflect.FileDescriptor
 
 const file_vault_v1_vault_proto_rawDesc = "" +
 	"\n" +
-	"\x14vault/v1/vault.proto\x12\x0fmurkio.vault.v1\"=\n" +
+	"\x14vault/v1/vault.proto\x12\x0fmurkio.vault.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"=\n" +
 	"\x0eReadEnvRequest\x12\x15\n" +
 	"\x06uri_id\x18\x01 \x01(\tR\x05uriId\x12\x14\n" +
 	"\x05names\x18\x02 \x03(\tR\x05names\"a\n" +
@@ -211,9 +3433,297 @@ const file_vault_v1_vault_proto_rawDesc = "" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
 	"\x04type\x18\x02 \x01(\tR\x04type\x12\x18\n" +
 	"\aversion\x18\x03 \x01(\x05R\aversion\x12\x14\n" +
-	"\x05value\x18\x04 \x01(\tR\x05value2\\\n" +
+	"\x05value\x18\x04 \x01(\tR\x05value\"\xc6\x01\n" +
+	"\vApplication\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1d\n" +
+	"\n" +
+	"created_by\x18\x03 \x01(\tR\tcreatedBy\x129\n" +
+	"\n" +
+	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"\n" +
+	"updated_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"e\n" +
+	"\tItemError\x12\x16\n" +
+	"\x06status\x18\x01 \x01(\x05R\x06status\x12\x12\n" +
+	"\x04type\x18\x02 \x01(\tR\x04type\x12\x14\n" +
+	"\x05title\x18\x03 \x01(\tR\x05title\x12\x16\n" +
+	"\x06detail\x18\x04 \x01(\tR\x06detail\"$\n" +
+	"\x0eNewApplication\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\"`\n" +
+	"\x19CreateApplicationsRequest\x12C\n" +
+	"\fapplications\x18\x01 \x03(\v2\x1f.murkio.vault.v1.NewApplicationR\fapplications\"'\n" +
+	"\x15GetApplicationRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"C\n" +
+	"\x17ListApplicationsRequest\x12\x12\n" +
+	"\x04page\x18\x01 \x01(\x05R\x04page\x12\x14\n" +
+	"\x05limit\x18\x02 \x01(\x05R\x05limit\"|\n" +
+	"\x04Page\x12\x12\n" +
+	"\x04page\x18\x01 \x01(\x05R\x04page\x12\x14\n" +
+	"\x05limit\x18\x02 \x01(\x05R\x05limit\x12\x14\n" +
+	"\x05total\x18\x03 \x01(\x05R\x05total\x12\x19\n" +
+	"\bhas_next\x18\x04 \x01(\bR\ahasNext\x12\x19\n" +
+	"\bhas_prev\x18\x05 \x01(\bR\ahasPrev\"\x87\x01\n" +
+	"\x18ListApplicationsResponse\x12@\n" +
+	"\fapplications\x18\x01 \x03(\v2\x1c.murkio.vault.v1.ApplicationR\fapplications\x12)\n" +
+	"\x04page\x18\x02 \x01(\v2\x15.murkio.vault.v1.PageR\x04page\"7\n" +
+	"\x11ApplicationChange\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\"c\n" +
+	"\x19UpdateApplicationsRequest\x12F\n" +
+	"\fapplications\x18\x01 \x03(\v2\".murkio.vault.v1.ApplicationChangeR\fapplications\"-\n" +
+	"\x19DeleteApplicationsRequest\x12\x10\n" +
+	"\x03ids\x18\x01 \x03(\tR\x03ids\"\x8c\x01\n" +
+	"\x14ApplicationsResponse\x12@\n" +
+	"\fapplications\x18\x01 \x03(\v2\x1c.murkio.vault.v1.ApplicationR\fapplications\x122\n" +
+	"\x06errors\x18\x02 \x03(\v2\x1a.murkio.vault.v1.ItemErrorR\x06errors\"b\n" +
+	"\x1aDeleteApplicationsResponse\x12\x10\n" +
+	"\x03ids\x18\x01 \x03(\tR\x03ids\x122\n" +
+	"\x06errors\x18\x02 \x03(\v2\x1a.murkio.vault.v1.ItemErrorR\x06errors\"\xb0\x02\n" +
+	"\x06Member\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12%\n" +
+	"\x0eapplication_id\x18\x02 \x01(\tR\rapplicationId\x12\x17\n" +
+	"\auser_id\x18\x03 \x01(\tR\x06userId\x12\x15\n" +
+	"\x06uri_id\x18\x04 \x01(\tR\x05uriId\x12\x12\n" +
+	"\x04role\x18\x05 \x01(\tR\x04role\x12\x16\n" +
+	"\x06status\x18\x06 \x01(\tR\x06status\x12\x1d\n" +
+	"\n" +
+	"invited_by\x18\a \x01(\tR\tinvitedBy\x129\n" +
+	"\n" +
+	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"\n" +
+	"updated_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"e\n" +
+	"\x12ListMembersRequest\x12%\n" +
+	"\x0eapplication_id\x18\x01 \x01(\tR\rapplicationId\x12\x12\n" +
+	"\x04page\x18\x02 \x01(\x05R\x04page\x12\x14\n" +
+	"\x05limit\x18\x03 \x01(\x05R\x05limit\"s\n" +
+	"\x13ListMembersResponse\x121\n" +
+	"\amembers\x18\x01 \x03(\v2\x17.murkio.vault.v1.MemberR\amembers\x12)\n" +
+	"\x04page\x18\x02 \x01(\v2\x15.murkio.vault.v1.PageR\x04page\"5\n" +
+	"\fGetMeRequest\x12%\n" +
+	"\x0eapplication_id\x18\x01 \x01(\tR\rapplicationId\"\xa3\x01\n" +
+	"\x13UpdateMemberRequest\x12%\n" +
+	"\x0eapplication_id\x18\x01 \x01(\tR\rapplicationId\x12\x1b\n" +
+	"\tmember_id\x18\x02 \x01(\tR\bmemberId\x12\x17\n" +
+	"\x04role\x18\x03 \x01(\tH\x00R\x04role\x88\x01\x01\x12\x1b\n" +
+	"\x06status\x18\x04 \x01(\tH\x01R\x06status\x88\x01\x01B\a\n" +
+	"\x05_roleB\t\n" +
+	"\a_status\"Y\n" +
+	"\x13RemoveMemberRequest\x12%\n" +
+	"\x0eapplication_id\x18\x01 \x01(\tR\rapplicationId\x12\x1b\n" +
+	"\tmember_id\x18\x02 \x01(\tR\bmemberId\"\x16\n" +
+	"\x14RemoveMemberResponse\"\xb3\x03\n" +
+	"\n" +
+	"Invitation\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12%\n" +
+	"\x0eapplication_id\x18\x02 \x01(\tR\rapplicationId\x12\x14\n" +
+	"\x05email\x18\x03 \x01(\tR\x05email\x12\x12\n" +
+	"\x04role\x18\x04 \x01(\tR\x04role\x129\n" +
+	"\n" +
+	"expires_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x12\x1d\n" +
+	"\n" +
+	"created_by\x18\x06 \x01(\tR\tcreatedBy\x12\x1f\n" +
+	"\vaccepted_by\x18\a \x01(\tR\n" +
+	"acceptedBy\x12;\n" +
+	"\vaccepted_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"acceptedAt\x129\n" +
+	"\n" +
+	"revoked_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\trevokedAt\x129\n" +
+	"\n" +
+	"created_at\x18\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12\x16\n" +
+	"\x06status\x18\v \x01(\tR\x06status\"j\n" +
+	"\x17CreateInvitationRequest\x12%\n" +
+	"\x0eapplication_id\x18\x01 \x01(\tR\rapplicationId\x12\x14\n" +
+	"\x05email\x18\x02 \x01(\tR\x05email\x12\x12\n" +
+	"\x04role\x18\x03 \x01(\tR\x04role\"m\n" +
+	"\x18CreateInvitationResponse\x12;\n" +
+	"\n" +
+	"invitation\x18\x01 \x01(\v2\x1b.murkio.vault.v1.InvitationR\n" +
+	"invitation\x12\x14\n" +
+	"\x05token\x18\x02 \x01(\tR\x05token\"?\n" +
+	"\x16ListInvitationsRequest\x12%\n" +
+	"\x0eapplication_id\x18\x01 \x01(\tR\rapplicationId\"X\n" +
+	"\x17ListInvitationsResponse\x12=\n" +
+	"\vinvitations\x18\x01 \x03(\v2\x1b.murkio.vault.v1.InvitationR\vinvitations\"e\n" +
+	"\x17RevokeInvitationRequest\x12%\n" +
+	"\x0eapplication_id\x18\x01 \x01(\tR\rapplicationId\x12#\n" +
+	"\rinvitation_id\x18\x02 \x01(\tR\finvitationId\"\x1a\n" +
+	"\x18RevokeInvitationResponse\"/\n" +
+	"\x17AcceptInvitationRequest\x12\x14\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\"\x93\x03\n" +
+	"\vAccessToken\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12%\n" +
+	"\x0eapplication_id\x18\x02 \x01(\tR\rapplicationId\x12\x1b\n" +
+	"\tmember_id\x18\x03 \x01(\tR\bmemberId\x12\x15\n" +
+	"\x06uri_id\x18\x04 \x01(\tR\x05uriId\x12\x12\n" +
+	"\x04name\x18\x05 \x01(\tR\x04name\x12\x16\n" +
+	"\x06prefix\x18\x06 \x01(\tR\x06prefix\x129\n" +
+	"\n" +
+	"expires_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x12<\n" +
+	"\flast_used_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"lastUsedAt\x129\n" +
+	"\n" +
+	"revoked_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\trevokedAt\x129\n" +
+	"\n" +
+	"created_at\x18\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"\xa7\x01\n" +
+	"\x12CreateTokenRequest\x12%\n" +
+	"\x0eapplication_id\x18\x01 \x01(\tR\rapplicationId\x12\x1b\n" +
+	"\tmember_id\x18\x02 \x01(\tR\bmemberId\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\x129\n" +
+	"\n" +
+	"expires_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\"~\n" +
+	"\x13CreateTokenResponse\x12?\n" +
+	"\faccess_token\x18\x01 \x01(\v2\x1c.murkio.vault.v1.AccessTokenR\vaccessToken\x12\x14\n" +
+	"\x05token\x18\x02 \x01(\tR\x05token\x12\x10\n" +
+	"\x03uri\x18\x03 \x01(\tR\x03uri\"W\n" +
+	"\x11ListTokensRequest\x12%\n" +
+	"\x0eapplication_id\x18\x01 \x01(\tR\rapplicationId\x12\x1b\n" +
+	"\tmember_id\x18\x02 \x01(\tR\bmemberId\"W\n" +
+	"\x12ListTokensResponse\x12A\n" +
+	"\raccess_tokens\x18\x01 \x03(\v2\x1c.murkio.vault.v1.AccessTokenR\faccessTokens\"s\n" +
+	"\x12RevokeTokenRequest\x12%\n" +
+	"\x0eapplication_id\x18\x01 \x01(\tR\rapplicationId\x12\x1b\n" +
+	"\tmember_id\x18\x02 \x01(\tR\bmemberId\x12\x19\n" +
+	"\btoken_id\x18\x03 \x01(\tR\atokenId\"\x15\n" +
+	"\x13RevokeTokenResponse\"\xfb\x02\n" +
+	"\x06Secret\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12%\n" +
+	"\x0eapplication_id\x18\x02 \x01(\tR\rapplicationId\x12\x1b\n" +
+	"\tmember_id\x18\x03 \x01(\tR\bmemberId\x12\x12\n" +
+	"\x04name\x18\x04 \x01(\tR\x04name\x12\x12\n" +
+	"\x04type\x18\x05 \x01(\tR\x04type\x12\x16\n" +
+	"\x06source\x18\x06 \x01(\tR\x06source\x12.\n" +
+	"\x13reference_secret_id\x18\a \x01(\tR\x11referenceSecretId\x12\x18\n" +
+	"\aversion\x18\b \x01(\x05R\aversion\x12\x1d\n" +
+	"\n" +
+	"created_by\x18\t \x01(\tR\tcreatedBy\x129\n" +
+	"\n" +
+	"created_at\x18\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
+	"\n" +
+	"updated_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xb0\x01\n" +
+	"\vSecretDraft\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
+	"\x04type\x18\x02 \x01(\tR\x04type\x12\x16\n" +
+	"\x06source\x18\x03 \x01(\tR\x06source\x12\x14\n" +
+	"\x05value\x18\x04 \x01(\tR\x05value\x123\n" +
+	"\x13reference_secret_id\x18\x05 \x01(\tH\x00R\x11referenceSecretId\x88\x01\x01B\x16\n" +
+	"\x14_reference_secret_id\"\x8e\x01\n" +
+	"\x14CreateSecretsRequest\x12%\n" +
+	"\x0eapplication_id\x18\x01 \x01(\tR\rapplicationId\x12\x1b\n" +
+	"\tmember_id\x18\x02 \x01(\tR\bmemberId\x122\n" +
+	"\x05items\x18\x03 \x03(\v2\x1c.murkio.vault.v1.SecretDraftR\x05items\"~\n" +
+	"\x15CreateSecretsResponse\x121\n" +
+	"\asecrets\x18\x01 \x03(\v2\x17.murkio.vault.v1.SecretR\asecrets\x122\n" +
+	"\x06errors\x18\x02 \x03(\v2\x1a.murkio.vault.v1.ItemErrorR\x06errors\"X\n" +
+	"\x12ListSecretsRequest\x12%\n" +
+	"\x0eapplication_id\x18\x01 \x01(\tR\rapplicationId\x12\x1b\n" +
+	"\tmember_id\x18\x02 \x01(\tR\bmemberId\"H\n" +
+	"\x13ListSecretsResponse\x121\n" +
+	"\asecrets\x18\x01 \x03(\v2\x17.murkio.vault.v1.SecretR\asecrets\"p\n" +
+	"\rSecretRequest\x12%\n" +
+	"\x0eapplication_id\x18\x01 \x01(\tR\rapplicationId\x12\x1b\n" +
+	"\tmember_id\x18\x02 \x01(\tR\bmemberId\x12\x1b\n" +
+	"\tsecret_id\x18\x03 \x01(\tR\bsecretId\"\x8c\x01\n" +
+	"\x13UpdateSecretRequest\x12%\n" +
+	"\x0eapplication_id\x18\x01 \x01(\tR\rapplicationId\x12\x1b\n" +
+	"\tmember_id\x18\x02 \x01(\tR\bmemberId\x12\x1b\n" +
+	"\tsecret_id\x18\x03 \x01(\tR\bsecretId\x12\x14\n" +
+	"\x05value\x18\x04 \x01(\tR\x05value\"\x8a\x01\n" +
+	"\x13RenameSecretRequest\x12%\n" +
+	"\x0eapplication_id\x18\x01 \x01(\tR\rapplicationId\x12\x1b\n" +
+	"\tmember_id\x18\x02 \x01(\tR\bmemberId\x12\x1b\n" +
+	"\tsecret_id\x18\x03 \x01(\tR\bsecretId\x12\x12\n" +
+	"\x04name\x18\x04 \x01(\tR\x04name\"\x16\n" +
+	"\x14DeleteSecretResponse\"\x83\x01\n" +
+	"\rSecretVersion\x12\x18\n" +
+	"\aversion\x18\x01 \x01(\x05R\aversion\x12\x1d\n" +
+	"\n" +
+	"created_by\x18\x02 \x01(\tR\tcreatedBy\x129\n" +
+	"\n" +
+	"created_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"X\n" +
+	"\x1aListSecretVersionsResponse\x12:\n" +
+	"\bversions\x18\x01 \x03(\v2\x1e.murkio.vault.v1.SecretVersionR\bversions\"\x90\x01\n" +
+	"\x13RevealSecretRequest\x12%\n" +
+	"\x0eapplication_id\x18\x01 \x01(\tR\rapplicationId\x12\x1b\n" +
+	"\tmember_id\x18\x02 \x01(\tR\bmemberId\x12\x1b\n" +
+	"\tsecret_id\x18\x03 \x01(\tR\bsecretId\x12\x18\n" +
+	"\aversion\x18\x04 \x01(\x05R\aversion\"d\n" +
+	"\x0eRevealedSecret\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x18\n" +
+	"\aversion\x18\x03 \x01(\x05R\aversion\x12\x14\n" +
+	"\x05value\x18\x04 \x01(\tR\x05value\"\xab\x03\n" +
+	"\bAuditLog\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12%\n" +
+	"\x0eapplication_id\x18\x02 \x01(\tR\rapplicationId\x12\x1d\n" +
+	"\n" +
+	"actor_type\x18\x03 \x01(\tR\tactorType\x12\x19\n" +
+	"\bactor_id\x18\x04 \x01(\tR\aactorId\x12\x19\n" +
+	"\btoken_id\x18\x05 \x01(\tR\atokenId\x12\x16\n" +
+	"\x06action\x18\x06 \x01(\tR\x06action\x12\x18\n" +
+	"\aoutcome\x18\a \x01(\tR\aoutcome\x12\x1f\n" +
+	"\vtarget_type\x18\b \x01(\tR\n" +
+	"targetType\x12\x1b\n" +
+	"\ttarget_id\x18\t \x01(\tR\btargetId\x12\x0e\n" +
+	"\x02ip\x18\n" +
+	" \x01(\tR\x02ip\x12\x1d\n" +
+	"\n" +
+	"user_agent\x18\v \x01(\tR\tuserAgent\x12\x1d\n" +
+	"\n" +
+	"request_id\x18\f \x01(\tR\trequestId\x12\x1a\n" +
+	"\bmetadata\x18\r \x01(\tR\bmetadata\x129\n" +
+	"\n" +
+	"created_at\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"\xb1\x02\n" +
+	"\x14ListAuditLogsRequest\x12%\n" +
+	"\x0eapplication_id\x18\x01 \x01(\tR\rapplicationId\x12\x14\n" +
+	"\x05limit\x18\x02 \x01(\x05R\x05limit\x12\x16\n" +
+	"\x06cursor\x18\x03 \x01(\tR\x06cursor\x12\x19\n" +
+	"\bactor_id\x18\x04 \x01(\tR\aactorId\x12\x18\n" +
+	"\aoutcome\x18\x05 \x01(\tR\aoutcome\x12\x16\n" +
+	"\x06action\x18\x06 \x01(\tR\x06action\x12\x1b\n" +
+	"\ttarget_id\x18\a \x01(\tR\btargetId\x12.\n" +
+	"\x04from\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\x04from\x12*\n" +
+	"\x02to\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\x02to\"g\n" +
+	"\x15ListAuditLogsResponse\x12-\n" +
+	"\x04logs\x18\x01 \x03(\v2\x19.murkio.vault.v1.AuditLogR\x04logs\x12\x1f\n" +
+	"\vnext_cursor\x18\x02 \x01(\tR\n" +
+	"nextCursor2\\\n" +
 	"\fVaultService\x12L\n" +
-	"\aReadEnv\x12\x1f.murkio.vault.v1.ReadEnvRequest\x1a .murkio.vault.v1.ReadEnvResponseB5Z3github.com/murkio-dev/vault/pkg/rpc/vaultv1;vaultv1b\x06proto3"
+	"\aReadEnv\x12\x1f.murkio.vault.v1.ReadEnvRequest\x1a .murkio.vault.v1.ReadEnvResponse2\x96\x04\n" +
+	"\x12ApplicationService\x12g\n" +
+	"\x12CreateApplications\x12*.murkio.vault.v1.CreateApplicationsRequest\x1a%.murkio.vault.v1.ApplicationsResponse\x12V\n" +
+	"\x0eGetApplication\x12&.murkio.vault.v1.GetApplicationRequest\x1a\x1c.murkio.vault.v1.Application\x12g\n" +
+	"\x10ListApplications\x12(.murkio.vault.v1.ListApplicationsRequest\x1a).murkio.vault.v1.ListApplicationsResponse\x12g\n" +
+	"\x12UpdateApplications\x12*.murkio.vault.v1.UpdateApplicationsRequest\x1a%.murkio.vault.v1.ApplicationsResponse\x12m\n" +
+	"\x12DeleteApplications\x12*.murkio.vault.v1.DeleteApplicationsRequest\x1a+.murkio.vault.v1.DeleteApplicationsResponse2\xd6\x02\n" +
+	"\rMemberService\x12X\n" +
+	"\vListMembers\x12#.murkio.vault.v1.ListMembersRequest\x1a$.murkio.vault.v1.ListMembersResponse\x12?\n" +
+	"\x05GetMe\x12\x1d.murkio.vault.v1.GetMeRequest\x1a\x17.murkio.vault.v1.Member\x12M\n" +
+	"\fUpdateMember\x12$.murkio.vault.v1.UpdateMemberRequest\x1a\x17.murkio.vault.v1.Member\x12[\n" +
+	"\fRemoveMember\x12$.murkio.vault.v1.RemoveMemberRequest\x1a%.murkio.vault.v1.RemoveMemberResponse2\xa2\x03\n" +
+	"\x11InvitationService\x12g\n" +
+	"\x10CreateInvitation\x12(.murkio.vault.v1.CreateInvitationRequest\x1a).murkio.vault.v1.CreateInvitationResponse\x12d\n" +
+	"\x0fListInvitations\x12'.murkio.vault.v1.ListInvitationsRequest\x1a(.murkio.vault.v1.ListInvitationsResponse\x12g\n" +
+	"\x10RevokeInvitation\x12(.murkio.vault.v1.RevokeInvitationRequest\x1a).murkio.vault.v1.RevokeInvitationResponse\x12U\n" +
+	"\x10AcceptInvitation\x12(.murkio.vault.v1.AcceptInvitationRequest\x1a\x17.murkio.vault.v1.Member2\x99\x02\n" +
+	"\fTokenService\x12X\n" +
+	"\vCreateToken\x12#.murkio.vault.v1.CreateTokenRequest\x1a$.murkio.vault.v1.CreateTokenResponse\x12U\n" +
+	"\n" +
+	"ListTokens\x12\".murkio.vault.v1.ListTokensRequest\x1a#.murkio.vault.v1.ListTokensResponse\x12X\n" +
+	"\vRevokeToken\x12#.murkio.vault.v1.RevokeTokenRequest\x1a$.murkio.vault.v1.RevokeTokenResponse2\xbe\x05\n" +
+	"\rSecretService\x12^\n" +
+	"\rCreateSecrets\x12%.murkio.vault.v1.CreateSecretsRequest\x1a&.murkio.vault.v1.CreateSecretsResponse\x12X\n" +
+	"\vListSecrets\x12#.murkio.vault.v1.ListSecretsRequest\x1a$.murkio.vault.v1.ListSecretsResponse\x12D\n" +
+	"\tGetSecret\x12\x1e.murkio.vault.v1.SecretRequest\x1a\x17.murkio.vault.v1.Secret\x12M\n" +
+	"\fUpdateSecret\x12$.murkio.vault.v1.UpdateSecretRequest\x1a\x17.murkio.vault.v1.Secret\x12M\n" +
+	"\fRenameSecret\x12$.murkio.vault.v1.RenameSecretRequest\x1a\x17.murkio.vault.v1.Secret\x12U\n" +
+	"\fDeleteSecret\x12\x1e.murkio.vault.v1.SecretRequest\x1a%.murkio.vault.v1.DeleteSecretResponse\x12a\n" +
+	"\x12ListSecretVersions\x12\x1e.murkio.vault.v1.SecretRequest\x1a+.murkio.vault.v1.ListSecretVersionsResponse\x12U\n" +
+	"\fRevealSecret\x12$.murkio.vault.v1.RevealSecretRequest\x1a\x1f.murkio.vault.v1.RevealedSecret2n\n" +
+	"\fAuditService\x12^\n" +
+	"\rListAuditLogs\x12%.murkio.vault.v1.ListAuditLogsRequest\x1a&.murkio.vault.v1.ListAuditLogsResponseB5Z3github.com/murkio-dev/vault/pkg/rpc/vaultv1;vaultv1b\x06proto3"
 
 var (
 	file_vault_v1_vault_proto_rawDescOnce sync.Once
@@ -227,21 +3737,162 @@ func file_vault_v1_vault_proto_rawDescGZIP() []byte {
 	return file_vault_v1_vault_proto_rawDescData
 }
 
-var file_vault_v1_vault_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_vault_v1_vault_proto_msgTypes = make([]protoimpl.MessageInfo, 55)
 var file_vault_v1_vault_proto_goTypes = []any{
-	(*ReadEnvRequest)(nil),  // 0: murkio.vault.v1.ReadEnvRequest
-	(*ReadEnvResponse)(nil), // 1: murkio.vault.v1.ReadEnvResponse
-	(*Variable)(nil),        // 2: murkio.vault.v1.Variable
+	(*ReadEnvRequest)(nil),             // 0: murkio.vault.v1.ReadEnvRequest
+	(*ReadEnvResponse)(nil),            // 1: murkio.vault.v1.ReadEnvResponse
+	(*Variable)(nil),                   // 2: murkio.vault.v1.Variable
+	(*Application)(nil),                // 3: murkio.vault.v1.Application
+	(*ItemError)(nil),                  // 4: murkio.vault.v1.ItemError
+	(*NewApplication)(nil),             // 5: murkio.vault.v1.NewApplication
+	(*CreateApplicationsRequest)(nil),  // 6: murkio.vault.v1.CreateApplicationsRequest
+	(*GetApplicationRequest)(nil),      // 7: murkio.vault.v1.GetApplicationRequest
+	(*ListApplicationsRequest)(nil),    // 8: murkio.vault.v1.ListApplicationsRequest
+	(*Page)(nil),                       // 9: murkio.vault.v1.Page
+	(*ListApplicationsResponse)(nil),   // 10: murkio.vault.v1.ListApplicationsResponse
+	(*ApplicationChange)(nil),          // 11: murkio.vault.v1.ApplicationChange
+	(*UpdateApplicationsRequest)(nil),  // 12: murkio.vault.v1.UpdateApplicationsRequest
+	(*DeleteApplicationsRequest)(nil),  // 13: murkio.vault.v1.DeleteApplicationsRequest
+	(*ApplicationsResponse)(nil),       // 14: murkio.vault.v1.ApplicationsResponse
+	(*DeleteApplicationsResponse)(nil), // 15: murkio.vault.v1.DeleteApplicationsResponse
+	(*Member)(nil),                     // 16: murkio.vault.v1.Member
+	(*ListMembersRequest)(nil),         // 17: murkio.vault.v1.ListMembersRequest
+	(*ListMembersResponse)(nil),        // 18: murkio.vault.v1.ListMembersResponse
+	(*GetMeRequest)(nil),               // 19: murkio.vault.v1.GetMeRequest
+	(*UpdateMemberRequest)(nil),        // 20: murkio.vault.v1.UpdateMemberRequest
+	(*RemoveMemberRequest)(nil),        // 21: murkio.vault.v1.RemoveMemberRequest
+	(*RemoveMemberResponse)(nil),       // 22: murkio.vault.v1.RemoveMemberResponse
+	(*Invitation)(nil),                 // 23: murkio.vault.v1.Invitation
+	(*CreateInvitationRequest)(nil),    // 24: murkio.vault.v1.CreateInvitationRequest
+	(*CreateInvitationResponse)(nil),   // 25: murkio.vault.v1.CreateInvitationResponse
+	(*ListInvitationsRequest)(nil),     // 26: murkio.vault.v1.ListInvitationsRequest
+	(*ListInvitationsResponse)(nil),    // 27: murkio.vault.v1.ListInvitationsResponse
+	(*RevokeInvitationRequest)(nil),    // 28: murkio.vault.v1.RevokeInvitationRequest
+	(*RevokeInvitationResponse)(nil),   // 29: murkio.vault.v1.RevokeInvitationResponse
+	(*AcceptInvitationRequest)(nil),    // 30: murkio.vault.v1.AcceptInvitationRequest
+	(*AccessToken)(nil),                // 31: murkio.vault.v1.AccessToken
+	(*CreateTokenRequest)(nil),         // 32: murkio.vault.v1.CreateTokenRequest
+	(*CreateTokenResponse)(nil),        // 33: murkio.vault.v1.CreateTokenResponse
+	(*ListTokensRequest)(nil),          // 34: murkio.vault.v1.ListTokensRequest
+	(*ListTokensResponse)(nil),         // 35: murkio.vault.v1.ListTokensResponse
+	(*RevokeTokenRequest)(nil),         // 36: murkio.vault.v1.RevokeTokenRequest
+	(*RevokeTokenResponse)(nil),        // 37: murkio.vault.v1.RevokeTokenResponse
+	(*Secret)(nil),                     // 38: murkio.vault.v1.Secret
+	(*SecretDraft)(nil),                // 39: murkio.vault.v1.SecretDraft
+	(*CreateSecretsRequest)(nil),       // 40: murkio.vault.v1.CreateSecretsRequest
+	(*CreateSecretsResponse)(nil),      // 41: murkio.vault.v1.CreateSecretsResponse
+	(*ListSecretsRequest)(nil),         // 42: murkio.vault.v1.ListSecretsRequest
+	(*ListSecretsResponse)(nil),        // 43: murkio.vault.v1.ListSecretsResponse
+	(*SecretRequest)(nil),              // 44: murkio.vault.v1.SecretRequest
+	(*UpdateSecretRequest)(nil),        // 45: murkio.vault.v1.UpdateSecretRequest
+	(*RenameSecretRequest)(nil),        // 46: murkio.vault.v1.RenameSecretRequest
+	(*DeleteSecretResponse)(nil),       // 47: murkio.vault.v1.DeleteSecretResponse
+	(*SecretVersion)(nil),              // 48: murkio.vault.v1.SecretVersion
+	(*ListSecretVersionsResponse)(nil), // 49: murkio.vault.v1.ListSecretVersionsResponse
+	(*RevealSecretRequest)(nil),        // 50: murkio.vault.v1.RevealSecretRequest
+	(*RevealedSecret)(nil),             // 51: murkio.vault.v1.RevealedSecret
+	(*AuditLog)(nil),                   // 52: murkio.vault.v1.AuditLog
+	(*ListAuditLogsRequest)(nil),       // 53: murkio.vault.v1.ListAuditLogsRequest
+	(*ListAuditLogsResponse)(nil),      // 54: murkio.vault.v1.ListAuditLogsResponse
+	(*timestamppb.Timestamp)(nil),      // 55: google.protobuf.Timestamp
 }
 var file_vault_v1_vault_proto_depIdxs = []int32{
-	2, // 0: murkio.vault.v1.ReadEnvResponse.variables:type_name -> murkio.vault.v1.Variable
-	0, // 1: murkio.vault.v1.VaultService.ReadEnv:input_type -> murkio.vault.v1.ReadEnvRequest
-	1, // 2: murkio.vault.v1.VaultService.ReadEnv:output_type -> murkio.vault.v1.ReadEnvResponse
-	2, // [2:3] is the sub-list for method output_type
-	1, // [1:2] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	2,  // 0: murkio.vault.v1.ReadEnvResponse.variables:type_name -> murkio.vault.v1.Variable
+	55, // 1: murkio.vault.v1.Application.created_at:type_name -> google.protobuf.Timestamp
+	55, // 2: murkio.vault.v1.Application.updated_at:type_name -> google.protobuf.Timestamp
+	5,  // 3: murkio.vault.v1.CreateApplicationsRequest.applications:type_name -> murkio.vault.v1.NewApplication
+	3,  // 4: murkio.vault.v1.ListApplicationsResponse.applications:type_name -> murkio.vault.v1.Application
+	9,  // 5: murkio.vault.v1.ListApplicationsResponse.page:type_name -> murkio.vault.v1.Page
+	11, // 6: murkio.vault.v1.UpdateApplicationsRequest.applications:type_name -> murkio.vault.v1.ApplicationChange
+	3,  // 7: murkio.vault.v1.ApplicationsResponse.applications:type_name -> murkio.vault.v1.Application
+	4,  // 8: murkio.vault.v1.ApplicationsResponse.errors:type_name -> murkio.vault.v1.ItemError
+	4,  // 9: murkio.vault.v1.DeleteApplicationsResponse.errors:type_name -> murkio.vault.v1.ItemError
+	55, // 10: murkio.vault.v1.Member.created_at:type_name -> google.protobuf.Timestamp
+	55, // 11: murkio.vault.v1.Member.updated_at:type_name -> google.protobuf.Timestamp
+	16, // 12: murkio.vault.v1.ListMembersResponse.members:type_name -> murkio.vault.v1.Member
+	9,  // 13: murkio.vault.v1.ListMembersResponse.page:type_name -> murkio.vault.v1.Page
+	55, // 14: murkio.vault.v1.Invitation.expires_at:type_name -> google.protobuf.Timestamp
+	55, // 15: murkio.vault.v1.Invitation.accepted_at:type_name -> google.protobuf.Timestamp
+	55, // 16: murkio.vault.v1.Invitation.revoked_at:type_name -> google.protobuf.Timestamp
+	55, // 17: murkio.vault.v1.Invitation.created_at:type_name -> google.protobuf.Timestamp
+	23, // 18: murkio.vault.v1.CreateInvitationResponse.invitation:type_name -> murkio.vault.v1.Invitation
+	23, // 19: murkio.vault.v1.ListInvitationsResponse.invitations:type_name -> murkio.vault.v1.Invitation
+	55, // 20: murkio.vault.v1.AccessToken.expires_at:type_name -> google.protobuf.Timestamp
+	55, // 21: murkio.vault.v1.AccessToken.last_used_at:type_name -> google.protobuf.Timestamp
+	55, // 22: murkio.vault.v1.AccessToken.revoked_at:type_name -> google.protobuf.Timestamp
+	55, // 23: murkio.vault.v1.AccessToken.created_at:type_name -> google.protobuf.Timestamp
+	55, // 24: murkio.vault.v1.CreateTokenRequest.expires_at:type_name -> google.protobuf.Timestamp
+	31, // 25: murkio.vault.v1.CreateTokenResponse.access_token:type_name -> murkio.vault.v1.AccessToken
+	31, // 26: murkio.vault.v1.ListTokensResponse.access_tokens:type_name -> murkio.vault.v1.AccessToken
+	55, // 27: murkio.vault.v1.Secret.created_at:type_name -> google.protobuf.Timestamp
+	55, // 28: murkio.vault.v1.Secret.updated_at:type_name -> google.protobuf.Timestamp
+	39, // 29: murkio.vault.v1.CreateSecretsRequest.items:type_name -> murkio.vault.v1.SecretDraft
+	38, // 30: murkio.vault.v1.CreateSecretsResponse.secrets:type_name -> murkio.vault.v1.Secret
+	4,  // 31: murkio.vault.v1.CreateSecretsResponse.errors:type_name -> murkio.vault.v1.ItemError
+	38, // 32: murkio.vault.v1.ListSecretsResponse.secrets:type_name -> murkio.vault.v1.Secret
+	55, // 33: murkio.vault.v1.SecretVersion.created_at:type_name -> google.protobuf.Timestamp
+	48, // 34: murkio.vault.v1.ListSecretVersionsResponse.versions:type_name -> murkio.vault.v1.SecretVersion
+	55, // 35: murkio.vault.v1.AuditLog.created_at:type_name -> google.protobuf.Timestamp
+	55, // 36: murkio.vault.v1.ListAuditLogsRequest.from:type_name -> google.protobuf.Timestamp
+	55, // 37: murkio.vault.v1.ListAuditLogsRequest.to:type_name -> google.protobuf.Timestamp
+	52, // 38: murkio.vault.v1.ListAuditLogsResponse.logs:type_name -> murkio.vault.v1.AuditLog
+	0,  // 39: murkio.vault.v1.VaultService.ReadEnv:input_type -> murkio.vault.v1.ReadEnvRequest
+	6,  // 40: murkio.vault.v1.ApplicationService.CreateApplications:input_type -> murkio.vault.v1.CreateApplicationsRequest
+	7,  // 41: murkio.vault.v1.ApplicationService.GetApplication:input_type -> murkio.vault.v1.GetApplicationRequest
+	8,  // 42: murkio.vault.v1.ApplicationService.ListApplications:input_type -> murkio.vault.v1.ListApplicationsRequest
+	12, // 43: murkio.vault.v1.ApplicationService.UpdateApplications:input_type -> murkio.vault.v1.UpdateApplicationsRequest
+	13, // 44: murkio.vault.v1.ApplicationService.DeleteApplications:input_type -> murkio.vault.v1.DeleteApplicationsRequest
+	17, // 45: murkio.vault.v1.MemberService.ListMembers:input_type -> murkio.vault.v1.ListMembersRequest
+	19, // 46: murkio.vault.v1.MemberService.GetMe:input_type -> murkio.vault.v1.GetMeRequest
+	20, // 47: murkio.vault.v1.MemberService.UpdateMember:input_type -> murkio.vault.v1.UpdateMemberRequest
+	21, // 48: murkio.vault.v1.MemberService.RemoveMember:input_type -> murkio.vault.v1.RemoveMemberRequest
+	24, // 49: murkio.vault.v1.InvitationService.CreateInvitation:input_type -> murkio.vault.v1.CreateInvitationRequest
+	26, // 50: murkio.vault.v1.InvitationService.ListInvitations:input_type -> murkio.vault.v1.ListInvitationsRequest
+	28, // 51: murkio.vault.v1.InvitationService.RevokeInvitation:input_type -> murkio.vault.v1.RevokeInvitationRequest
+	30, // 52: murkio.vault.v1.InvitationService.AcceptInvitation:input_type -> murkio.vault.v1.AcceptInvitationRequest
+	32, // 53: murkio.vault.v1.TokenService.CreateToken:input_type -> murkio.vault.v1.CreateTokenRequest
+	34, // 54: murkio.vault.v1.TokenService.ListTokens:input_type -> murkio.vault.v1.ListTokensRequest
+	36, // 55: murkio.vault.v1.TokenService.RevokeToken:input_type -> murkio.vault.v1.RevokeTokenRequest
+	40, // 56: murkio.vault.v1.SecretService.CreateSecrets:input_type -> murkio.vault.v1.CreateSecretsRequest
+	42, // 57: murkio.vault.v1.SecretService.ListSecrets:input_type -> murkio.vault.v1.ListSecretsRequest
+	44, // 58: murkio.vault.v1.SecretService.GetSecret:input_type -> murkio.vault.v1.SecretRequest
+	45, // 59: murkio.vault.v1.SecretService.UpdateSecret:input_type -> murkio.vault.v1.UpdateSecretRequest
+	46, // 60: murkio.vault.v1.SecretService.RenameSecret:input_type -> murkio.vault.v1.RenameSecretRequest
+	44, // 61: murkio.vault.v1.SecretService.DeleteSecret:input_type -> murkio.vault.v1.SecretRequest
+	44, // 62: murkio.vault.v1.SecretService.ListSecretVersions:input_type -> murkio.vault.v1.SecretRequest
+	50, // 63: murkio.vault.v1.SecretService.RevealSecret:input_type -> murkio.vault.v1.RevealSecretRequest
+	53, // 64: murkio.vault.v1.AuditService.ListAuditLogs:input_type -> murkio.vault.v1.ListAuditLogsRequest
+	1,  // 65: murkio.vault.v1.VaultService.ReadEnv:output_type -> murkio.vault.v1.ReadEnvResponse
+	14, // 66: murkio.vault.v1.ApplicationService.CreateApplications:output_type -> murkio.vault.v1.ApplicationsResponse
+	3,  // 67: murkio.vault.v1.ApplicationService.GetApplication:output_type -> murkio.vault.v1.Application
+	10, // 68: murkio.vault.v1.ApplicationService.ListApplications:output_type -> murkio.vault.v1.ListApplicationsResponse
+	14, // 69: murkio.vault.v1.ApplicationService.UpdateApplications:output_type -> murkio.vault.v1.ApplicationsResponse
+	15, // 70: murkio.vault.v1.ApplicationService.DeleteApplications:output_type -> murkio.vault.v1.DeleteApplicationsResponse
+	18, // 71: murkio.vault.v1.MemberService.ListMembers:output_type -> murkio.vault.v1.ListMembersResponse
+	16, // 72: murkio.vault.v1.MemberService.GetMe:output_type -> murkio.vault.v1.Member
+	16, // 73: murkio.vault.v1.MemberService.UpdateMember:output_type -> murkio.vault.v1.Member
+	22, // 74: murkio.vault.v1.MemberService.RemoveMember:output_type -> murkio.vault.v1.RemoveMemberResponse
+	25, // 75: murkio.vault.v1.InvitationService.CreateInvitation:output_type -> murkio.vault.v1.CreateInvitationResponse
+	27, // 76: murkio.vault.v1.InvitationService.ListInvitations:output_type -> murkio.vault.v1.ListInvitationsResponse
+	29, // 77: murkio.vault.v1.InvitationService.RevokeInvitation:output_type -> murkio.vault.v1.RevokeInvitationResponse
+	16, // 78: murkio.vault.v1.InvitationService.AcceptInvitation:output_type -> murkio.vault.v1.Member
+	33, // 79: murkio.vault.v1.TokenService.CreateToken:output_type -> murkio.vault.v1.CreateTokenResponse
+	35, // 80: murkio.vault.v1.TokenService.ListTokens:output_type -> murkio.vault.v1.ListTokensResponse
+	37, // 81: murkio.vault.v1.TokenService.RevokeToken:output_type -> murkio.vault.v1.RevokeTokenResponse
+	41, // 82: murkio.vault.v1.SecretService.CreateSecrets:output_type -> murkio.vault.v1.CreateSecretsResponse
+	43, // 83: murkio.vault.v1.SecretService.ListSecrets:output_type -> murkio.vault.v1.ListSecretsResponse
+	38, // 84: murkio.vault.v1.SecretService.GetSecret:output_type -> murkio.vault.v1.Secret
+	38, // 85: murkio.vault.v1.SecretService.UpdateSecret:output_type -> murkio.vault.v1.Secret
+	38, // 86: murkio.vault.v1.SecretService.RenameSecret:output_type -> murkio.vault.v1.Secret
+	47, // 87: murkio.vault.v1.SecretService.DeleteSecret:output_type -> murkio.vault.v1.DeleteSecretResponse
+	49, // 88: murkio.vault.v1.SecretService.ListSecretVersions:output_type -> murkio.vault.v1.ListSecretVersionsResponse
+	51, // 89: murkio.vault.v1.SecretService.RevealSecret:output_type -> murkio.vault.v1.RevealedSecret
+	54, // 90: murkio.vault.v1.AuditService.ListAuditLogs:output_type -> murkio.vault.v1.ListAuditLogsResponse
+	65, // [65:91] is the sub-list for method output_type
+	39, // [39:65] is the sub-list for method input_type
+	39, // [39:39] is the sub-list for extension type_name
+	39, // [39:39] is the sub-list for extension extendee
+	0,  // [0:39] is the sub-list for field type_name
 }
 
 func init() { file_vault_v1_vault_proto_init() }
@@ -249,15 +3900,17 @@ func file_vault_v1_vault_proto_init() {
 	if File_vault_v1_vault_proto != nil {
 		return
 	}
+	file_vault_v1_vault_proto_msgTypes[20].OneofWrappers = []any{}
+	file_vault_v1_vault_proto_msgTypes[39].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_vault_v1_vault_proto_rawDesc), len(file_vault_v1_vault_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   55,
 			NumExtensions: 0,
-			NumServices:   1,
+			NumServices:   7,
 		},
 		GoTypes:           file_vault_v1_vault_proto_goTypes,
 		DependencyIndexes: file_vault_v1_vault_proto_depIdxs,

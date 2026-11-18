@@ -6,8 +6,8 @@ import (
 	"time"
 	"uuid"
 
-	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	secretcontracts "github.com/murkio-dev/vault/internal/restful/secret/contracts"
 	"github.com/murkio-dev/vault/pkg/sqlite"
 )
 
@@ -35,20 +35,9 @@ func NewVersionRepository(db *sql.DB) VersionRepository {
 }
 
 var (
-	_ contracts.ISecretCreator          = SecretRepository{}
-	_ contracts.ISecretFinder           = SecretRepository{}
-	_ contracts.ISecretOwnerFinder      = SecretRepository{}
-	_ contracts.ISecretLister           = SecretRepository{}
-	_ contracts.ISecretCounter          = SecretRepository{}
-	_ contracts.ISecretReferenceCounter = SecretRepository{}
-	_ contracts.ISecretVersionAdder     = SecretRepository{}
-	_ contracts.ISecretRenamer          = SecretRepository{}
-	_ contracts.ISecretDeleter          = SecretRepository{}
+	_ secretcontracts.ISecretRepository = SecretRepository{}
 
-	_ contracts.IVersionLister        = VersionRepository{}
-	_ contracts.IVersionCurrentFinder = VersionRepository{}
-	_ contracts.IVersionNumberFinder  = VersionRepository{}
-	_ contracts.IVersionResealer      = VersionRepository{}
+	_ secretcontracts.IVersionRepository = VersionRepository{}
 )
 
 // Functions
@@ -126,7 +115,6 @@ func (r SecretRepository) FindByOwner(ctx context.Context, application, owner, i
 		application.String(), owner.String(), id.String()))
 }
 
-// List lista a tabela de um membro.
 func (r SecretRepository) List(ctx context.Context, application, owner uuid.UUID, limit, offset int) ([]entities.Secret, int, error) {
 	if err := entities.Require(application, owner); err != nil {
 		return nil, 0, err
@@ -159,7 +147,6 @@ func (r SecretRepository) List(ctx context.Context, application, owner uuid.UUID
 	return secrets, total, rows.Err()
 }
 
-// Count conta os segredos da tabela de um membro.
 func (r SecretRepository) Count(ctx context.Context, application, owner uuid.UUID) (int, error) {
 	if err := entities.Require(application, owner); err != nil {
 		return 0, err
@@ -172,7 +159,6 @@ func (r SecretRepository) Count(ctx context.Context, application, owner uuid.UUI
 	return total, err
 }
 
-// CountReferences conta os segredos da aplicação que apontam para o segredo.
 func (r SecretRepository) CountReferences(ctx context.Context, application, secret uuid.UUID) (int, error) {
 	if err := entities.Require(application, secret); err != nil {
 		return 0, err
@@ -279,7 +265,6 @@ func (r VersionRepository) List(ctx context.Context, application, secret uuid.UU
 	return versions, total, rows.Err()
 }
 
-// FindCurrent acha a versão atual do segredo.
 func (r VersionRepository) FindCurrent(ctx context.Context, application, secret uuid.UUID) (entities.SecretVersion, error) {
 	if err := entities.Require(application, secret); err != nil {
 		return entities.SecretVersion{}, err
@@ -288,7 +273,6 @@ func (r VersionRepository) FindCurrent(ctx context.Context, application, secret 
 	return r.find(ctx, versionFrom+" AND v.version = s.current_version", application, secret)
 }
 
-// FindByNumber acha uma versão pelo número (a partir de 1).
 func (r VersionRepository) FindByNumber(ctx context.Context, application, secret uuid.UUID, number int) (entities.SecretVersion, error) {
 	if err := entities.Require(application, secret); err != nil {
 		return entities.SecretVersion{}, err

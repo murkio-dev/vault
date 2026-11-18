@@ -51,7 +51,7 @@ func newRevokeRig() *revokeRig {
 		token.ID, token.MemberID = id, rig.owner
 		return token, nil
 	}
-	rig.useCase = useCases.NewRevokeTokenUseCase(rig.tokens, rig.tokens, rig.guard, rig.tx)
+	rig.useCase = useCases.NewRevokeTokenUseCase(rig.tokens, rig.guard, rig.tx)
 	return rig
 }
 
@@ -62,7 +62,7 @@ func revokeInput() useCases.RevokeInput {
 func whenRevokeBuildSucceeds(t *testing.T) {
 	rig := newRevokeRig()
 
-	assert.Equal(t, rig.tokens, rig.useCase.Finder)
+	assert.Equal(t, rig.tokens, rig.useCase.Repository)
 	assert.Equal(t, rig.guard, rig.useCase.Guard)
 	assert.Equal(t, rig.tx, rig.useCase.Tx)
 }

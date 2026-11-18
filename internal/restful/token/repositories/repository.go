@@ -6,8 +6,8 @@ import (
 	"time"
 	"uuid"
 
-	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	tokencontracts "github.com/murkio-dev/vault/internal/restful/token/contracts"
 	"github.com/murkio-dev/vault/pkg/sqlite"
 )
 
@@ -21,14 +21,7 @@ func NewRepository(db *sql.DB) TokenRepository {
 	return TokenRepository{DB: db}
 }
 
-var (
-	_ contracts.ITokenCreator      = TokenRepository{}
-	_ contracts.ITokenFinder       = TokenRepository{}
-	_ contracts.ITokenLister       = TokenRepository{}
-	_ contracts.ITokenHashFinder   = TokenRepository{}
-	_ contracts.ITokenUsageToucher = TokenRepository{}
-	_ contracts.ITokenRevoker      = TokenRepository{}
-)
+var _ tokencontracts.ITokenRepository = TokenRepository{}
 
 // Functions
 

@@ -15,7 +15,7 @@ import (
 	member_mocks "github.com/murkio-dev/vault/internal/restful/member/mocks"
 	"github.com/murkio-dev/vault/internal/restful/token/mocks"
 	"github.com/murkio-dev/vault/internal/restful/token/useCases"
-	"github.com/murkio-dev/vault/pkg/utils"
+	pkgmocks "github.com/murkio-dev/vault/pkg/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -49,14 +49,14 @@ func newCreateRig() *createRig {
 }
 
 func createInput() useCases.CreateInput {
-	return useCases.CreateInput{Requester: member_mocks.NewUserRequester(), Application: uuid.NewV7(), Member: entities.SelfOwner, Name: utils.GenRandomTokenName()}
+	return useCases.CreateInput{Requester: member_mocks.NewUserRequester(), Application: uuid.NewV7(), Member: entities.SelfOwner, Name: pkgmocks.GenRandomTokenName()}
 }
 
 func whenCreateBuildSucceeds(t *testing.T) {
 	rig := newCreateRig()
 
-	assert.Equal(t, rig.tokens, rig.useCase.Creator)
-	assert.Equal(t, rig.members, rig.useCase.MemberFinder)
+	assert.Equal(t, rig.tokens, rig.useCase.Repository)
+	assert.Equal(t, rig.members, rig.useCase.Members)
 	assert.Equal(t, rig.guard, rig.useCase.Guard)
 	assert.Equal(t, rig.tx, rig.useCase.Tx)
 	assert.Equal(t, "https://vault.example.com", rig.useCase.PublicURL, "a barra final sai")

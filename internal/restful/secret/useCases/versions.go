@@ -6,18 +6,19 @@ import (
 
 	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	secretcontracts "github.com/murkio-dev/vault/internal/restful/secret/contracts"
 )
 
 // Builder
 
 type ListVersionsUseCase struct {
-	OwnerFinder   contracts.ISecretOwnerFinder
-	VersionLister contracts.IVersionLister
-	Guard         contracts.IAccessGuard
+	Repository secretcontracts.ISecretRepository
+	Versions   secretcontracts.IVersionRepository
+	Guard      contracts.IAccessGuard
 }
 
-func NewListVersionsUseCase(ownerFinder contracts.ISecretOwnerFinder, versionLister contracts.IVersionLister, guard contracts.IAccessGuard) ListVersionsUseCase {
-	return ListVersionsUseCase{OwnerFinder: ownerFinder, VersionLister: versionLister, Guard: guard}
+func NewListVersionsUseCase(repository secretcontracts.ISecretRepository, versions secretcontracts.IVersionRepository, guard contracts.IAccessGuard) ListVersionsUseCase {
+	return ListVersionsUseCase{Repository: repository, Versions: versions, Guard: guard}
 }
 
 // DTOS
@@ -46,12 +47,12 @@ func (u ListVersionsUseCase) Perform(ctx context.Context, input VersionsInput) V
 		return VersionsOutput{Error: denied}
 	}
 
-	secret, err := u.OwnerFinder.FindByOwner(ctx, input.Application, owner, input.Secret)
+	secret, err := u.Repository.FindByOwner(ctx, input.Application, owner, input.Secret)
 	if err != nil {
 		return VersionsOutput{Error: failure(err)}
 	}
 
-	versions, _, err := u.VersionLister.List(ctx, input.Application, secret.ID, entities.MaxVersionsListed, 0)
+	versions, _, err := u.Versions.List(ctx, input.Application, secret.ID, entities.MaxVersionsListed, 0)
 	if err != nil {
 		return VersionsOutput{Error: failure(err)}
 	}

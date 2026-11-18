@@ -7,18 +7,6 @@ import (
 	"uuid"
 )
 
-// RFC 9457 (problem details):
-//
-//	{
-//	  "type": "https://murkio.com/en-us/docs/vault/errors/#validation",
-//	  "title": "Validation error",
-//	  "status": 400,
-//	  "detail": "The field name is invalid.",
-//	  "instance": "/v1/applications",
-//	  "invalidParams": [
-//	    {"field": "name", "reason": "application name cannot obtain '*' and spaces.", "value": "my app *"}
-//	  ]
-//	}
 type Error struct {
 	Type          string `json:"type"`
 	Title         string `json:"title"`
@@ -136,7 +124,7 @@ func InvalidLimitError(err error) Error {
 // ou revogada. É sempre a mesma, sem motivo: dizer qual foi ajudaria quem tenta
 // forjar ou adivinhar um token. Quem chega aqui não se identificou, então não
 // há autor para a trilha de auditoria. Exemplo: um JWT com assinatura errada e
-// um token vt_ revogado devolvem exatamente o mesmo corpo.
+// um token sk_vt_ revogado devolvem exatamente o mesmo corpo.
 func UnauthorizedError() Error {
 	return NewError(ErrTypeUnauthorized, "Unauthorized", http.StatusUnauthorized,
 		"A valid credential is required.")

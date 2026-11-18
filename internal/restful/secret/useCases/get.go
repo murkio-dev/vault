@@ -6,17 +6,18 @@ import (
 
 	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	secretcontracts "github.com/murkio-dev/vault/internal/restful/secret/contracts"
 )
 
 // Builder
 
 type GetSecretUseCase struct {
-	OwnerFinder contracts.ISecretOwnerFinder
-	Guard       contracts.IAccessGuard
+	Repository secretcontracts.ISecretRepository
+	Guard      contracts.IAccessGuard
 }
 
-func NewGetSecretUseCase(ownerFinder contracts.ISecretOwnerFinder, guard contracts.IAccessGuard) GetSecretUseCase {
-	return GetSecretUseCase{OwnerFinder: ownerFinder, Guard: guard}
+func NewGetSecretUseCase(repository secretcontracts.ISecretRepository, guard contracts.IAccessGuard) GetSecretUseCase {
+	return GetSecretUseCase{Repository: repository, Guard: guard}
 }
 
 // DTOS
@@ -42,7 +43,7 @@ func (u GetSecretUseCase) Perform(ctx context.Context, input GetInput) GetOutput
 		return GetOutput{Error: denied}
 	}
 
-	secret, err := u.OwnerFinder.FindByOwner(ctx, input.Application, owner, input.Secret)
+	secret, err := u.Repository.FindByOwner(ctx, input.Application, owner, input.Secret)
 	if err != nil {
 		return GetOutput{Error: failure(err)}
 	}

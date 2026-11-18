@@ -8,23 +8,20 @@ import (
 
 	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	applicationcontracts "github.com/murkio-dev/vault/internal/restful/application/contracts"
 	"github.com/murkio-dev/vault/pkg/sqlite"
 )
 
 // Builder
 
 type UpdateApplicationUseCase struct {
-	Updater contracts.IApplicationUpdater
-	Guard   contracts.IAccessGuard
-	Tx      contracts.IAuditedTx
+	Repository applicationcontracts.IApplicationRepository
+	Guard      contracts.IAccessGuard
+	Tx         contracts.IAuditedTx
 }
 
-func NewUpdateApplicationUseCase(updater contracts.IApplicationUpdater, guard contracts.IAccessGuard, tx contracts.IAuditedTx) UpdateApplicationUseCase {
-	return UpdateApplicationUseCase{
-		Updater: updater,
-		Guard:   guard,
-		Tx:      tx,
-	}
+func NewUpdateApplicationUseCase(repository applicationcontracts.IApplicationRepository, guard contracts.IAccessGuard, tx contracts.IAuditedTx) UpdateApplicationUseCase {
+	return UpdateApplicationUseCase{Repository: repository, Guard: guard, Tx: tx}
 }
 
 // DTOS
@@ -79,7 +76,7 @@ func (u UpdateApplicationUseCase) Perform(ctx context.Context, input UpdateInput
 			entities.AuditTarget{Type: "application", ID: application.ID.String()}, map[string]any{"name": application.Name})
 
 		err := u.Tx.Run(ctx, entry, func(ctx context.Context) (err error) {
-			value, err = u.Updater.Update(ctx, application)
+			value, err = u.Repository.Update(ctx, application)
 			return err
 		})
 		if err != nil {

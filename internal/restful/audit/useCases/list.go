@@ -6,6 +6,7 @@ import (
 
 	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	auditcontracts "github.com/murkio-dev/vault/internal/restful/audit/contracts"
 )
 
 const (
@@ -16,12 +17,12 @@ const (
 // Builder
 
 type ListAuditLogsUseCase struct {
-	Lister contracts.IAuditLogLister
-	Guard  contracts.IAccessGuard
+	Repository auditcontracts.IAuditLogRepository
+	Guard      contracts.IAccessGuard
 }
 
-func NewListAuditLogsUseCase(lister contracts.IAuditLogLister, guard contracts.IAccessGuard) ListAuditLogsUseCase {
-	return ListAuditLogsUseCase{Lister: lister, Guard: guard}
+func NewListAuditLogsUseCase(repository auditcontracts.IAuditLogRepository, guard contracts.IAccessGuard) ListAuditLogsUseCase {
+	return ListAuditLogsUseCase{Repository: repository, Guard: guard}
 }
 
 // DTOS
@@ -66,7 +67,7 @@ func (u ListAuditLogsUseCase) Perform(ctx context.Context, input ListInput) List
 	// Pede uma linha a mais do que o limite: se ela vier, há próxima página e o
 	// cursor é o id da última linha devolvida (a trilha anda do mais novo para o
 	// mais antigo, e o UUIDv7 é ordenado no tempo).
-	logs, err := u.Lister.List(ctx, filter, filter.Limit+1)
+	logs, err := u.Repository.List(ctx, filter, filter.Limit+1)
 	if err != nil {
 		internal := entities.InternalServerError(err, nil)
 		return ListOutput{Error: &internal}

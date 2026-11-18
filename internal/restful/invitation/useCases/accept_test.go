@@ -29,6 +29,7 @@ func TestAcceptInvitation(t *testing.T) {
 	t.Run("Quando outro aceita o mesmo link antes.", func(t *testing.T) { whenAcceptLosesTheRace(t) })
 	t.Run("Quando não há credencial.", func(t *testing.T) { whenAcceptHasNoCredential(t) })
 	t.Run("Quando ocorre erro de banco.", func(t *testing.T) { whenAcceptFailsInDb(t) })
+	t.Run("Quando o banco falha ao buscar o vínculo da conta.", func(t *testing.T) { whenAcceptMembershipLookupFails(t) })
 }
 
 // Functions
@@ -52,7 +53,7 @@ func newAcceptRig(invitation entities.Invitation) *acceptRig {
 		tx:      &audit_mocks.Tx{},
 		audit:   &audit_mocks.AuditRepo{},
 	}
-	rig.useCase = useCases.NewAcceptInvitationUseCase(rig.invitations, rig.invitations, rig.members, rig.members, rig.guard, rig.tx, rig.audit)
+	rig.useCase = useCases.NewAcceptInvitationUseCase(rig.invitations, rig.members, rig.guard, rig.tx, rig.audit)
 	return rig
 }
 
@@ -61,10 +62,8 @@ func validToken() string { return entities.InvitationTokenPrefix + strings.Repea
 func whenAcceptBuildSucceeds(t *testing.T) {
 	rig := newAcceptRig(mocks.NewInvitation())
 
-	assert.Equal(t, rig.invitations, rig.useCase.TokenFinder)
-	assert.Equal(t, rig.invitations, rig.useCase.Acceptor)
-	assert.Equal(t, rig.members, rig.useCase.MemberCreator)
-	assert.Equal(t, rig.members, rig.useCase.MemberFinder)
+	assert.Equal(t, rig.invitations, rig.useCase.Repository)
+	assert.Equal(t, rig.members, rig.useCase.Members)
 	assert.Equal(t, rig.guard, rig.useCase.Guard)
 	assert.Equal(t, rig.tx, rig.useCase.Tx)
 	assert.Equal(t, rig.audit, rig.useCase.Audit)
@@ -191,4 +190,19 @@ func whenAcceptFailsInDb(t *testing.T) {
 	if assert.NotNil(t, failed.Error) {
 		assert.Equal(t, entities.ErrTypeInternal, failed.Error.Type, "erro de banco na busca não vira 404")
 	}
+}
+
+func whenAcceptMembershipLookupFails(t *testing.T) {
+	rig := newAcceptRig(mocks.NewInvitation())
+	rig.members.FindByUserFunc = func(context.Context, uuid.UUID, uuid.UUID) (entities.Member, error) {
+		return entities.Member{}, errors.New("segredo-interno")
+	}
+
+	output := rig.useCase.Perform(context.Background(), useCases.AcceptInput{Requester: member_mocks.NewUserRequester(), Token: validToken()})
+
+	if assert.NotNil(t, output.Error) {
+		assert.Equal(t, entities.ErrTypeInternal, output.Error.Type, "erro de banco não vira \"pode entrar\"")
+		assert.NotContains(t, output.Error.Detail, "segredo-interno")
+	}
+	assert.Empty(t, rig.members.Created, "ninguém entra sem saber se já é membro")
 }

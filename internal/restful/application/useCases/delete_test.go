@@ -28,6 +28,8 @@ func TestDeleteApplication(t *testing.T) {
 	t.Run("Quando ocorre erro de banco.", func(t *testing.T) { whenDeleteFailsInDb(t) })
 	t.Run("Quando a lista de entrada é vazia.", func(t *testing.T) { whenDeleteEmptyInput(t) })
 	t.Run("Quando recebe um lote misto com sucesso parcial.", func(t *testing.T) { whenDeleteMixedBatch(t) })
+	t.Run("Quando o acesso é negado.", func(t *testing.T) { whenDeleteIsDenied(t) })
+	t.Run("Quando a auditoria falha.", func(t *testing.T) { whenDeleteAuditFails(t) })
 }
 
 // Functions
@@ -37,7 +39,7 @@ func whenDeleteBuildSucceeds(t *testing.T) {
 
 	useCase := useCases.NewDeleteApplicationUseCase(repo, &member_mocks.Guard{}, &audit_mocks.Tx{})
 
-	assert.Equal(t, repo, useCase.Deleter)
+	assert.Equal(t, repo, useCase.Repository)
 }
 
 func whenDeleteOneID(t *testing.T) {
@@ -159,5 +161,33 @@ func whenDeleteMixedBatch(t *testing.T) {
 		assert.Equal(t, entities.ErrTypeValidation, output.Errors[0].Type)
 		assert.Equal(t, entities.ErrTypeNotFound, output.Errors[1].Type)
 		assert.Equal(t, entities.ErrTypeInternal, output.Errors[2].Type)
+	}
+}
+
+func whenDeleteIsDenied(t *testing.T) {
+	repo, tx := &mocks.ApplicationRepo{}, &audit_mocks.Tx{}
+	denied := (&member_mocks.Guard{}).Deny(entities.NotFoundError("Resource"))
+	app := mocks.NewApp()
+
+	output := useCases.NewDeleteApplicationUseCase(repo, denied, tx).Perform(context.Background(), useCases.DeleteInput{Requester: mocks.NewRequester(), IDs: []uuid.UUID{app.ID}})
+
+	assert.Nil(t, output.Data)
+	if assert.Len(t, output.Errors, 1) {
+		assert.Equal(t, http.StatusNotFound, output.Errors[0].Status)
+	}
+	assert.Empty(t, repo.Deleted, "negado, o repositório não é chamado")
+	assert.Zero(t, tx.Runs)
+}
+
+func whenDeleteAuditFails(t *testing.T) {
+	repo, tx := &mocks.ApplicationRepo{}, &audit_mocks.Tx{AuditErr: errors.New("disk full")}
+	app := mocks.NewApp()
+
+	output := useCases.NewDeleteApplicationUseCase(repo, &member_mocks.Guard{}, tx).Perform(context.Background(), useCases.DeleteInput{Requester: mocks.NewRequester(), IDs: []uuid.UUID{app.ID}})
+
+	assert.Nil(t, output.Data, "sem trilha, a mudança falha")
+	if assert.Len(t, output.Errors, 1) {
+		assert.Equal(t, entities.ErrTypeInternal, output.Errors[0].Type)
+		assert.NotContains(t, output.Errors[0].Detail, "disk full")
 	}
 }

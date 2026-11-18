@@ -18,6 +18,7 @@ func TestParse(t *testing.T) {
 	t.Run("Quando lê o caminho.", func(t *testing.T) { whenParsingThePath(t) })
 	t.Run("Quando lê a revogação.", func(t *testing.T) { whenParsingTheRevoke(t) })
 	t.Run("Quando lê a criação.", func(t *testing.T) { whenParsingTheCreate(t) })
+	t.Run("Quando o caminho é inválido na revogação e na criação.", func(t *testing.T) { whenPathIsInvalid(t) })
 }
 
 // Functions
@@ -69,4 +70,14 @@ func whenParsingTheCreate(t *testing.T) {
 	assert.Nil(t, none)
 	assert.NotNil(t, badDate)
 	assert.NotNil(t, unknown)
+}
+
+func whenPathIsInvalid(t *testing.T) {
+	bad := map[string]string{"app": "nao-e-uuid", "member": "me", "id": uuid.NewV7().String()}
+
+	_, _, _, revoke := services.ParseRevoke(request("", bad))
+	_, _, _, _, create := services.ParseCreate(request(`{"name":"ci"}`, bad))
+
+	assert.NotNil(t, revoke)
+	assert.NotNil(t, create)
 }

@@ -3,22 +3,18 @@ package useCases
 import (
 	"context"
 
-	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	applicationcontracts "github.com/murkio-dev/vault/internal/restful/application/contracts"
 )
 
 // Builder
 
 type ListApplicationsUseCase struct {
-	Lister     contracts.IApplicationLister
-	UserLister contracts.IApplicationUserLister
+	Repository applicationcontracts.IApplicationRepository
 }
 
-func NewListApplicationsUseCase(lister contracts.IApplicationLister, userLister contracts.IApplicationUserLister) ListApplicationsUseCase {
-	return ListApplicationsUseCase{
-		Lister:     lister,
-		UserLister: userLister,
-	}
+func NewListApplicationsUseCase(repository applicationcontracts.IApplicationRepository) ListApplicationsUseCase {
+	return ListApplicationsUseCase{Repository: repository}
 }
 
 // DTOS
@@ -57,10 +53,10 @@ func (u ListApplicationsUseCase) Perform(ctx context.Context, input ListInput) L
 	offset := (page - 1) * limit
 
 	list := func() ([]entities.Application, int, error) {
-		return u.UserLister.ListByUser(ctx, actor.UserID, limit, offset)
+		return u.Repository.ListByUser(ctx, actor.UserID, limit, offset)
 	}
 	if actor.PlatformAdmin {
-		list = func() ([]entities.Application, int, error) { return u.Lister.List(ctx, limit, offset) }
+		list = func() ([]entities.Application, int, error) { return u.Repository.List(ctx, limit, offset) }
 	}
 	data, total, err := list()
 	if err != nil {

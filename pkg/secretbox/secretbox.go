@@ -109,7 +109,7 @@ func (b *Box) Open(sealed, associatedData []byte) ([]byte, error) {
 // OpenStale abre o valor e diz se foi com uma chave antiga. O valor cifrado não
 // guarda qual chave o cifrou: tenta a ativa e depois as antigas, na ordem, e o
 // tag do GCM garante que a chave errada não abre. Quando devolve stale, o
-// chamador deve recifrar o valor com a chave ativa (pkg/secretvalues faz isso
+// chamador deve recifrar o valor com a chave ativa (internal/adapters/secretvalues faz isso
 // na leitura), e depois disso a chave antiga pode sair. Valor curto demais ou
 // que nenhuma chave abre devolve ErrInvalidSealed.
 func (b *Box) OpenStale(sealed, associatedData []byte) ([]byte, bool, error) {

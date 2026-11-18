@@ -6,8 +6,8 @@ import (
 	"time"
 	"uuid"
 
-	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	applicationcontracts "github.com/murkio-dev/vault/internal/restful/application/contracts"
 	"github.com/murkio-dev/vault/pkg/sqlite"
 )
 
@@ -23,16 +23,7 @@ func NewRepository(db *sql.DB) ApplicationRepository {
 	}
 }
 
-var (
-	_ contracts.IApplicationCreator    = ApplicationRepository{}
-	_ contracts.IApplicationChecker    = ApplicationRepository{}
-	_ contracts.IApplicationFinder     = ApplicationRepository{}
-	_ contracts.IApplicationLister     = ApplicationRepository{}
-	_ contracts.IApplicationUserLister = ApplicationRepository{}
-	_ contracts.IApplicationUpdater    = ApplicationRepository{}
-	_ contracts.IApplicationUpgrader   = ApplicationRepository{}
-	_ contracts.IApplicationDeleter    = ApplicationRepository{}
-)
+var _ applicationcontracts.IApplicationRepository = ApplicationRepository{}
 
 // Functions
 
@@ -78,7 +69,6 @@ func (r ApplicationRepository) List(ctx context.Context, limit, offset int) ([]e
 	return r.list(ctx, "FROM applications WHERE deleted_at IS NULL", nil, limit, offset)
 }
 
-// ListByUser devolve só as aplicações de que a conta é membro ativo.
 func (r ApplicationRepository) ListByUser(ctx context.Context, user uuid.UUID, limit, offset int) ([]entities.Application, int, error) {
 	if err := entities.Require(user); err != nil {
 		return nil, 0, err

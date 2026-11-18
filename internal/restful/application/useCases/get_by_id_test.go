@@ -21,6 +21,7 @@ func TestGetApplicationByID(t *testing.T) {
 	t.Run("Quando a aplicação existe.", func(t *testing.T) { whenGetByIDFindsApplication(t) })
 	t.Run("Quando a aplicação não existe.", func(t *testing.T) { whenGetByIDNotFound(t) })
 	t.Run("Quando ocorre erro de banco.", func(t *testing.T) { whenGetByIDFailsInDb(t) })
+	t.Run("Quando o acesso é negado.", func(t *testing.T) { whenGetByIDIsDenied(t) })
 }
 
 // Functions
@@ -71,5 +72,21 @@ func whenGetByIDFailsInDb(t *testing.T) {
 	if assert.NotNil(t, output.Error) {
 		assert.Equal(t, entities.ErrTypeInternal, output.Error.Type)
 		assert.Equal(t, http.StatusInternalServerError, output.Error.Status)
+	}
+}
+
+func whenGetByIDIsDenied(t *testing.T) {
+	repo := &mocks.ApplicationRepo{
+		FindByIDFunc: func(context.Context, uuid.UUID) (entities.Application, error) {
+			t.Error("negado, o repositório não é chamado")
+			return entities.Application{}, nil
+		},
+	}
+	denied := (&member_mocks.Guard{}).Deny(entities.NotFoundError("Resource"))
+
+	output := useCases.NewGetApplicationByIDUseCase(repo, denied).Perform(context.Background(), useCases.GetByIDInput{Requester: mocks.NewRequester(), Application: mocks.NewApp().ID})
+
+	if assert.NotNil(t, output.Error) {
+		assert.Equal(t, http.StatusNotFound, output.Error.Status)
 	}
 }

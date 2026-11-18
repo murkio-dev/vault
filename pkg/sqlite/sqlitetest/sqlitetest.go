@@ -15,7 +15,6 @@ import (
 	"github.com/murkio-dev/vault/pkg/sqlite"
 )
 
-// New abre o banco migrado e o fecha no fim do teste.
 func New(t testing.TB) *sql.DB {
 	t.Helper()
 

@@ -6,8 +6,8 @@ import (
 	"time"
 	"uuid"
 
-	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	invitationcontracts "github.com/murkio-dev/vault/internal/restful/invitation/contracts"
 	"github.com/murkio-dev/vault/pkg/sqlite"
 )
 
@@ -21,13 +21,17 @@ func NewRepository(db *sql.DB) InvitationRepository {
 	return InvitationRepository{DB: db}
 }
 
-var (
-	_ contracts.IInvitationCreator     = InvitationRepository{}
-	_ contracts.IInvitationLister      = InvitationRepository{}
-	_ contracts.IInvitationTokenFinder = InvitationRepository{}
-	_ contracts.IInvitationAcceptor    = InvitationRepository{}
-	_ contracts.IInvitationRevoker     = InvitationRepository{}
-)
+var _ invitationcontracts.IInvitationRepository = InvitationRepository{}
+
+type OutboxRepository struct {
+	DB *sql.DB
+}
+
+func NewOutboxRepository(db *sql.DB) OutboxRepository {
+	return OutboxRepository{DB: db}
+}
+
+var _ invitationcontracts.IOutboxRepository = OutboxRepository{}
 
 // Functions
 
@@ -169,4 +173,21 @@ func scanInvitation(row scanner) (entities.Invitation, error) {
 	}
 
 	return invitation, nil
+}
+
+// Create grava o pedido para outro serviço. Dentro de uma transação
+// (IAuditedTx), entra nela: ou a mudança e o pedido são gravados, ou nenhum. A
+// leitura e a publicação são do relay externo, não deste serviço.
+func (r OutboxRepository) Create(ctx context.Context, event entities.OutboxEvent) (entities.OutboxEvent, error) {
+	const query = `
+		INSERT INTO outbox_events (id, application_id, type, payload, exchange, envelope, created_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?)`
+
+	_, err := sqlite.Conn(ctx, r.DB).ExecContext(ctx, query, event.ID.String(), event.ApplicationID.String(),
+		event.Type, string(event.Payload), event.Exchange, event.Envelope, event.CreatedAt)
+	if err != nil {
+		return entities.OutboxEvent{}, err
+	}
+
+	return event, nil
 }

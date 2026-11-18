@@ -1,129 +1,175 @@
-# vault
+<h1 align="center">Vault</h1>
 
-Cofre de variáveis e segredos do Murkio, para acabar com `.env` complexo. O produto e as
-decisões estão em `../schema/vault.md`; o contrato HTTP em `docs/api.md`.
+<p align="center">
+Segredos da sua aplicação em um só lugar, no lugar do <code>.env</code>.
+</p>
 
-Go 1.27, só `net/http` e SQLite (`modernc.org/sqlite`, Go puro). Sem Docker, Postgres,
-Redis, RabbitMQ nem HashiCorp Vault.
+<p align="center">
+<img src="https://img.shields.io/static/v1?label=go&message=1.27&color=00ADD8" alt="Go 1.27" />
+<img src="https://img.shields.io/static/v1?label=storage&message=SQLite&color=003B57" alt="SQLite" />
+<img src="https://img.shields.io/static/v1?label=target&message=FreeBSD&color=AB2B28" alt="FreeBSD" />
+<img src="https://img.shields.io/static/v1?label=dependencies&message=stdlib%20first&color=success" alt="stdlib first" />
+<img src="https://img.shields.io/static/v1?label=license&message=PolyForm%20NC%201.0.0&color=blue" alt="PolyForm Noncommercial 1.0.0" />
+</p>
 
-## Estado
+<div align="center">
+  <a href="docs/README.md">Documentação</a>
+  <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
+  <a href="docs/api.md">API</a>
+  <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
+  <a href="docs/guides/create-token-and-read-env.md">Guias</a>
+  <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
+  <a href="docs/development/architecture.md">Arquitetura</a>
+  <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
+  <a href="../schema/vault.md">Desenho do produto</a>
+  <br />
+</div>
 
-| Parte | Estado |
-| --- | --- |
-| Aplicações (CRUD, soft delete com cascata) | feito, autorizado e auditado |
-| Autenticação das pessoas (JWT do Auth, JWKS) | feito (`pkg/authn`, `middlewares.Authenticate`) |
-| Papéis e permissões (`entities.Decide`, `access.Guard`) | feito, com matriz testada |
-| Auditoria append-only, fail-closed | feito (trigger no banco + `audit.Audited`) |
-| Retenção da auditoria (1 ano) | trigger e `PurgeExpired` prontos; falta o job que os chama |
-| Cifragem em repouso (`pkg/secretbox`) | pronta; a chave é validada no boot |
-| Membros e convites (com outbox para o e-mail) | feito |
-| Segredos (tipos, versões cifradas, referências, `reveal` auditado) | feito |
-| Tokens do SDK e `GET /runtime/{uri_id}/env` | feito |
-| gRPC interno (`VaultService.ReadEnv`, só 127.0.0.1) | feito |
-| Leitura da auditoria (cursor, filtros) | feito |
-| Geração de chaves (api key, JWT, PASETO), banco dinâmico | só desenhado |
+### [Leia a documentação →](docs/README.md)
 
-O Caddy expõe o vault em `<host>/v1/vault/...` (`../infra/Caddyfile`), com rate limit por IP e por rota (leitura do ambiente também por token) e corpo de no máximo 64 KB. O Caddy troca o prefixo `/v1/vault` por `/api/v1`, e o vault segue recebendo `/api/v1/...`. O gRPC interno não passa por ele.
+## O que é o Vault?
 
-## Rodando
+O Vault é o serviço de segredos da plataforma Murkio. Em vez de espalhar `.env` por máquinas, você guarda os valores no Vault e o código lê só o que precisa, em tempo de execução, com um **token** revogável na hora.
+
+Ele é um **binário único em Go**, com SQLite ao lado dele. Não precisa de Docker, Postgres, Redis nem RabbitMQ.
+
+```bash
+# o SDK (ou o seu código) só precisa de uma URI e de um token
+curl -H "Authorization: Bearer sk_vt_..." \
+  https://api.murkio.com/v1/vault/runtime/<uri_id>/env
+```
+
+```json
+{
+  "data": {
+    "uri_id": "3f9c0a7e1b2d4c5e8a6b7c8d",
+    "variables": [
+      { "name": "DATABASE_URL", "type": "database_uri", "version": 3, "value": "postgres://..." }
+    ]
+  }
+}
+```
+
+O que o Vault entrega:
+
+- **Aplicações** com **membros** (`admin` e `developer`), convidados por e-mail com link de uso único.
+- **Uma tabela de segredos por membro**, com tipos (`string`, `password`, `url`, `database_uri`, `api_key`, `jwt_key`, `paseto_key`), versões e referências entre segredos da mesma aplicação.
+- **Valores cifrados em repouso** (AES-256-GCM) com chave fora do banco e rotação por chave anterior.
+- **Tokens do SDK** (`sk_vt_...`): só o hash é guardado, aparecem uma única vez e param de valer no instante em que são revogados.
+- **Auditoria append-only e fail-closed**: leituras e acessos negados também entram.
+- **API REST** (`/api/v1`) com lote, formatos JSON, XML, YAML e tabela, erros em RFC 9457, e um **gRPC interno** para outros serviços.
+
+## Instalar e rodar
+
+O Vault roda em Linux, macOS e Windows para desenvolvimento, e em **FreeBSD** em produção.
+
+> **Requisitos:** Go 1.27 e uma aplicação do Vault cadastrada no Identity (o `AUTH_APPLICATION_ID`). As pessoas entram com a conta Murkio, e o Vault valida o JWT localmente pelo JWKS do Identity.
 
 ```sh
-cp .env.example .env     # preencha AUTH_APPLICATION_ID e ENCRYPTION_KEY (openssl rand -base64 32)
-go run ./cmd/api
+cp .env.example .env
+# gere a chave de cifragem (32 bytes em base64) e preencha ENCRYPTION_KEY e AUTH_APPLICATION_ID
+openssl rand -base64 32
+
+go run ./cmd/api              # sobe a API (HTTP em APPLICATION_PORT, gRPC em 127.0.0.1:GRPC_PORT)
+go build -o bin/vault-api ./cmd/api   # binário único
+go test -race ./...           # testes
 ```
 
-O `.env`, o banco (`SQLITE_PATH`) e o log (`<binário>.log`, ou `LOG_PATH`) ficam **ao lado do binário**, de onde quer que ele seja iniciado (no `go run`, na pasta atual). O `.env` também é lido da pasta atual, e o ambiente do processo vale mais que o arquivo.
+O banco (`vault.db`) e o log (`vault.log`, últimas 1000 linhas) ficam **ao lado do binário**. Veja [Configuração](docs/operations/configuration.md).
 
-### Lendo os segredos de outro serviço
+### Atualizar
 
-Cada serviço lê os segredos dele pelo SDK do vault: `GET /runtime/{uri_id}/env?names=A,B` com o
-token `vt_` do membro dono (HTTP, só a stdlib; o gRPC interno é para chamadas de máquina no
-mesmo host). O messaging já faz isso no boot (`VAULT_URL`, `VAULT_URI_ID`, `VAULT_TOKEN`, ver
-`../messaging/README.md`): o valor do vault vale mais que o do `.env`, e só os campos marcados
-como segredo são lidos. O auth **não** usa o vault: ele sobe sempre com o `.env`, porque o
-vault valida os tokens pelo JWKS dele e a dependência seria circular.
+Não há comando de atualização. Troque o binário e reinicie: as migrations embutidas rodam sozinhas no boot.
 
-### Ligando ao auth (dev)
+Para trocar a chave de cifragem sem perder dados, siga a [Rotação da `ENCRYPTION_KEY`](docs/operations/key-rotation.md).
 
-O vault confia em **uma** aplicação do auth: a das contas Murkio, que é a aplicação de
-plataforma `murkio`. Quem tem conta nela usa o vault, e quem tem o role `admin` nela é o
-platform admin.
+## Links rápidos
 
-```sh
-# 1. auth: só ENCRYPTION_KEY e APPLICATION_PORT no .env. No primeiro boot de um banco vazio
-#    ele cria sozinho a plataforma e grava platform-credentials.txt (0600) ao lado do banco,
-#    com application_id, admin_email, admin_password e platform_secret_key.
-cd ../identity && make run-api
+- Introdução
+  - [O que é o Vault?](docs/introduction/what-is-vault.md)
+  - [Conceitos](docs/introduction/concepts.md)
+  - [Instalação](docs/introduction/installation.md)
+  - [Quickstart](docs/introduction/quickstart.md)
 
-# 2. vault: AUTH_URL=http://localhost:8080, AUTH_APPLICATION_ID=<application_id do arquivo>,
-#    ENCRYPTION_KEY e GRPC_PORT no .env
-cd ../vault && go run ./cmd/api
+- API
+  - [Contrato HTTP completo e matriz de permissões](docs/api.md)
+  - [Autenticação (JWT e token `sk_vt_`)](docs/api/authentication.md)
+  - [Formatos de resposta](docs/api/formats.md)
+  - [Lote e entidade única](docs/api/batch.md)
+  - [Paginação](docs/api/pagination.md)
+  - [Erros (RFC 9457)](docs/api/errors.md)
+  - [Aplicações](docs/api/applications.md)
+  - [Membros](docs/api/members.md)
+  - [Convites](docs/api/invitations.md)
+  - [Segredos](docs/api/secrets.md)
+  - [Tokens](docs/api/tokens.md)
+  - [Runtime (`/runtime/{uri_id}/env`)](docs/api/runtime.md)
+  - [Auditoria](docs/api/audit-logs.md)
+  - [gRPC interno](docs/api/grpc.md)
 
-# 3. entre como o admin (a sk_ e a senha vêm do arquivo) e use o access token no vault:
-curl -s -X POST localhost:8080/v1/login -H "Authorization: Bearer $SK" \
-  -H 'Content-Type: application/json' -d '{"email":"...","password":"..."}'
-curl -s localhost:8083/api/v1/applications -H "Authorization: Bearer <access_token>"
-```
+- Segurança
+  - [Visão geral](docs/security/overview.md)
+  - [Cifragem](docs/security/encryption.md)
+  - [Permissões](docs/security/permissions.md)
+  - [Reportar uma vulnerabilidade](SECURITY.md)
 
-Guarde as credenciais e apague o `platform-credentials.txt`. Esse fluxo foi conferido com os
-binários reais do auth e do vault: login, criar aplicação, criar segredo, gerar token e ler o
-ambiente por HTTP (`/api/v1/runtime/{uri_id}/env`) e por gRPC (`VaultService.ReadEnv`).
+- Operação
+  - [Configuração (`.env`)](docs/operations/configuration.md)
+  - [Banco (SQLite)](docs/operations/database.md)
+  - [Observabilidade](docs/operations/observability.md)
+  - [Deploy (FreeBSD, Caddy)](docs/operations/deployment.md)
+  - [Rotação da chave](docs/operations/key-rotation.md)
+  - [Retenção](docs/operations/retention.md)
 
-Sem os workers do auth (ainda não existem) nenhum e-mail sai: um cadastro novo só é
-verificado lendo o código da `outbox_events` do `identity.db`. O admin do bootstrap já nasce
-com o e-mail verificado.
+- Desenvolvimento
+  - [Primeiros passos](docs/development/getting-started.md)
+  - [Arquitetura](docs/development/architecture.md)
+  - [Pacotes (`pkg/`)](docs/development/packages.md)
+  - [Testes](docs/development/testing.md)
+  - [Proto (gRPC)](docs/development/proto.md)
+  - [Arquivos `.http`](docs/development/http-files.md)
 
-## Estrutura
+- Referência
+  - [Limitações atuais](docs/reference/limitations.md)
+  - [Variáveis de ambiente](docs/reference/env-cheatsheet.md)
 
-```
-cmd/api/main.go                  # config, banco, migrations, servidor
-internal/
-  contracts/                     # IUseCase e os contratos de repository (um por grupo, todos em repository.go), de auditoria e de cifra
-  entities/                      # núcleo: Actor, Decide (permissões), AuditLog, Member, erros RFC 9457
-  restful/                       # um service por pasta: controllers, services, useCases, repositories, mocks, initializr
-    initializr.go                # monta o que os services dividem e registra as rotas
-    member/                      # membros e o use case Authorize, o porteiro de toda ação
-    audit/                       # leitura da trilha de auditoria
-    invitation/                  # convites por e-mail (token inv_, outbox)
-    secret/                      # segredos: metadados, versões cifradas, reveal
-    token/                       # tokens do SDK (vt_)
-    runtime/                     # GET /runtime/{uri_id}/env
-  rpc/                           # gRPC interno (só 127.0.0.1): VaultService.ReadEnv, mesmo token vt_
-    application/                 # CRUD de aplicações
-migrations/sqlite/               # *.up.sql (rodam no boot) e *.down.sql (nunca rodam sozinhas)
-hacks/http/<service>/<ação>.http # requests de exemplo de cada rota
-pkg/                             # infra: authn (+Authenticate), recovery, audited, outbox, secretbox,
-                                 # secretvalues, tokenauth, sqlite (+sqlitetest), mocks (fakes únicos),
-                                 # migration, dotenv, utils
-```
+## Guias
 
-## Contratos
+- Aplicações e pessoas
+  - [Criar uma aplicação](docs/guides/create-application.md)
+  - [Convidar um membro](docs/guides/invite-member.md)
+  - [Aceitar um convite](docs/guides/accept-invitation.md)
 
-`IUseCase`, `IAuditedTx` (mudança + trilha na mesma transação), `ISecretValues` (cifra) e os
-contratos de repository, em `contracts/repository.go`. Eles são pequenos, concretos e sem
-generics: um por grupo de métodos (`IMemberFinder`, `ISecretOwnerFinder`, `ITokenRevoker`...), e
-cada use case recebe só os que usa. A aplicação, o dono, o segredo e o hash são parâmetros
-explícitos do método; o repository recusa o id zerado (`entities.ErrMissingParam`) e nunca o
-lê como "sem filtro". Cada repository tem teste de isolamento entre aplicações.
+- Segredos
+  - [Guardar um segredo](docs/guides/store-secret.md)
+  - [Referenciar um segredo de outro membro](docs/guides/reference-secret.md)
+  - [Revelar um valor](docs/guides/reveal-secret.md)
 
-## Regras que o código garante
+- Tokens e SDK
+  - [Criar um token e ler o ambiente](docs/guides/create-token-and-read-env.md)
+  - [Revogar um token](docs/guides/revoke-token.md)
 
-- O valor de um segredo nunca está numa entidade serializável nem numa listagem.
-- Quem não é membro recebe `404` em tudo; quem é membro e não pode recebe `403`.
-- Remover ou suspender um membro vale na hora: o banco é consultado a cada requisição.
-- Toda mudança grava a auditoria **na mesma transação**; sem auditoria, a mudança não acontece.
-- O banco recusa `UPDATE` em `audit_logs` e só deixa passar o `DELETE` do que passou de 1 ano ([retenção](docs/retention.md)). O expurgo está pronto (`PurgeExpired`); quem o chama é o job, que ainda não existe.
-- Os valores ficam cifrados (AES-256-GCM, AAD por versão); token e convite só existem como hash.
-- As respostas com valor (`reveal`, `runtime/env`, criação de token e de convite) são sempre JSON, ignorando o `Accept`.
-- Corpo com campo desconhecido é `400`: o cliente não consegue forjar `created_by`, `member_id` ou papel.
+- Auditoria
+  - [Ler a trilha de auditoria](docs/guides/read-audit-trail.md)
 
-## Testes
+- Operação
+  - [Rotacionar a `ENCRYPTION_KEY`](docs/guides/rotate-encryption-key.md)
+  - [Publicar atrás do Caddy](docs/guides/deploy-behind-caddy.md)
 
-```sh
-go test -race ./...
-```
+- Integração e desenvolvimento
+  - [Chamar o Vault por gRPC](docs/guides/call-over-grpc.md)
+  - [Criar um novo service](docs/guides/add-a-new-service.md)
 
-Os testes de segurança (`secrets_test.go`, `tokens_test.go`, `members_test.go`) varrem o
-arquivo do banco procurando o valor em claro e provam o isolamento entre contas, a revogação
-imediata e o fail-closed da auditoria. `internal/restful/restful_test.go` sobe a pilha real (autenticação, guard, transação,
-auditoria, SQLite) com só o Auth falso (`pkg/authn/authntest`).
+## Contribuindo
+
+Leia [Desenvolvimento > Primeiros passos](docs/development/getting-started.md) e [Arquitetura](docs/development/architecture.md). As regras do projeto ficam em [`.agents/rules/`](.agents/rules) e a skill de trabalho em [`.agents/skills/go-developer.md`](.agents/skills/go-developer.md).
+
+Antes de abrir um PR: `gofmt -l .`, `go vet ./...` e `go test -race ./...`. Quem commita é o único autor e responde pelo commit ([`commits.md`](.agents/rules/commits.md)).
+
+## Segurança
+
+O código é público para ser conferido: veja [`SECURITY.md`](SECURITY.md) para reportar uma vulnerabilidade e para os comandos que mostram o que o Vault faz (e não faz) com os seus dados.
+
+## Licença
+
+[PolyForm Noncommercial 1.0.0](LICENSE). O código é **source-available**: você pode ler, auditar, rodar e modificar para fins não comerciais (estudo, pesquisa, uso pessoal, organizações sem fins lucrativos, entre outros, conforme o texto da licença). **Não é open source**: uso comercial exige uma licença da Murkio.

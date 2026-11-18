@@ -5,13 +5,15 @@ import (
 	"errors"
 	"net/http"
 	"testing"
+	"uuid"
 
 	"github.com/murkio-dev/vault/internal/entities"
 	"github.com/murkio-dev/vault/internal/restful/application/mocks"
 	"github.com/murkio-dev/vault/internal/restful/application/useCases"
 	audit_mocks "github.com/murkio-dev/vault/internal/restful/audit/mocks"
 	member_mocks "github.com/murkio-dev/vault/internal/restful/member/mocks"
-	"github.com/murkio-dev/vault/pkg/utils"
+	secret_mocks "github.com/murkio-dev/vault/internal/restful/secret/mocks"
+	pkgmocks "github.com/murkio-dev/vault/pkg/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -29,6 +31,11 @@ func TestCreateApplication(t *testing.T) {
 	t.Run("Quando ocorre erro de banco na verificação de existência.", func(t *testing.T) { whenCreateExistFailsInDb(t) })
 	t.Run("Quando a lista de entrada é vazia.", func(t *testing.T) { whenCreateInputIsEmpty(t) })
 	t.Run("Quando recebe um lote misto com sucesso parcial.", func(t *testing.T) { whenCreateMixedBatch(t) })
+	t.Run("Quando o dono vem do ator e não do corpo.", func(t *testing.T) { whenCreateOwnerComesFromTheActor(t) })
+	t.Run("Quando a criação vira admin do criador.", func(t *testing.T) { whenCreateMakesTheCreatorAdmin(t) })
+	t.Run("Quando a criação é negada.", func(t *testing.T) { whenCreateIsDenied(t) })
+	t.Run("Quando a auditoria falha na criação.", func(t *testing.T) { whenCreateAuditFails(t) })
+	t.Run("Quando o nome já existe na corrida.", func(t *testing.T) { whenCreateLosesTheNameRace(t) })
 }
 
 // Functions
@@ -36,24 +43,24 @@ func TestCreateApplication(t *testing.T) {
 func whenCreateBuildSucceeds(t *testing.T) {
 	repo := &mocks.ApplicationRepo{}
 
-	useCase := useCases.NewCreateApplicationUseCase(repo, repo, &member_mocks.MemberRepo{}, &member_mocks.Guard{}, &audit_mocks.Tx{})
+	useCase := useCases.NewCreateApplicationUseCase(repo, &member_mocks.MemberRepo{}, &member_mocks.Guard{}, &audit_mocks.Tx{})
 
-	assert.NotNil(t, useCase.Creator)
-	assert.Equal(t, repo, useCase.Creator, "o repositório atribuído deve ser o mesmo passado no construtor")
-	assert.Equal(t, repo, useCase.Checker)
+	assert.NotNil(t, useCase.Repository)
+	assert.Equal(t, repo, useCase.Repository, "o repositório atribuído deve ser o mesmo passado no construtor")
+	assert.Equal(t, repo, useCase.Repository)
 }
 
 func whenCreateBuildWithNilRepo(t *testing.T) {
-	useCase := useCases.NewCreateApplicationUseCase(nil, nil, &member_mocks.MemberRepo{}, &member_mocks.Guard{}, &audit_mocks.Tx{})
+	useCase := useCases.NewCreateApplicationUseCase(nil, &member_mocks.MemberRepo{}, &member_mocks.Guard{}, &audit_mocks.Tx{})
 
-	assert.Nil(t, useCase.Creator, "o repositório interno fica nil quando injetado como nil")
+	assert.Nil(t, useCase.Repository, "o repositório interno fica nil quando injetado como nil")
 }
 
 func whenCreateOneEntity(t *testing.T) {
 	repo := &mocks.ApplicationRepo{}
-	useCase := useCases.NewCreateApplicationUseCase(repo, repo, &member_mocks.MemberRepo{}, &member_mocks.Guard{}, &audit_mocks.Tx{})
+	useCase := useCases.NewCreateApplicationUseCase(repo, &member_mocks.MemberRepo{}, &member_mocks.Guard{}, &audit_mocks.Tx{})
 
-	name := utils.GenRandomApplicationName()
+	name := pkgmocks.GenRandomApplicationName()
 	output := useCase.Perform(context.Background(), useCases.CreateInput{
 		Requester:   mocks.NewRequester(),
 		Application: []entities.Application{{Name: name}},
@@ -68,14 +75,14 @@ func whenCreateOneEntity(t *testing.T) {
 
 func whenCreateMultipleEntities(t *testing.T) {
 	repo := &mocks.ApplicationRepo{}
-	useCase := useCases.NewCreateApplicationUseCase(repo, repo, &member_mocks.MemberRepo{}, &member_mocks.Guard{}, &audit_mocks.Tx{})
+	useCase := useCases.NewCreateApplicationUseCase(repo, &member_mocks.MemberRepo{}, &member_mocks.Guard{}, &audit_mocks.Tx{})
 
 	input := useCases.CreateInput{
 		Requester: mocks.NewRequester(),
 		Application: []entities.Application{
-			{Name: utils.GenRandomApplicationName()},
-			{Name: utils.GenRandomApplicationName()},
-			{Name: utils.GenRandomApplicationName()},
+			{Name: pkgmocks.GenRandomApplicationName()},
+			{Name: pkgmocks.GenRandomApplicationName()},
+			{Name: pkgmocks.GenRandomApplicationName()},
 		},
 	}
 	output := useCase.Perform(context.Background(), input)
@@ -90,7 +97,7 @@ func whenCreateMultipleEntities(t *testing.T) {
 
 func whenCreateOneInvalidEntity(t *testing.T) {
 	repo := &mocks.ApplicationRepo{}
-	useCase := useCases.NewCreateApplicationUseCase(repo, repo, &member_mocks.MemberRepo{}, &member_mocks.Guard{}, &audit_mocks.Tx{})
+	useCase := useCases.NewCreateApplicationUseCase(repo, &member_mocks.MemberRepo{}, &member_mocks.Guard{}, &audit_mocks.Tx{})
 
 	output := useCase.Perform(context.Background(), useCases.CreateInput{
 		Requester:   mocks.NewRequester(),
@@ -107,7 +114,7 @@ func whenCreateOneInvalidEntity(t *testing.T) {
 
 func whenCreateMultipleInvalidEntities(t *testing.T) {
 	repo := &mocks.ApplicationRepo{}
-	useCase := useCases.NewCreateApplicationUseCase(repo, repo, &member_mocks.MemberRepo{}, &member_mocks.Guard{}, &audit_mocks.Tx{})
+	useCase := useCases.NewCreateApplicationUseCase(repo, &member_mocks.MemberRepo{}, &member_mocks.Guard{}, &audit_mocks.Tx{})
 
 	output := useCase.Perform(context.Background(), useCases.CreateInput{
 		Requester:   mocks.NewRequester(),
@@ -126,11 +133,11 @@ func whenCreateAppAlreadyExists(t *testing.T) {
 	repo := &mocks.ApplicationRepo{
 		ExistFunc: func(ctx context.Context, input entities.Application) (bool, error) { return true, nil },
 	}
-	useCase := useCases.NewCreateApplicationUseCase(repo, repo, &member_mocks.MemberRepo{}, &member_mocks.Guard{}, &audit_mocks.Tx{})
+	useCase := useCases.NewCreateApplicationUseCase(repo, &member_mocks.MemberRepo{}, &member_mocks.Guard{}, &audit_mocks.Tx{})
 
 	output := useCase.Perform(context.Background(), useCases.CreateInput{
 		Requester:   mocks.NewRequester(),
-		Application: []entities.Application{{Name: utils.GenRandomApplicationName()}},
+		Application: []entities.Application{{Name: pkgmocks.GenRandomApplicationName()}},
 	})
 
 	assert.Nil(t, output.Data)
@@ -147,11 +154,11 @@ func whenCreateFailsInDb(t *testing.T) {
 			return entities.Application{}, errors.New("database connection failure")
 		},
 	}
-	useCase := useCases.NewCreateApplicationUseCase(repo, repo, &member_mocks.MemberRepo{}, &member_mocks.Guard{}, &audit_mocks.Tx{})
+	useCase := useCases.NewCreateApplicationUseCase(repo, &member_mocks.MemberRepo{}, &member_mocks.Guard{}, &audit_mocks.Tx{})
 
 	output := useCase.Perform(context.Background(), useCases.CreateInput{
 		Requester:   mocks.NewRequester(),
-		Application: []entities.Application{{Name: utils.GenRandomApplicationName()}},
+		Application: []entities.Application{{Name: pkgmocks.GenRandomApplicationName()}},
 	})
 
 	assert.Nil(t, output.Data)
@@ -168,11 +175,11 @@ func whenCreateExistFailsInDb(t *testing.T) {
 			return false, errors.New("connection failed during exist check")
 		},
 	}
-	useCase := useCases.NewCreateApplicationUseCase(repo, repo, &member_mocks.MemberRepo{}, &member_mocks.Guard{}, &audit_mocks.Tx{})
+	useCase := useCases.NewCreateApplicationUseCase(repo, &member_mocks.MemberRepo{}, &member_mocks.Guard{}, &audit_mocks.Tx{})
 
 	output := useCase.Perform(context.Background(), useCases.CreateInput{
 		Requester:   mocks.NewRequester(),
-		Application: []entities.Application{{Name: utils.GenRandomApplicationName()}},
+		Application: []entities.Application{{Name: pkgmocks.GenRandomApplicationName()}},
 	})
 
 	assert.Nil(t, output.Data)
@@ -183,7 +190,7 @@ func whenCreateExistFailsInDb(t *testing.T) {
 }
 
 func whenCreateInputIsEmpty(t *testing.T) {
-	useCase := useCases.NewCreateApplicationUseCase(&mocks.ApplicationRepo{}, &mocks.ApplicationRepo{}, &member_mocks.MemberRepo{}, &member_mocks.Guard{}, &audit_mocks.Tx{})
+	useCase := useCases.NewCreateApplicationUseCase(&mocks.ApplicationRepo{}, &member_mocks.MemberRepo{}, &member_mocks.Guard{}, &audit_mocks.Tx{})
 
 	output := useCase.Perform(context.Background(), useCases.CreateInput{
 		Requester:   mocks.NewRequester(),
@@ -195,9 +202,9 @@ func whenCreateInputIsEmpty(t *testing.T) {
 }
 
 func whenCreateMixedBatch(t *testing.T) {
-	validName := utils.GenRandomApplicationName()
-	existsName := utils.GenRandomApplicationName()
-	dbErrorName := utils.GenRandomApplicationName()
+	validName := pkgmocks.GenRandomApplicationName()
+	existsName := pkgmocks.GenRandomApplicationName()
+	dbErrorName := pkgmocks.GenRandomApplicationName()
 
 	repo := &mocks.ApplicationRepo{
 		ExistFunc: func(ctx context.Context, input entities.Application) (bool, error) {
@@ -210,7 +217,7 @@ func whenCreateMixedBatch(t *testing.T) {
 			return input, nil
 		},
 	}
-	useCase := useCases.NewCreateApplicationUseCase(repo, repo, &member_mocks.MemberRepo{}, &member_mocks.Guard{}, &audit_mocks.Tx{})
+	useCase := useCases.NewCreateApplicationUseCase(repo, &member_mocks.MemberRepo{}, &member_mocks.Guard{}, &audit_mocks.Tx{})
 
 	output := useCase.Perform(context.Background(), useCases.CreateInput{
 		Requester: mocks.NewRequester(),
@@ -229,5 +236,77 @@ func whenCreateMixedBatch(t *testing.T) {
 		assert.Equal(t, entities.ErrTypeValidation, output.Errors[0].Type)
 		assert.Equal(t, entities.ErrTypeConflict, output.Errors[1].Type)
 		assert.Equal(t, entities.ErrTypeInternal, output.Errors[2].Type)
+	}
+}
+
+func whenCreateOwnerComesFromTheActor(t *testing.T) {
+	repo, members, tx := &mocks.ApplicationRepo{}, &member_mocks.MemberRepo{}, &audit_mocks.Tx{}
+	requester := mocks.NewRequester()
+	forged := mocks.NewApp()
+	forged.CreatedBy = uuid.NewV7()
+
+	output := useCases.NewCreateApplicationUseCase(repo, members, &member_mocks.Guard{}, tx).
+		Perform(context.Background(), useCases.CreateInput{Requester: requester, Application: []entities.Application{forged}})
+
+	assert.Empty(t, output.Errors)
+	if assert.Len(t, output.Data, 1) {
+		assert.Equal(t, requester.Actor.UserID, output.Data[0].CreatedBy, "o created_by do corpo é ignorado")
+		assert.NotEqual(t, forged.CreatedBy, output.Data[0].CreatedBy)
+	}
+}
+
+func whenCreateMakesTheCreatorAdmin(t *testing.T) {
+	members, tx := &member_mocks.MemberRepo{}, &audit_mocks.Tx{}
+	requester := mocks.NewRequester()
+
+	output := useCases.NewCreateApplicationUseCase(&mocks.ApplicationRepo{}, members, &member_mocks.Guard{}, tx).
+		Perform(context.Background(), useCases.CreateInput{Requester: requester, Application: []entities.Application{mocks.NewApp()}})
+
+	assert.Empty(t, output.Errors)
+	if assert.Len(t, members.Created, 1) {
+		assert.Equal(t, entities.RoleAdmin, members.Created[0].Role)
+		assert.Equal(t, requester.Actor.UserID, members.Created[0].UserID)
+		assert.Equal(t, output.Data[0].ID, members.Created[0].ApplicationID)
+	}
+	assert.Equal(t, []string{entities.AuditApplicationCreated}, tx.Actions())
+}
+
+func whenCreateIsDenied(t *testing.T) {
+	repo, members := &mocks.ApplicationRepo{}, &member_mocks.MemberRepo{}
+	guard := (&member_mocks.Guard{}).Deny(entities.UnauthorizedError())
+
+	output := useCases.NewCreateApplicationUseCase(repo, members, guard, &audit_mocks.Tx{}).
+		Perform(context.Background(), useCases.CreateInput{Requester: entities.ApiHeader{}, Application: []entities.Application{mocks.NewApp()}})
+
+	assert.Nil(t, output.Data)
+	if assert.Len(t, output.Errors, 1) {
+		assert.Equal(t, http.StatusUnauthorized, output.Errors[0].Status)
+	}
+	assert.Zero(t, len(repo.Created))
+	assert.Empty(t, members.Created)
+}
+
+func whenCreateAuditFails(t *testing.T) {
+	tx := &audit_mocks.Tx{AuditErr: errors.New("disk full")}
+
+	output := useCases.NewCreateApplicationUseCase(&mocks.ApplicationRepo{}, &member_mocks.MemberRepo{}, &member_mocks.Guard{}, tx).
+		Perform(context.Background(), useCases.CreateInput{Requester: mocks.NewRequester(), Application: []entities.Application{mocks.NewApp()}})
+
+	assert.Nil(t, output.Data, "sem trilha, a aplicação não nasce")
+	if assert.Len(t, output.Errors, 1) {
+		assert.Equal(t, entities.ErrTypeInternal, output.Errors[0].Type)
+	}
+}
+
+func whenCreateLosesTheNameRace(t *testing.T) {
+	repo := &mocks.ApplicationRepo{CreateFunc: func(context.Context, entities.Application) (entities.Application, error) {
+		return entities.Application{}, secret_mocks.NewUniqueViolation()
+	}}
+
+	output := useCases.NewCreateApplicationUseCase(repo, &member_mocks.MemberRepo{}, &member_mocks.Guard{}, &audit_mocks.Tx{}).
+		Perform(context.Background(), useCases.CreateInput{Requester: mocks.NewRequester(), Application: []entities.Application{mocks.NewApp()}})
+
+	if assert.Len(t, output.Errors, 1) {
+		assert.Equal(t, http.StatusConflict, output.Errors[0].Status, "a restrição do banco vira conflito, não 500")
 	}
 }

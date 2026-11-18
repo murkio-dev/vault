@@ -5,27 +5,22 @@ import (
 
 	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	applicationcontracts "github.com/murkio-dev/vault/internal/restful/application/contracts"
+	membercontracts "github.com/murkio-dev/vault/internal/restful/member/contracts"
 	"github.com/murkio-dev/vault/pkg/sqlite"
 )
 
 // Builder
 
 type CreateApplicationUseCase struct {
-	Checker       contracts.IApplicationChecker
-	Creator       contracts.IApplicationCreator
-	MemberCreator contracts.IMemberCreator
-	Guard         contracts.IAccessGuard
-	Tx            contracts.IAuditedTx
+	Repository applicationcontracts.IApplicationRepository
+	Members    membercontracts.IMemberRepository
+	Guard      contracts.IAccessGuard
+	Tx         contracts.IAuditedTx
 }
 
-func NewCreateApplicationUseCase(checker contracts.IApplicationChecker, creator contracts.IApplicationCreator, memberCreator contracts.IMemberCreator, guard contracts.IAccessGuard, tx contracts.IAuditedTx) CreateApplicationUseCase {
-	return CreateApplicationUseCase{
-		Checker:       checker,
-		Creator:       creator,
-		MemberCreator: memberCreator,
-		Guard:         guard,
-		Tx:            tx,
-	}
+func NewCreateApplicationUseCase(repository applicationcontracts.IApplicationRepository, members membercontracts.IMemberRepository, guard contracts.IAccessGuard, tx contracts.IAuditedTx) CreateApplicationUseCase {
+	return CreateApplicationUseCase{Repository: repository, Members: members, Guard: guard, Tx: tx}
 }
 
 // DTOS
@@ -59,7 +54,7 @@ func (u CreateApplicationUseCase) Perform(ctx context.Context, input CreateInput
 			continue
 		}
 
-		exists, err := u.Checker.Exist(ctx, entity)
+		exists, err := u.Repository.Exist(ctx, entity)
 		if err != nil {
 			errs = append(errs, entities.InternalServerError(err, &application.Name))
 			continue
@@ -75,10 +70,10 @@ func (u CreateApplicationUseCase) Perform(ctx context.Context, input CreateInput
 			map[string]any{"name": entity.Name, "admin_member_id": admin.ID.String()})
 
 		err = u.Tx.Run(ctx, entry, func(ctx context.Context) error {
-			if _, err := u.Creator.Create(ctx, entity); err != nil {
+			if _, err := u.Repository.Create(ctx, entity); err != nil {
 				return err
 			}
-			_, err := u.MemberCreator.Create(ctx, admin)
+			_, err := u.Members.Create(ctx, admin)
 			return err
 		})
 		if err != nil {

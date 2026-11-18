@@ -27,6 +27,8 @@ func TestAuditRepository(t *testing.T) {
 	t.Run("Quando expurga o que passou da retenção.", func(t *testing.T) { whenPurgingExpired(t) })
 	t.Run("Quando o banco guarda a retenção.", func(t *testing.T) { whenDatabaseGuardsRetention(t) })
 	t.Run("Quando o lote do expurgo é inválido.", func(t *testing.T) { whenPurgeLimitIsInvalid(t) })
+	t.Run("Quando a linha vem sem os campos opcionais.", func(t *testing.T) { whenOptionalFieldsAreEmpty(t) })
+	t.Run("Quando o banco falha ao gravar, ler e expurgar.", func(t *testing.T) { whenDatabaseFails(t) })
 }
 
 // Functions
@@ -228,4 +230,38 @@ func whenPurgeLimitIsInvalid(t *testing.T) {
 
 		assert.Error(t, err, "limit %d", limit)
 	}
+}
+
+func whenOptionalFieldsAreEmpty(t *testing.T) {
+	db := sqlitetest.New(t)
+	repo := repositories.NewRepository(db)
+	a := sqlitetest.Seed(t, db, "app-a")
+	log := entry(a.Application, a.User, entities.AuditSecretRevealed, entities.AuditAllowed)
+	log.TargetType, log.TargetID, log.IP, log.UserAgent, log.RequestID = "", "", "", "", ""
+
+	_, err := repo.Create(context.Background(), log)
+	require.NoError(t, err)
+
+	var targetType, targetID, ip, userAgent, requestID sql.NullString
+	require.NoError(t, db.QueryRow("SELECT target_type, target_id, ip, user_agent, request_id FROM audit_logs WHERE id = ?", log.ID.String()).
+		Scan(&targetType, &targetID, &ip, &userAgent, &requestID))
+	for name, column := range map[string]sql.NullString{"target_type": targetType, "target_id": targetID, "ip": ip, "user_agent": userAgent, "request_id": requestID} {
+		assert.False(t, column.Valid, name+": texto vazio vira NULL, não uma string vazia")
+	}
+}
+
+func whenDatabaseFails(t *testing.T) {
+	db := sqlitetest.New(t)
+	repo := repositories.NewRepository(db)
+	a := sqlitetest.Seed(t, db, "app-a")
+	log := entry(a.Application, a.User, entities.AuditSecretRevealed, entities.AuditAllowed)
+	require.NoError(t, db.Close())
+
+	_, createErr := repo.Create(context.Background(), log)
+	_, listErr := repo.List(context.Background(), entities.AuditFilter{ApplicationID: a.Application}, 10)
+	_, purgeErr := repo.PurgeExpired(context.Background(), time.Now(), 10)
+
+	assert.Error(t, createErr)
+	assert.Error(t, listErr)
+	assert.Error(t, purgeErr)
 }

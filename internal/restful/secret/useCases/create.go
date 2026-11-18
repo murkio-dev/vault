@@ -6,24 +6,22 @@ import (
 
 	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	secretcontracts "github.com/murkio-dev/vault/internal/restful/secret/contracts"
 )
 
-// MaxCreateBatch limita quantos segredos uma chamada cria.
 const MaxCreateBatch = 50
 
 // Builder
 
 type CreateSecretUseCase struct {
-	Counter contracts.ISecretCounter
-	Creator contracts.ISecretCreator
-	Finder  contracts.ISecretFinder
-	Values  contracts.ISecretValues
-	Guard   contracts.IAccessGuard
-	Tx      contracts.IAuditedTx
+	Repository secretcontracts.ISecretRepository
+	Values     contracts.ISecretValues
+	Guard      contracts.IAccessGuard
+	Tx         contracts.IAuditedTx
 }
 
-func NewCreateSecretUseCase(counter contracts.ISecretCounter, creator contracts.ISecretCreator, finder contracts.ISecretFinder, values contracts.ISecretValues, guard contracts.IAccessGuard, tx contracts.IAuditedTx) CreateSecretUseCase {
-	return CreateSecretUseCase{Counter: counter, Creator: creator, Finder: finder, Values: values, Guard: guard, Tx: tx}
+func NewCreateSecretUseCase(repository secretcontracts.ISecretRepository, values contracts.ISecretValues, guard contracts.IAccessGuard, tx contracts.IAuditedTx) CreateSecretUseCase {
+	return CreateSecretUseCase{Repository: repository, Values: values, Guard: guard, Tx: tx}
 }
 
 // DTOS
@@ -67,7 +65,7 @@ func (u CreateSecretUseCase) Perform(ctx context.Context, input CreateInput) Cre
 			continue
 		}
 
-		if stored, err := u.Counter.Count(ctx, input.Application, owner); err != nil {
+		if stored, err := u.Repository.Count(ctx, input.Application, owner); err != nil {
 			errs = append(errs, *failure(err))
 			continue
 		} else if stored >= entities.MaxSecretsPerTable {
@@ -81,7 +79,7 @@ func (u CreateSecretUseCase) Perform(ctx context.Context, input CreateInput) Cre
 
 		var created entities.Secret
 		err := u.Tx.Run(ctx, entry, func(ctx context.Context) (err error) {
-			created, err = u.Creator.Create(ctx, write)
+			created, err = u.Repository.Create(ctx, write)
 			return err
 		})
 		if err != nil {
@@ -158,7 +156,7 @@ func (u CreateSecretUseCase) prepare(ctx context.Context, input CreateInput, own
 // Referência para referência é recusada, o que impede ciclos.
 func (u CreateSecretUseCase) checkReference(ctx context.Context, input CreateInput, item entities.SecretDraft) *entities.Error {
 
-	target, err := u.Finder.FindById(ctx, input.Application, *item.ReferenceSecretID)
+	target, err := u.Repository.FindById(ctx, input.Application, *item.ReferenceSecretID)
 	if err != nil {
 		return invalid("reference_secret_id", "must be an active secret of this application")
 	}

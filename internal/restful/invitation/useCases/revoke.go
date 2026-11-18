@@ -8,18 +8,19 @@ import (
 
 	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	invitationcontracts "github.com/murkio-dev/vault/internal/restful/invitation/contracts"
 )
 
 // Builder
 
 type RevokeInvitationUseCase struct {
-	Revoker contracts.IInvitationRevoker
-	Guard   contracts.IAccessGuard
-	Tx      contracts.IAuditedTx
+	Repository invitationcontracts.IInvitationRepository
+	Guard      contracts.IAccessGuard
+	Tx         contracts.IAuditedTx
 }
 
-func NewRevokeInvitationUseCase(revoker contracts.IInvitationRevoker, guard contracts.IAccessGuard, tx contracts.IAuditedTx) RevokeInvitationUseCase {
-	return RevokeInvitationUseCase{Revoker: revoker, Guard: guard, Tx: tx}
+func NewRevokeInvitationUseCase(repository invitationcontracts.IInvitationRepository, guard contracts.IAccessGuard, tx contracts.IAuditedTx) RevokeInvitationUseCase {
+	return RevokeInvitationUseCase{Repository: repository, Guard: guard, Tx: tx}
 }
 
 // DTOS
@@ -46,7 +47,7 @@ func (u RevokeInvitationUseCase) Perform(ctx context.Context, input RevokeInput)
 		entities.AuditTarget{Type: "invitation", ID: input.Invitation.String()}, nil)
 
 	err := u.Tx.Run(ctx, entry, func(ctx context.Context) error {
-		return u.Revoker.Revoke(ctx, input.Application, input.Invitation)
+		return u.Repository.Revoke(ctx, input.Application, input.Invitation)
 	})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

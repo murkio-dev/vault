@@ -6,19 +6,19 @@ import (
 
 	"github.com/murkio-dev/vault/internal/contracts"
 	"github.com/murkio-dev/vault/internal/entities"
+	tokencontracts "github.com/murkio-dev/vault/internal/restful/token/contracts"
 )
 
 // Builder
 
 type RevokeTokenUseCase struct {
-	Finder  contracts.ITokenFinder
-	Revoker contracts.ITokenRevoker
-	Guard   contracts.IAccessGuard
-	Tx      contracts.IAuditedTx
+	Repository tokencontracts.ITokenRepository
+	Guard      contracts.IAccessGuard
+	Tx         contracts.IAuditedTx
 }
 
-func NewRevokeTokenUseCase(finder contracts.ITokenFinder, revoker contracts.ITokenRevoker, guard contracts.IAccessGuard, tx contracts.IAuditedTx) RevokeTokenUseCase {
-	return RevokeTokenUseCase{Finder: finder, Revoker: revoker, Guard: guard, Tx: tx}
+func NewRevokeTokenUseCase(repository tokencontracts.ITokenRepository, guard contracts.IAccessGuard, tx contracts.IAuditedTx) RevokeTokenUseCase {
+	return RevokeTokenUseCase{Repository: repository, Guard: guard, Tx: tx}
 }
 
 // DTOS
@@ -49,7 +49,7 @@ func (u RevokeTokenUseCase) Perform(ctx context.Context, input RevokeInput) Revo
 
 	ctx = entities.WithActor(ctx, input.Requester.Actor)
 
-	token, err := u.Finder.FindById(ctx, input.Application, input.Token)
+	token, err := u.Repository.FindById(ctx, input.Application, input.Token)
 	if err != nil || token.MemberID != owner {
 		notFound := entities.NotFoundError("Resource")
 		return RevokeOutput{Error: &notFound}
@@ -63,7 +63,7 @@ func (u RevokeTokenUseCase) Perform(ctx context.Context, input RevokeInput) Revo
 		entities.AuditTarget{Type: "token", ID: token.ID.String()}, map[string]any{"name": token.Name, "prefix": token.Prefix, "member_id": owner.String()})
 
 	err = u.Tx.Run(ctx, entry, func(ctx context.Context) error {
-		return u.Revoker.Revoke(ctx, input.Application, token.ID)
+		return u.Repository.Revoke(ctx, input.Application, token.ID)
 	})
 	if err != nil {
 		return RevokeOutput{Error: failure(err)}
