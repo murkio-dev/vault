@@ -8,6 +8,7 @@ import (
 	"uuid"
 
 	"github.com/murkio-dev/vault/internal/entities"
+	"github.com/murkio-dev/vault/internal/restful/token/mocks"
 	"github.com/murkio-dev/vault/internal/restful/token/repositories"
 	"github.com/murkio-dev/vault/pkg/sqlite/sqlitetest"
 	"github.com/stretchr/testify/assert"
@@ -25,6 +26,7 @@ func TestTokenRepository(t *testing.T) {
 	t.Run("Quando o token deixa de valer.", func(t *testing.T) { whenTheTokenStopsBeingValid(t) })
 	t.Run("Quando revoga.", func(t *testing.T) { whenRevoking(t) })
 	t.Run("Quando marca o último uso.", func(t *testing.T) { whenMarkingTheLastUse(t) })
+	t.Run("Quando o banco falha.", func(t *testing.T) { whenDatabaseFails(t) })
 }
 
 // Functions
@@ -129,7 +131,7 @@ func whenAuthenticatingByHash(t *testing.T) {
 	token, raw := add(t, repo, a)
 
 	found, err := repo.FindActiveByHash(context.Background(), entities.HashToken(raw))
-	_, noneErr := repo.FindActiveByHash(context.Background(), entities.HashToken("vt_inventado"))
+	_, noneErr := repo.FindActiveByHash(context.Background(), entities.HashToken("sk_vt_inventado"))
 
 	require.NoError(t, err)
 	assert.Equal(t, token.ID, found.ID)
@@ -222,4 +224,24 @@ func (d *sqlDB) exec(t *testing.T, query string, args ...any) {
 	t.Helper()
 	_, err := d.Exec(query, args...)
 	require.NoError(t, err)
+}
+
+func whenDatabaseFails(t *testing.T) {
+	db := sqlitetest.New(t)
+	repo := repositories.NewRepository(db)
+	app, id := uuid.NewV7(), uuid.NewV7()
+	token := mocks.NewToken()
+	require.NoError(t, db.Close())
+	ctx := context.Background()
+
+	_, create := repo.Create(ctx, token)
+	_, find := repo.FindById(ctx, app, id)
+	_, _, list := repo.List(ctx, app, id, 10, 0)
+	_, byHash := repo.FindActiveByHash(ctx, "hash")
+	_, touch := repo.TouchLastUsed(ctx, token)
+	revoke := repo.Revoke(ctx, app, id)
+
+	for name, err := range map[string]error{"Create": create, "FindById": find, "List": list, "FindActiveByHash": byHash, "TouchLastUsed": touch, "Revoke": revoke} {
+		assert.Error(t, err, name)
+	}
 }
