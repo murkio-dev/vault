@@ -126,7 +126,7 @@ func NewToken(prefix string) (string, error) {
 // procura. Um token de 256 bits aleatórios não precisa de hash lento (argon2,
 // bcrypt): o espaço de busca já é inviável, e o hash rápido deixa a
 // autenticação de cada requisição do SDK barata. A busca é por igualdade do
-// hash, sem comparar o token. Exemplo: HashToken("vt_abc") sempre dá o mesmo
+// hash, sem comparar o token. Exemplo: HashToken("sk_vt_abc") sempre dá o mesmo
 // valor de 64 caracteres, e dois tokens diferentes nunca colidem na prática.
 func HashToken(token string) string {
 	sum := sha256.Sum256([]byte(token))
