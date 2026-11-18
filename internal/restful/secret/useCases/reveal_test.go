@@ -9,6 +9,7 @@ import (
 	"uuid"
 
 	"github.com/murkio-dev/vault/internal/entities"
+	member_mocks "github.com/murkio-dev/vault/internal/restful/member/mocks"
 	"github.com/murkio-dev/vault/internal/restful/secret/mocks"
 	"github.com/murkio-dev/vault/internal/restful/secret/useCases"
 	"github.com/stretchr/testify/assert"
@@ -30,112 +31,104 @@ func TestRevealSecret(t *testing.T) {
 
 // Functions
 
-func (r *rig) reveal() useCases.RevealSecretUseCase {
-	return useCases.NewRevealSecretUseCase(r.secrets, r.values, r.guard, r.tx)
-}
-
-func (r *rig) revealInput(version int) useCases.RevealInput {
-	return useCases.RevealInput{Requester: r.requester(), Application: uuid.NewV7(), Member: entities.SelfOwner, Secret: uuid.NewV7(), Version: version}
-}
-
 func whenRevealBuildSucceeds(t *testing.T) {
-	r := newRig()
+	r := mocks.NewRig()
 
-	useCase := r.reveal()
+	useCase := revealUseCase(r)
 
-	assert.Equal(t, r.secrets, useCase.OwnerFinder)
-	assert.Equal(t, r.values, useCase.Values)
-	assert.Equal(t, r.tx, useCase.Tx)
+	assert.Equal(t, r.Secrets, useCase.Repository)
+	assert.Equal(t, r.Values, useCase.Values)
+	assert.Equal(t, r.Tx, useCase.Tx)
 }
 
 func whenRevealSucceeds(t *testing.T) {
-	r := newRig()
+	r := mocks.NewRig()
 
-	output := r.reveal().Perform(context.Background(), r.revealInput(0))
+	output := revealUseCase(r).Perform(context.Background(), revealInput(r, 0))
 
 	assert.Nil(t, output.Error)
 	assert.Equal(t, "valor-revelado", output.Data.Value)
 	assert.Equal(t, 1, output.Data.Version)
-	assert.Equal(t, []entities.Action{entities.ActionSecretReveal}, r.guard.Actions())
-	if assert.Len(t, r.tx.Entries, 1) {
-		assert.Equal(t, entities.AuditSecretRevealed, r.tx.Entries[0].Action)
-		assert.NotContains(t, string(r.tx.Entries[0].Metadata), "valor-revelado", "a trilha leva nome e versão, nunca o valor")
+	assert.Equal(t, []entities.Action{entities.ActionSecretReveal}, r.Guard.Actions())
+	if assert.Len(t, r.Tx.Entries, 1) {
+		assert.Equal(t, entities.AuditSecretRevealed, r.Tx.Entries[0].Action)
+		assert.NotContains(t, string(r.Tx.Entries[0].Metadata), "valor-revelado", "a trilha leva nome e versão, nunca o valor")
 	}
 }
 
 func whenRevealAnOldVersion(t *testing.T) {
-	r := newRig()
+	r := mocks.NewRig()
 
-	output := r.reveal().Perform(context.Background(), r.revealInput(3))
+	output := revealUseCase(r).Perform(context.Background(), revealInput(r, 3))
 
 	assert.Nil(t, output.Error)
 	assert.Equal(t, 3, output.Data.Version)
-	assert.Contains(t, string(r.tx.Entries[0].Metadata), `"version":3`)
+	assert.Contains(t, string(r.Tx.Entries[0].Metadata), `"version":3`)
 }
 
 func whenRevealAReference(t *testing.T) {
-	r := newRig()
+	r := mocks.NewRig()
 	target := uuid.NewV7()
-	r.secrets.FindByOwnerFunc = func(context.Context, uuid.UUID, uuid.UUID, uuid.UUID) (entities.Secret, error) {
+	r.Secrets.FindByOwnerFunc = func(context.Context, uuid.UUID, uuid.UUID, uuid.UUID) (entities.Secret, error) {
 		secret := mocks.NewSecret()
 		secret.Source, secret.ReferenceSecretID = entities.SourceReference, &target
 		return secret, nil
 	}
 
-	output := r.reveal().Perform(context.Background(), r.revealInput(0))
+	output := revealUseCase(r).Perform(context.Background(), revealInput(r, 0))
 
 	assert.Nil(t, output.Error)
-	assert.Contains(t, string(r.tx.Entries[0].Metadata), target.String(), "a trilha diz de onde o valor foi resolvido")
+	assert.Contains(t, string(r.Tx.Entries[0].Metadata), target.String(), "a trilha diz de onde o valor foi resolvido")
 }
 
 func whenRevealVersionIsNegative(t *testing.T) {
-	r := newRig()
+	r := mocks.NewRig()
 
-	output := r.reveal().Perform(context.Background(), r.revealInput(-1))
+	output := revealUseCase(r).Perform(context.Background(), revealInput(r, -1))
 
 	if assert.NotNil(t, output.Error) {
 		assert.Equal(t, http.StatusBadRequest, output.Error.Status)
 	}
-	assert.Zero(t, r.guard.Calls)
+	assert.Zero(t, r.Guard.Calls)
 }
 
 func whenRevealIsMissing(t *testing.T) {
-	missingSecret := newRig()
-	missingSecret.secrets.FindByOwnerFunc = func(context.Context, uuid.UUID, uuid.UUID, uuid.UUID) (entities.Secret, error) {
+	missingSecret := mocks.NewRig()
+	missingSecret.Secrets.FindByOwnerFunc = func(context.Context, uuid.UUID, uuid.UUID, uuid.UUID) (entities.Secret, error) {
 		return entities.Secret{}, sql.ErrNoRows
 	}
-	missingVersion := newRig()
-	missingVersion.values.ValueErr = sql.ErrNoRows
+	missingVersion := mocks.NewRig()
+	missingVersion.Values.ValueErr = sql.ErrNoRows
 
-	for name, r := range map[string]*rig{"segredo": missingSecret, "versão": missingVersion} {
-		output := r.reveal().Perform(context.Background(), r.revealInput(9))
+	for name, r := range map[string]mocks.Rig{"segredo": missingSecret, "versão": missingVersion} {
+		output := revealUseCase(r).Perform(context.Background(), revealInput(r, 9))
 
 		if assert.NotNil(t, output.Error, name) {
 			assert.Equal(t, http.StatusNotFound, output.Error.Status, name)
 		}
 		assert.Empty(t, output.Data.Value, name)
-		assert.Empty(t, r.tx.Entries, name)
+		assert.Empty(t, r.Tx.Entries, name)
 	}
 }
 
 func whenRevealIsDenied(t *testing.T) {
-	r := newRig()
-	r.guard.Deny(entities.ForbiddenError())
+	r := mocks.NewRig()
+	r.Guard.Deny(entities.ForbiddenError())
 
-	output := r.reveal().Perform(context.Background(), r.revealInput(0))
+	output := revealUseCase(r).Perform(context.Background(), revealInput(r, 0))
 
 	if assert.NotNil(t, output.Error) {
 		assert.Equal(t, http.StatusForbidden, output.Error.Status)
 	}
 	assert.Empty(t, output.Data.Value, "negado, o valor nunca sai")
-	assert.Zero(t, r.tx.Runs)
+	assert.Zero(t, r.Tx.Runs)
 }
 
 func whenRevealAuditFails(t *testing.T) {
-	r := newRig()
-	r.tx.AuditErr = errors.New("disk full")
+	r := mocks.NewRig()
+	r.Tx.AuditErr = errors.New("disk full")
 
-	output := r.reveal().Perform(context.Background(), r.revealInput(0))
+	output := revealUseCase(r).Perform(context.Background(), revealInput(r, 0))
 
 	if assert.NotNil(t, output.Error) {
 		assert.Equal(t, entities.ErrTypeInternal, output.Error.Type)
@@ -144,14 +137,24 @@ func whenRevealAuditFails(t *testing.T) {
 }
 
 func whenRevealDecryptionFails(t *testing.T) {
-	r := newRig()
-	r.values.ValueErr = errors.New("segredo-interno")
+	r := mocks.NewRig()
+	r.Values.ValueErr = errors.New("segredo-interno")
 
-	output := r.reveal().Perform(context.Background(), r.revealInput(0))
+	output := revealUseCase(r).Perform(context.Background(), revealInput(r, 0))
 
 	if assert.NotNil(t, output.Error) {
 		assert.Equal(t, entities.ErrTypeInternal, output.Error.Type)
 		assert.NotContains(t, output.Error.Detail, "segredo-interno")
 	}
 	assert.Empty(t, output.Data.Value)
+}
+
+// Helpers
+
+func revealUseCase(r mocks.Rig) useCases.RevealSecretUseCase {
+	return useCases.NewRevealSecretUseCase(r.Secrets, r.Values, r.Guard, r.Tx)
+}
+
+func revealInput(r mocks.Rig, version int) useCases.RevealInput {
+	return useCases.RevealInput{Requester: member_mocks.NewUserRequester(), Application: uuid.NewV7(), Member: entities.SelfOwner, Secret: uuid.NewV7(), Version: version}
 }
