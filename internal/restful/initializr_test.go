@@ -100,6 +100,8 @@ func TestTokens(t *testing.T) {
 	t.Run("Quando o token é revogado.", func(t *testing.T) { whenTokenIsRevoked(t) })
 	t.Run("Quando o token deixa de valer por outro motivo.", func(t *testing.T) { whenTokenStopsWorking(t) })
 	t.Run("Quando a auditoria falha na leitura do ambiente.", func(t *testing.T) { whenAuditFailsOnEnv(t) })
+	t.Run("Quando a chave publishable tenta ler o ambiente.", func(t *testing.T) { whenPublishableKeyReadsEnvironment(t) })
+	t.Run("Quando a chave é renomeada e rotacionada.", func(t *testing.T) { whenKeyIsRenamedAndRotated(t) })
 }
 
 func TestAuditLogs(t *testing.T) {
@@ -245,7 +247,7 @@ func whenApplicationIsDeleted(t *testing.T) {
 	s := newStack(t)
 	maria := s.person()
 	id := s.createApplication(&maria, "minha-app")
-	_, err := s.db.Exec(`INSERT INTO access_tokens (id, application_id, member_id, name, prefix, token_hash, created_by, created_at)
+	_, err := s.db.Exec(`INSERT INTO api_keys (id, application_id, member_id, name, prefix, hash, created_by, created_at)
 		SELECT 'tok', application_id, id, 'n', 'sk_vt_x', 'hash', user_id, ? FROM members WHERE application_id = ?`, time.Now().UTC(), id)
 	require.NoError(t, err)
 
@@ -254,7 +256,7 @@ func whenApplicationIsDeleted(t *testing.T) {
 
 	assert.Equal(t, http.StatusNoContent, status)
 	assert.Equal(t, http.StatusNotFound, read)
-	assert.Equal(t, 1, s.count(`SELECT COUNT(*) FROM access_tokens WHERE revoked_at IS NOT NULL`), "os tokens são revogados na cascata")
+	assert.Equal(t, 1, s.count(`SELECT COUNT(*) FROM api_keys WHERE deleted_at IS NOT NULL`), "os tokens são revogados na cascata")
 	assert.Equal(t, 1, s.count(`SELECT COUNT(*) FROM members WHERE deleted_at IS NOT NULL`))
 	assert.Equal(t, 1, s.count(`SELECT COUNT(*) FROM audit_logs WHERE action = 'application.deleted'`), "a trilha continua")
 
@@ -531,7 +533,7 @@ func whenAMemberIsRemoved(t *testing.T) {
 	app := s.createApplication(&maria, "minha-app")
 	dev, memberID := s.join(&maria, app, "developer")
 	now := time.Now().UTC()
-	_, err := s.db.Exec(`INSERT INTO access_tokens (id, application_id, member_id, name, prefix, token_hash, created_by, created_at) VALUES ('t', ?, ?, 'n', 'sk_vt_x', 'h', 'u', ?)`, app, memberID, now)
+	_, err := s.db.Exec(`INSERT INTO api_keys (id, application_id, member_id, name, prefix, hash, created_by, created_at) VALUES ('t', ?, ?, 'n', 'sk_vt_x', 'h', 'u', ?)`, app, memberID, now)
 	require.NoError(t, err)
 	_, err = s.db.Exec(`INSERT INTO secrets (id, application_id, member_id, name, type, source, created_by, created_at) VALUES ('s', ?, ?, 'A', 'string', 'static', 'u', ?)`, app, memberID, now)
 	require.NoError(t, err)
@@ -545,7 +547,7 @@ func whenAMemberIsRemoved(t *testing.T) {
 	assert.Equal(t, http.StatusNoContent, status)
 	assert.Equal(t, http.StatusNotFound, after)
 	assert.Equal(t, http.StatusNotFound, missing)
-	assert.Equal(t, 1, s.count(`SELECT COUNT(*) FROM access_tokens WHERE id = 't' AND revoked_at IS NOT NULL`), "os tokens dele são revogados")
+	assert.Equal(t, 1, s.count(`SELECT COUNT(*) FROM api_keys WHERE id = 't' AND deleted_at IS NOT NULL`), "os tokens dele são revogados")
 	assert.Equal(t, 1, s.count(`SELECT COUNT(*) FROM secrets WHERE id = 's' AND deleted_at IS NOT NULL`), "e os segredos, apagados")
 	assert.Equal(t, 1, s.count(`SELECT COUNT(*) FROM audit_logs WHERE action = 'member.removed' AND target_id = ?`, memberID))
 }
@@ -851,7 +853,7 @@ func whenTokenIsCreated(t *testing.T) {
 	maria := s.person()
 	app := s.createApplication(&maria, "minha-app")
 
-	req := httptest.NewRequest(http.MethodPost, tokensPath(app, "me"), strings.NewReader(`{"name":"notebook"}`))
+	req := httptest.NewRequest(http.MethodPost, tokensPath(app, "me"), strings.NewReader(`{"name":"notebook","type":"secret"}`))
 	req.Header.Set("Authorization", "Bearer "+maria.token)
 	req.Header.Set("Accept", "text/plain")
 	rec := httptest.NewRecorder()
@@ -860,20 +862,21 @@ func whenTokenIsCreated(t *testing.T) {
 	require.Equal(t, http.StatusCreated, rec.Code)
 	assert.Contains(t, rec.Header().Get("Content-Type"), "application/json", "a resposta com o token é sempre JSON")
 	body := rec.Body.String()
-	raw := strings.Split(strings.Split(body, `"token":"`)[1], `"`)[0]
+	raw := strings.Split(strings.Split(body, `"key":"`)[1], `"`)[0]
 	assert.True(t, strings.HasPrefix(raw, "sk_vt_"))
 	assert.Contains(t, body, `"uri":"https://vault.example.com/`)
-	assert.Contains(t, body, `"prefix":"`+raw[:entities.TokenDisplayLength]+`"`)
+	assert.Contains(t, body, `"prefix":"`+raw[:entities.KeyDisplayLength]+`"`)
 
-	assert.Equal(t, 0, s.count(`SELECT COUNT(*) FROM access_tokens WHERE token_hash = ?`, raw), "o banco guarda o hash, não o token")
-	assert.Equal(t, 1, s.count(`SELECT COUNT(*) FROM access_tokens WHERE prefix = ?`, raw[:entities.TokenDisplayLength]))
+	assert.Equal(t, 0, s.count(`SELECT COUNT(*) FROM api_keys WHERE hash = ?`, raw), "o banco guarda o hash, não o token")
+	assert.Equal(t, 1, s.count(`SELECT COUNT(*) FROM api_keys WHERE prefix = ?`, raw[:entities.KeyDisplayLength]))
 	assert.Equal(t, 0, s.count(`SELECT COUNT(*) FROM audit_logs WHERE metadata LIKE ?`, "%"+raw+"%"), "a trilha nunca leva o token")
-	assert.Equal(t, 1, s.count(`SELECT COUNT(*) FROM audit_logs WHERE action = 'token.created'`))
+	assert.Equal(t, 1, s.count(`SELECT COUNT(*) FROM audit_logs WHERE action = 'api_key.created'`))
 
 	status, list := s.do(&maria, http.MethodGet, tokensPath(app, "me"), nil)
 	require.Equal(t, http.StatusOK, status)
 	item := list["data"].([]any)[0].(map[string]any)
-	assert.NotContains(t, item, "token", "a lista só mostra o prefixo")
+	assert.NotContains(t, item, "key", "a lista só mostra o prefixo")
+	assert.Equal(t, "secret", item["type"])
 	assert.Equal(t, "notebook", item["name"])
 }
 
@@ -884,12 +887,12 @@ func whenRolesCreateTokens(t *testing.T) {
 	dev, devMember := s.join(&maria, app, "developer")
 	other, otherMember := s.join(&maria, app, "developer")
 
-	own, _ := s.do(&dev, http.MethodPost, tokensPath(app, "me"), map[string]any{"name": "meu"})
-	forOther, _ := s.do(&dev, http.MethodPost, tokensPath(app, otherMember), map[string]any{"name": "roubado"})
-	byAdmin, _ := s.do(&maria, http.MethodPost, tokensPath(app, devMember), map[string]any{"name": "do-admin"})
-	hidden, _ := s.do(&outsider, http.MethodPost, tokensPath(app, devMember), map[string]any{"name": "x"})
+	own, _ := s.do(&dev, http.MethodPost, tokensPath(app, "me"), map[string]any{"name": "meu", "type": "secret"})
+	forOther, _ := s.do(&dev, http.MethodPost, tokensPath(app, otherMember), map[string]any{"name": "roubado", "type": "secret"})
+	byAdmin, _ := s.do(&maria, http.MethodPost, tokensPath(app, devMember), map[string]any{"name": "do-admin", "type": "secret"})
+	hidden, _ := s.do(&outsider, http.MethodPost, tokensPath(app, devMember), map[string]any{"name": "x", "type": "secret"})
 	listOther, _ := s.do(&other, http.MethodGet, tokensPath(app, devMember), nil)
-	missing, _ := s.do(&maria, http.MethodPost, tokensPath(app, uuid.NewV7().String()), map[string]any{"name": "x"})
+	missing, _ := s.do(&maria, http.MethodPost, tokensPath(app, uuid.NewV7().String()), map[string]any{"name": "x", "type": "secret"})
 
 	assert.Equal(t, http.StatusCreated, own)
 	assert.Equal(t, http.StatusForbidden, forOther)
@@ -917,25 +920,27 @@ func whenTokenInputIsInvalid(t *testing.T) {
 	good := time.Now().Add(time.Hour).Format(time.RFC3339)
 
 	cases := map[string]map[string]any{
-		"sem nome":              {"name": ""},
-		"nome com controle":     {"name": "a\nb"},
-		"nome longo":            {"name": strings.Repeat("a", 101)},
-		"vencimento no passado": {"name": "x", "expires_at": past},
-		"vencimento distante":   {"name": "x", "expires_at": far},
-		"campo desconhecido":    {"name": "x", "member_id": member},
+		"sem nome":              {"name": "", "type": "secret"},
+		"nome com controle":     {"name": "a\nb", "type": "secret"},
+		"nome longo":            {"name": strings.Repeat("a", 101), "type": "secret"},
+		"vencimento no passado": {"name": "x", "type": "secret", "expires_at": past},
+		"vencimento distante":   {"name": "x", "type": "secret", "expires_at": far},
+		"campo desconhecido":    {"name": "x", "type": "secret", "member_id": member},
+		"sem tipo":              {"name": "x"},
+		"tipo inválido":         {"name": "x", "type": "admin"},
 	}
 	for name, body := range cases {
 		status, _ := s.do(&maria, http.MethodPost, tokensPath(app, "me"), body)
 		assert.Equal(t, http.StatusBadRequest, status, name)
 	}
-	ok, _ := s.do(&maria, http.MethodPost, tokensPath(app, "me"), map[string]any{"name": "x", "expires_at": good})
+	ok, _ := s.do(&maria, http.MethodPost, tokensPath(app, "me"), map[string]any{"name": "x", "type": "secret", "expires_at": good})
 	assert.Equal(t, http.StatusCreated, ok)
-	assert.Equal(t, 1, s.count(`SELECT COUNT(*) FROM access_tokens`))
+	assert.Equal(t, 1, s.count(`SELECT COUNT(*) FROM api_keys`))
 
 	_, err = s.db.Exec(`UPDATE members SET status = 'suspended' WHERE id = ?`, member)
 	require.NoError(t, err)
 	root := s.person("admin")
-	suspended, _ := s.do(&root, http.MethodPost, tokensPath(app, member), map[string]any{"name": "x"})
+	suspended, _ := s.do(&root, http.MethodPost, tokensPath(app, member), map[string]any{"name": "x", "type": "secret"})
 	assert.Equal(t, http.StatusConflict, suspended, "membro suspenso não recebe token novo")
 }
 
@@ -973,7 +978,7 @@ func whenSDKReadsEnvironment(t *testing.T) {
 
 	assert.Equal(t, 2, s.count(`SELECT COUNT(*) FROM audit_logs WHERE action = 'env.read' AND token_id = ? AND actor_type = 'token'`, token.id))
 	assert.Equal(t, 0, s.count(`SELECT COUNT(*) FROM audit_logs WHERE metadata LIKE '%s3cr3t%' OR metadata LIKE '%sk-123%'`), "a trilha leva ids, nunca valores")
-	assert.Equal(t, 1, s.count(`SELECT COUNT(*) FROM access_tokens WHERE id = ? AND last_used_at IS NOT NULL`, token.id), "o último uso é registrado")
+	assert.Equal(t, 1, s.count(`SELECT COUNT(*) FROM api_keys WHERE id = ? AND last_used_at IS NOT NULL`, token.id), "o último uso é registrado")
 
 	empty := s.person()
 	emptyApp := s.createApplication(&empty, "app-vazia")
@@ -998,6 +1003,48 @@ func whenURIDoesNotMatch(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, garbage.Code)
 	assert.JSONEq(t, stripInstance(crossed.Body.Bytes()), stripInstance(garbage.Body.Bytes()), "as duas respostas são iguais")
 	assert.Equal(t, 2, s.count(`SELECT COUNT(*) FROM audit_logs WHERE action = 'access.denied' AND token_id = ?`, devToken.id))
+}
+
+func whenPublishableKeyReadsEnvironment(t *testing.T) {
+	s := newStack(t)
+	maria := s.person()
+	app := s.createApplication(&maria, "minha-app")
+	s.createSecret(&maria, app, "me", "API_KEY", "api_key", "valor-secreto")
+	public := s.newKey(&maria, app, "me", "web", "publishable")
+
+	env := s.env(public.token, public.uri, "", "")
+	asManager := s.raw(&person{token: public.token}, http.MethodGet, secretsPath(app, "me"), "", "")
+	_, revealErr := vaultv1.NewVaultServiceClient(s.grpcConn()).ReadEnv(bearer(public.token), &vaultv1.ReadEnvRequest{UriId: public.uri})
+
+	assert.True(t, strings.HasPrefix(public.token, "pk_vt_"))
+	assert.Equal(t, http.StatusUnauthorized, env.Code, "a pk_vt_ nunca lê segredo")
+	assert.NotContains(t, env.Body.String(), "valor-secreto")
+	assert.Equal(t, http.StatusUnauthorized, asManager.Code)
+	assert.Equal(t, codes.Unauthenticated, status.Code(revealErr), "nem pelo gRPC")
+	assert.Equal(t, 0, s.count(`SELECT COUNT(*) FROM api_keys WHERE id = ? AND last_used_at IS NOT NULL`, public.id))
+}
+
+func whenKeyIsRenamedAndRotated(t *testing.T) {
+	s := newStack(t)
+	maria := s.person()
+	app := s.createApplication(&maria, "minha-app")
+	old := s.newToken(&maria, app, "me", "ci")
+
+	renamed, renamedBody := s.do(&maria, http.MethodPatch, keyPath(app, "me", "/"+old.id), map[string]any{"name": "deploy"})
+	rotated, rotatedBody := s.do(&maria, http.MethodPost, keyPath(app, "me", "/"+old.id+"/rotate"), nil)
+	require.Equal(t, http.StatusCreated, rotated, "%v", rotatedBody)
+	next := rotatedBody["data"].(map[string]any)
+	got, gotBody := s.do(&maria, http.MethodGet, keyPath(app, "me", "/"+old.id), nil)
+
+	assert.Equal(t, http.StatusOK, renamed, "%v", renamedBody)
+	assert.Equal(t, "deploy", next["name"], "a nova chave herda o nome")
+	assert.NotEqual(t, old.id, next["id"])
+	assert.Equal(t, http.StatusOK, s.env(next["key"].(string), old.uri, "", "").Code, "a nova vale")
+	assert.Equal(t, http.StatusOK, s.env(old.token, old.uri, "", "").Code, "a antiga ainda vale durante a sobreposição")
+	assert.Equal(t, http.StatusOK, got)
+	assert.NotNil(t, gotBody["data"].(map[string]any)["expires_at"], "a antiga ganhou vencimento")
+	assert.Equal(t, 1, s.count(`SELECT COUNT(*) FROM audit_logs WHERE action = 'api_key.rotated' AND target_id = ?`, old.id))
+	assert.Equal(t, 1, s.count(`SELECT COUNT(*) FROM audit_logs WHERE action = 'api_key.updated' AND target_id = ?`, old.id))
 }
 
 func whenTokenIsUsedWhereItShouldNot(t *testing.T) {
@@ -1033,15 +1080,15 @@ func whenTokenIsRevoked(t *testing.T) {
 	s.createSecret(&dev, app, "me", "A", "string", "valor")
 	token := s.newToken(&dev, app, "me", "ci")
 	again := s.newToken(&dev, app, "me", "outro")
-	path := tokensPath(app, devMember) + "/" + token.id + "/revoke"
+	path := keyPath(app, devMember, "/"+token.id)
 
 	before := s.env(token.token, token.uri, "", "")
-	byOther, _ := s.do(&other, http.MethodPost, path, nil)
-	byAdmin, _ := s.do(&maria, http.MethodPost, path, nil)
+	byOther, _ := s.do(&other, http.MethodDelete, path, nil)
+	byAdmin, _ := s.do(&maria, http.MethodDelete, path, nil)
 	after := s.env(token.token, token.uri, "", "")
-	repeat, _ := s.do(&maria, http.MethodPost, path, nil)
-	wrongMember, _ := s.do(&maria, http.MethodPost, tokensPath(app, "me")+"/"+again.id+"/revoke", nil)
-	unknown, _ := s.do(&maria, http.MethodPost, tokensPath(app, devMember)+"/"+uuid.NewV7().String()+"/revoke", nil)
+	repeat, _ := s.do(&maria, http.MethodDelete, path, nil)
+	wrongMember, _ := s.do(&maria, http.MethodDelete, keyPath(app, "me", "/"+again.id), nil)
+	unknown, _ := s.do(&maria, http.MethodDelete, keyPath(app, devMember, "/"+uuid.NewV7().String()), nil)
 	untouched := s.env(again.token, again.uri, "", "")
 
 	assert.Equal(t, http.StatusOK, before.Code)
@@ -1052,12 +1099,12 @@ func whenTokenIsRevoked(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, wrongMember, "o token tem de ser do membro do caminho")
 	assert.Equal(t, http.StatusNotFound, unknown)
 	assert.Equal(t, http.StatusOK, untouched.Code, "os outros tokens do dev seguem valendo")
-	assert.Equal(t, 1, s.count(`SELECT COUNT(*) FROM audit_logs WHERE action = 'token.revoked' AND target_id = ?`, token.id), "uma linha só, mesmo revogando duas vezes")
+	assert.Equal(t, 1, s.count(`SELECT COUNT(*) FROM audit_logs WHERE action = 'api_key.revoked' AND target_id = ?`, token.id), "uma linha só, mesmo revogando duas vezes")
 
 	_, list := s.do(&dev, http.MethodGet, tokensPath(app, "me"), nil)
 	revoked := 0
 	for _, item := range list["data"].([]any) {
-		if item.(map[string]any)["revoked_at"] != nil {
+		if item.(map[string]any)["deleted_at"] != nil {
 			revoked++
 		}
 	}
@@ -1075,7 +1122,7 @@ func whenTokenStopsWorking(t *testing.T) {
 	removedToken := s.newToken(&removed, app, "me", "r")
 	_, _, _ = suspended, removed, expired
 
-	_, err := s.db.Exec(`UPDATE access_tokens SET expires_at = ? WHERE id = ?`, time.Now().UTC().Add(-time.Second), expired.id)
+	_, err := s.db.Exec(`UPDATE api_keys SET expires_at = ? WHERE id = ?`, time.Now().UTC().Add(-time.Second), expired.id)
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusUnauthorized, s.env(expired.token, expired.uri, "", "").Code, "vencido")
 
@@ -1282,7 +1329,7 @@ func whenGRPCTokenIsRevoked(t *testing.T) {
 	_, err := client.ReadEnv(bearer(token.token), &vaultv1.ReadEnvRequest{UriId: token.uri})
 	require.NoError(t, err)
 
-	_, execErr := s.db.Exec(`UPDATE access_tokens SET revoked_at = CURRENT_TIMESTAMP WHERE id = ?`, token.id)
+	_, execErr := s.db.Exec(`UPDATE api_keys SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?`, token.id)
 	require.NoError(t, execErr)
 	_, afterRevoke := client.ReadEnv(bearer(token.token), &vaultv1.ReadEnvRequest{UriId: token.uri})
 
@@ -1532,22 +1579,22 @@ func whenGRPCTokenReadsEnvironment(t *testing.T) {
 	app := s.createApplication(&maria, "minha-app")
 	s.createSecret(&maria, app, s.memberID(&maria, app), "API_KEY", "api_key", "sk-123")
 	conn := s.grpcConn()
-	tokens, runtime := vaultv1.NewTokenServiceClient(conn), vaultv1.NewVaultServiceClient(conn)
+	tokens, runtime := vaultv1.NewApiKeyServiceClient(conn), vaultv1.NewVaultServiceClient(conn)
 	ctx := bearer(maria.token)
 
-	created, createErr := tokens.CreateToken(ctx, &vaultv1.CreateTokenRequest{ApplicationId: app, MemberId: "me", Name: "ci"})
+	created, createErr := tokens.CreateApiKey(ctx, &vaultv1.CreateApiKeyRequest{ApplicationId: app, MemberId: "me", Name: "ci", Type: "secret"})
 	require.NoError(t, createErr)
-	listed, listErr := tokens.ListTokens(ctx, &vaultv1.ListTokensRequest{ApplicationId: app, MemberId: "me"})
-	env, envErr := runtime.ReadEnv(bearer(created.GetToken()), &vaultv1.ReadEnvRequest{UriId: created.GetAccessToken().GetUriId()})
-	_, revokeErr := tokens.RevokeToken(ctx, &vaultv1.RevokeTokenRequest{ApplicationId: app, MemberId: "me", TokenId: created.GetAccessToken().GetId()})
-	_, afterRevoke := runtime.ReadEnv(bearer(created.GetToken()), &vaultv1.ReadEnvRequest{UriId: created.GetAccessToken().GetUriId()})
+	listed, listErr := tokens.ListApiKeys(ctx, &vaultv1.ListApiKeysRequest{ApplicationId: app, MemberId: "me"})
+	env, envErr := runtime.ReadEnv(bearer(created.GetKey()), &vaultv1.ReadEnvRequest{UriId: created.GetApiKey().GetUriId()})
+	_, revokeErr := tokens.DeleteApiKey(ctx, &vaultv1.ApiKeyRequest{ApplicationId: app, MemberId: "me", Id: created.GetApiKey().GetId()})
+	_, afterRevoke := runtime.ReadEnv(bearer(created.GetKey()), &vaultv1.ReadEnvRequest{UriId: created.GetApiKey().GetUriId()})
 
-	assert.True(t, strings.HasPrefix(created.GetToken(), "sk_vt_"))
+	assert.True(t, strings.HasPrefix(created.GetKey(), "sk_vt_"))
 	assert.Contains(t, created.GetUri(), "https://vault.example.com")
-	assert.Equal(t, 0, s.count(`SELECT COUNT(*) FROM access_tokens WHERE token_hash = ?`, created.GetToken()), "o banco guarda o hash, não o token")
+	assert.Equal(t, 0, s.count(`SELECT COUNT(*) FROM api_keys WHERE hash = ?`, created.GetKey()), "o banco guarda o hash, não o token")
 	require.NoError(t, listErr)
-	if assert.Len(t, listed.GetAccessTokens(), 1) {
-		assert.NotContains(t, listed.String(), created.GetToken(), "a listagem só traz o prefixo")
+	if assert.Len(t, listed.GetApiKeys(), 1) {
+		assert.NotContains(t, listed.String(), created.GetKey(), "a listagem só traz o prefixo")
 	}
 	require.NoError(t, envErr)
 	if assert.Len(t, env.GetVariables(), 1) {
@@ -1606,7 +1653,7 @@ func whenGRPCSDKTokenReachesPersonServices(t *testing.T) {
 	for name, ctx := range map[string]context.Context{"token do SDK": sdk, "anônimo": anonymous} {
 		_, members := vaultv1.NewMemberServiceClient(conn).ListMembers(ctx, &vaultv1.ListMembersRequest{ApplicationId: app})
 		_, invitations := vaultv1.NewInvitationServiceClient(conn).CreateInvitation(ctx, &vaultv1.CreateInvitationRequest{ApplicationId: app, Email: "x@example.com", Role: "admin"})
-		_, tokens := vaultv1.NewTokenServiceClient(conn).CreateToken(ctx, &vaultv1.CreateTokenRequest{ApplicationId: app, MemberId: member, Name: "outro"})
+		_, tokens := vaultv1.NewApiKeyServiceClient(conn).CreateApiKey(ctx, &vaultv1.CreateApiKeyRequest{ApplicationId: app, MemberId: member, Name: "outro", Type: "secret"})
 		revealed, secrets := vaultv1.NewSecretServiceClient(conn).RevealSecret(ctx, &vaultv1.RevealSecretRequest{ApplicationId: app, MemberId: member, SecretId: id})
 		_, audit := vaultv1.NewAuditServiceClient(conn).ListAuditLogs(ctx, &vaultv1.ListAuditLogsRequest{ApplicationId: app})
 
@@ -1615,7 +1662,7 @@ func whenGRPCSDKTokenReachesPersonServices(t *testing.T) {
 		}
 		assert.Nil(t, revealed, name)
 	}
-	assert.Equal(t, 1, s.count(`SELECT COUNT(*) FROM access_tokens`), "o token do SDK não cria outro token")
+	assert.Equal(t, 1, s.count(`SELECT COUNT(*) FROM api_keys`), "o token do SDK não cria outro token")
 	assert.Equal(t, 0, s.count(`SELECT COUNT(*) FROM invitations`))
 	assert.Equal(t, 0, s.count(`SELECT COUNT(*) FROM audit_logs WHERE action = 'secret.revealed'`), "nenhum valor foi revelado")
 }
@@ -1777,8 +1824,14 @@ func columnsOf(table string) string {
 	return "payload"
 }
 
+// tokensPath é a rota das chaves com o dono na query; keyPath acrescenta o
+// trecho por id (ex.: "/<id>/rotate") antes da query.
 func tokensPath(app, member string) string {
-	return "/api/v1/applications/" + app + "/members/" + member + "/tokens"
+	return keyPath(app, member, "")
+}
+
+func keyPath(app, member, sub string) string {
+	return "/api/v1/api-keys" + sub + "?application_id=" + app + "&member_id=" + member
 }
 
 // sdk guarda um token do SDK e o uri_id do membro dono.
@@ -1790,10 +1843,15 @@ type sdk struct {
 
 func (s *stack) newToken(who *person, app, member, name string) sdk {
 	s.t.Helper()
-	status, body := s.do(who, http.MethodPost, tokensPath(app, member), map[string]any{"name": name})
+	return s.newKey(who, app, member, name, "secret")
+}
+
+func (s *stack) newKey(who *person, app, member, name, keyType string) sdk {
+	s.t.Helper()
+	status, body := s.do(who, http.MethodPost, tokensPath(app, member), map[string]any{"name": name, "type": keyType})
 	require.Equal(s.t, http.StatusCreated, status, "%v", body)
 	data := body["data"].(map[string]any)
-	return sdk{id: data["id"].(string), token: data["token"].(string), uri: data["uri_id"].(string)}
+	return sdk{id: data["id"].(string), token: data["key"].(string), uri: data["uri_id"].(string)}
 }
 
 func (s *stack) env(token, uri, query, accept string) *httptest.ResponseRecorder {
@@ -1869,7 +1927,7 @@ func whenInitGRPCRegistersEveryService(t *testing.T) {
 	defer server.Close()
 
 	info := server.Registrar().(*grpc.Server).GetServiceInfo()
-	for _, name := range []string{"VaultService", "ApplicationService", "MemberService", "InvitationService", "SecretService", "TokenService", "AuditService"} {
+	for _, name := range []string{"VaultService", "ApplicationService", "MemberService", "InvitationService", "SecretService", "ApiKeyService", "AuditService"} {
 		assert.Contains(t, info, "murkio.vault.v1."+name)
 	}
 }

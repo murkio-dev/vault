@@ -7,11 +7,11 @@ import (
 	"github.com/murkio-dev/vault/internal/adapters/secretvalues"
 	"github.com/murkio-dev/vault/internal/adapters/tokenauth"
 	"github.com/murkio-dev/vault/internal/contracts"
+	apikeys_repositories "github.com/murkio-dev/vault/internal/restful/apikeys/repositories"
 	audit_repositories "github.com/murkio-dev/vault/internal/restful/audit/repositories"
 	member_repositories "github.com/murkio-dev/vault/internal/restful/member/repositories"
 	member_usecases "github.com/murkio-dev/vault/internal/restful/member/useCases"
 	secret_repositories "github.com/murkio-dev/vault/internal/restful/secret/repositories"
-	token_repositories "github.com/murkio-dev/vault/internal/restful/token/repositories"
 	"github.com/murkio-dev/vault/pkg/authn"
 	"github.com/murkio-dev/vault/pkg/secretbox"
 	"github.com/murkio-dev/vault/pkg/sqlite"
@@ -28,7 +28,7 @@ func New(db *sql.DB, box *secretbox.Box) (contracts.Dependencies, authn.TokenAut
 	members := member_repositories.NewRepository(db)
 	secrets := secret_repositories.NewRepository(db)
 	versions := secret_repositories.NewVersionRepository(db)
-	tokens := token_repositories.NewRepository(db)
+	tokens := apikeys_repositories.NewRepository(db)
 	recorder := audit_repositories.NewRepository(db)
 
 	deps := contracts.Dependencies{

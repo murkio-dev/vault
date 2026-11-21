@@ -44,11 +44,11 @@ Rotas: [Segredos](../api/secrets.md).
 ## URI e token
 
 - A **URI** (`uri_id`) é um identificador público e estável da tabela de um membro. Ela não carrega senha.
-- O **token** (`sk_vt_` + 43 caracteres) é a credencial. Só o SHA-256 dele fica no banco, ele aparece uma única vez e pode ter validade (até 10 anos).
+- A **chave secreta** (`sk_vt_` + 43 caracteres) é a credencial. A `pk_vt_` só identifica a aplicação e nunca lê segredo. Só o SHA-256 dele fica no banco, ele aparece uma única vez e pode ter validade (até 10 anos).
 
 O SDK chama `GET /api/v1/runtime/{uri_id}/env` com `Authorization: Bearer sk_vt_...`. Um token só lê a `uri_id` do próprio membro.
 
-Rotas: [Tokens](../api/tokens.md) e [Runtime](../api/runtime.md).
+Rotas: [Chaves de API](../api/api-keys.md) e [Runtime](../api/runtime.md).
 
 ## Auditoria
 

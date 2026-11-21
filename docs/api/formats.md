@@ -22,7 +22,7 @@ Rota que recebe ou devolve valor de segredo, token, convite ou papel **ignora o 
 
 - `POST …/secrets/{id}/reveal`;
 - `GET /runtime/{uri_id}/env`;
-- `POST …/tokens` (criação);
+- `POST /api-keys` (criação) e `POST /api-keys/{id}/rotate`;
 - `POST …/invitations` (criação) e `POST /invitations/accept`.
 
 Nessas rotas o **corpo da requisição** também é só JSON, o `Content-Type` não decide, e **campo desconhecido é `400`**. Quem manda `role` ou `created_by` onde não cabe não vê o campo ignorado em silêncio.

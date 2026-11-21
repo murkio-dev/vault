@@ -1,0 +1,10 @@
+# A chave aparece só nesta resposta. type: secret (sk_vt_) ou publishable (pk_vt_).
+POST {{APPLICATION_BACKEND}}/api/v1/api-keys?application_id={{APP_ID}}&member_id=me
+Authorization: Bearer {{ACCESS_TOKEN}}
+Content-Type: application/json
+
+{
+    "name": "notebook",
+    "type": "secret",
+    "expires_at": "2027-01-01T00:00:00Z"
+}

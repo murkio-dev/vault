@@ -222,63 +222,85 @@ message AcceptInvitationRequest {
   string token = 1;
 }
 
-// TokenService administra os tokens do SDK (vt_...) de um membro, com as
-// mesmas regras das rotas HTTP de token. Credencial: o JWT de pessoa. Em todos
-// os pedidos, member_id aceita o id do membro ou "me" (o membro de quem chama).
-service TokenService {
-  // CreateToken gera o token do membro. O token aparece só nesta resposta; o
+// ApiKeyService administra as chaves de um membro (pk_vt_ e sk_vt_), com as
+// mesmas regras das rotas HTTP /api/v1/api-keys e os mesmos nomes do
+// ApiKeyService do Identity. Credencial: o JWT de pessoa. Em todos os pedidos,
+// member_id aceita o id do membro ou "me" (o membro de quem chama). Só a
+// sk_vt_ autentica no runtime; a pk_vt_ só identifica a aplicação.
+service ApiKeyService {
+  // CreateApiKey gera a chave do membro. O valor aparece só nesta resposta; o
   // banco guarda o hash.
-  rpc CreateToken(CreateTokenRequest) returns (CreateTokenResponse);
-  // ListTokens lista os tokens do membro, inclusive os revogados. Nenhum traz
-  // o token: só o prefixo.
-  rpc ListTokens(ListTokensRequest) returns (ListTokensResponse);
-  // RevokeToken revoga o token; vale na hora.
-  rpc RevokeToken(RevokeTokenRequest) returns (RevokeTokenResponse);
+  rpc CreateApiKey(CreateApiKeyRequest) returns (ApiKeyCreated);
+  // ListApiKeys lista as chaves do membro, inclusive as apagadas. Nenhuma traz
+  // o valor: só o prefixo.
+  rpc ListApiKeys(ListApiKeysRequest) returns (ListApiKeysResponse);
+  // GetApiKey devolve a chave, mesmo apagada, sem o valor.
+  rpc GetApiKey(ApiKeyRequest) returns (ApiKey);
+  // UpdateApiKey troca o nome; nome vazio mantém o atual.
+  rpc UpdateApiKey(ChangeApiKeyRequest) returns (ApiKey);
+  // UpgradeApiKey troca o nome; o nome é obrigatório.
+  rpc UpgradeApiKey(ChangeApiKeyRequest) returns (ApiKey);
+  // DeleteApiKey revoga a chave; vale na hora.
+  rpc DeleteApiKey(ApiKeyRequest) returns (Empty);
+  // RotateApiKey gera uma chave nova e faz a antiga vencer em 72h.
+  rpc RotateApiKey(ApiKeyRequest) returns (ApiKeyCreated);
 }
 
-message AccessToken {
+message ApiKey {
   string id = 1;
   string application_id = 2;
   string member_id = 3;
   string uri_id = 4;
   string name = 5;
-  string prefix = 6;
-  google.protobuf.Timestamp expires_at = 7;
+  // type: "publishable" ou "secret".
+  string type = 6;
+  string prefix = 7;
   google.protobuf.Timestamp last_used_at = 8;
-  google.protobuf.Timestamp revoked_at = 9;
+  google.protobuf.Timestamp expires_at = 9;
   google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+  google.protobuf.Timestamp deleted_at = 12;
 }
 
-message CreateTokenRequest {
-  string application_id = 1;
-  string member_id = 2;
-  string name = 3;
-  // expires_at é opcional: ausente, o token não vence.
-  google.protobuf.Timestamp expires_at = 4;
-}
-
-message CreateTokenResponse {
-  AccessToken access_token = 1;
-  string token = 2;
+message ApiKeyCreated {
+  ApiKey api_key = 1;
+  // key é o valor em claro; não é possível lê-lo de novo.
+  string key = 2;
   string uri = 3;
 }
 
-message ListTokensRequest {
+message CreateApiKeyRequest {
+  string application_id = 1;
+  string member_id = 2;
+  string name = 3;
+  string type = 4;
+  // expires_at é opcional: ausente, a chave não vence.
+  google.protobuf.Timestamp expires_at = 5;
+}
+
+message ListApiKeysRequest {
   string application_id = 1;
   string member_id = 2;
 }
 
-message ListTokensResponse {
-  repeated AccessToken access_tokens = 1;
+message ListApiKeysResponse {
+  repeated ApiKey api_keys = 1;
 }
 
-message RevokeTokenRequest {
+message ApiKeyRequest {
   string application_id = 1;
   string member_id = 2;
-  string token_id = 3;
+  string id = 3;
 }
 
-message RevokeTokenResponse {}
+message ChangeApiKeyRequest {
+  string application_id = 1;
+  string member_id = 2;
+  string id = 3;
+  string name = 4;
+}
+
+message Empty {}
 
 // SecretService administra os segredos da tabela de um membro, com as mesmas
 // regras das rotas HTTP de segredo. Credencial: o JWT de pessoa. Em todos os

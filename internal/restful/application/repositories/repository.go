@@ -152,7 +152,7 @@ func (r ApplicationRepository) Delete(ctx context.Context, input uuid.UUID) erro
 		query string
 		args  []any
 	}{
-		{"UPDATE access_tokens SET revoked_at = ? WHERE application_id = ? AND revoked_at IS NULL", []any{now, id}},
+		{"UPDATE api_keys SET deleted_at = ? WHERE application_id = ? AND deleted_at IS NULL", []any{now, id}},
 		{"UPDATE secrets SET deleted_at = ? WHERE application_id = ? AND deleted_at IS NULL", []any{now, id}},
 		{"UPDATE members SET deleted_at = ? WHERE application_id = ? AND deleted_at IS NULL", []any{now, id}},
 		{"UPDATE invitations SET revoked_at = ? WHERE application_id = ? AND revoked_at IS NULL AND accepted_at IS NULL", []any{now, id}},

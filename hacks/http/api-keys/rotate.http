@@ -1,0 +1,3 @@
+# A chave nova aparece só nesta resposta; a antiga vale por mais 72h.
+POST {{APPLICATION_BACKEND}}/api/v1/api-keys/{{KEY_ID}}/rotate?application_id={{APP_ID}}&member_id=me
+Authorization: Bearer {{ACCESS_TOKEN}}

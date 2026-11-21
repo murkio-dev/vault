@@ -5,13 +5,13 @@ import (
 	"net/http"
 
 	"github.com/murkio-dev/vault/internal/contracts"
+	"github.com/murkio-dev/vault/internal/restful/apikeys"
 	"github.com/murkio-dev/vault/internal/restful/application"
 	"github.com/murkio-dev/vault/internal/restful/audit"
 	"github.com/murkio-dev/vault/internal/restful/invitation"
 	"github.com/murkio-dev/vault/internal/restful/member"
 	"github.com/murkio-dev/vault/internal/restful/runtime"
 	"github.com/murkio-dev/vault/internal/restful/secret"
-	"github.com/murkio-dev/vault/internal/restful/token"
 	"github.com/murkio-dev/vault/pkg/authn"
 	"github.com/murkio-dev/vault/pkg/dependencies"
 	"github.com/murkio-dev/vault/pkg/grpcx"
@@ -27,7 +27,7 @@ func Init(db *sql.DB, box *secretbox.Box, publicURL string, mux *http.ServeMux) 
 		func() error { return member.Init(db, deps, mux) },
 		func() error { return invitation.Init(db, deps, mux) },
 		func() error { return secret.Init(db, deps, mux) },
-		func() error { return token.Init(db, deps, publicURL, mux) },
+		func() error { return apikeys.Init(db, deps, publicURL, mux) },
 		func() error { return runtime.Init(deps, mux) },
 		func() error { return audit.Init(db, deps, mux) },
 	}
@@ -57,7 +57,7 @@ func InitGRPC(db *sql.DB, deps contracts.Dependencies, verifier *authn.Verifier,
 		func() error { return member.InitGRPC(db, deps, registrar) },
 		func() error { return invitation.InitGRPC(db, deps, registrar) },
 		func() error { return secret.InitGRPC(db, deps, registrar) },
-		func() error { return token.InitGRPC(db, deps, publicURL, registrar) },
+		func() error { return apikeys.InitGRPC(db, deps, publicURL, registrar) },
 		func() error { return audit.InitGRPC(db, deps, registrar) },
 	}
 	for _, initialize := range initializers {

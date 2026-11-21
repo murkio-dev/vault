@@ -9,7 +9,7 @@ import (
 
 	"github.com/murkio-dev/vault/internal/adapters/tokenauth"
 	"github.com/murkio-dev/vault/internal/entities"
-	"github.com/murkio-dev/vault/internal/restful/token/mocks"
+	"github.com/murkio-dev/vault/internal/restful/apikeys/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,16 +25,16 @@ func TestAuthenticator(t *testing.T) {
 
 // Functions
 
-func validToken() string { return entities.SDKTokenPrefix + strings.Repeat("A", 43) }
+func validToken() string { return entities.SecretKeyPrefix + strings.Repeat("A", 43) }
 
-func found(token entities.AccessToken) *mocks.TokenRepo {
-	return &mocks.TokenRepo{FindActiveByHashFunc: func(context.Context, string) (entities.AccessToken, error) {
+func found(token entities.ApiKey) *mocks.ApiKeyRepo {
+	return &mocks.ApiKeyRepo{FindActiveByHashFunc: func(context.Context, string) (entities.ApiKey, error) {
 		return token, nil
 	}}
 }
 
 func whenTokenIsValid(t *testing.T) {
-	token := mocks.NewToken()
+	token := mocks.NewApiKey()
 	token.UserID = uuid.NewV7()
 	repo := found(token)
 
@@ -55,12 +55,12 @@ func whenTokenIsValid(t *testing.T) {
 }
 
 func whenTokenFormatIsInvalid(t *testing.T) {
-	repo := &mocks.TokenRepo{FindActiveByHashFunc: func(context.Context, string) (entities.AccessToken, error) {
+	repo := &mocks.ApiKeyRepo{FindActiveByHashFunc: func(context.Context, string) (entities.ApiKey, error) {
 		t.Error("formato inválido nem chega ao banco")
-		return entities.AccessToken{}, nil
+		return entities.ApiKey{}, nil
 	}}
 
-	for name, raw := range map[string]string{"vazio": "", "sem prefixo": "abc", "jwt": "eyJhbGciOiJFZERTQSJ9.e30.x", "gigante": entities.SDKTokenPrefix + strings.Repeat("A", 200)} {
+	for name, raw := range map[string]string{"vazio": "", "sem prefixo": "abc", "jwt": "eyJhbGciOiJFZERTQSJ9.e30.x", "gigante": entities.SecretKeyPrefix + strings.Repeat("A", 200), "publishable": entities.PublicKeyPrefix + strings.Repeat("A", 43)} {
 		_, err := tokenauth.NewAuthenticator(repo).Authenticate(context.Background(), raw)
 
 		assert.Error(t, err, name)
@@ -68,7 +68,7 @@ func whenTokenFormatIsInvalid(t *testing.T) {
 }
 
 func whenTokenIsNotValidAnymore(t *testing.T) {
-	repo := &mocks.TokenRepo{}
+	repo := &mocks.ApiKeyRepo{}
 
 	actor, err := tokenauth.NewAuthenticator(repo).Authenticate(context.Background(), validToken())
 
@@ -78,8 +78,8 @@ func whenTokenIsNotValidAnymore(t *testing.T) {
 }
 
 func whenRepositoryFails(t *testing.T) {
-	repo := &mocks.TokenRepo{FindActiveByHashFunc: func(context.Context, string) (entities.AccessToken, error) {
-		return entities.AccessToken{}, errors.New("segredo-interno")
+	repo := &mocks.ApiKeyRepo{FindActiveByHashFunc: func(context.Context, string) (entities.ApiKey, error) {
+		return entities.ApiKey{}, errors.New("segredo-interno")
 	}}
 
 	_, err := tokenauth.NewAuthenticator(repo).Authenticate(context.Background(), validToken())
@@ -88,9 +88,9 @@ func whenRepositoryFails(t *testing.T) {
 }
 
 func whenTouchFails(t *testing.T) {
-	repo := found(mocks.NewToken())
-	repo.TouchLastUsedFunc = func(context.Context, entities.AccessToken) (entities.AccessToken, error) {
-		return entities.AccessToken{}, errors.New("disk full")
+	repo := found(mocks.NewApiKey())
+	repo.TouchLastUsedFunc = func(context.Context, entities.ApiKey) (entities.ApiKey, error) {
+		return entities.ApiKey{}, errors.New("disk full")
 	}
 
 	actor, err := tokenauth.NewAuthenticator(repo).Authenticate(context.Background(), validToken())

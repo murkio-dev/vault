@@ -43,13 +43,13 @@ A resposta traz só metadados (`id`, `version`, ...), nunca o valor.
 ## 4. Crie um token
 
 ```sh
-curl -s -X POST $VAULT/api/v1/applications/$APP_ID/members/me/tokens \
+curl -s -X POST "$VAULT/api/v1/api-keys?application_id=$APP_ID" \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"name": "notebook"}'
+  -d '{"name": "notebook", "type": "secret"}'
 ```
 
-Copie `data.token` (`sk_vt_...`) agora: ele **não aparece de novo**.
+Copie `data.key` (`sk_vt_...`) agora: ele **não aparece de novo**.
 
 ## 5. Leia o ambiente como o SDK
 
@@ -71,6 +71,6 @@ curl -s "$VAULT/api/v1/applications/$APP_ID/audit-logs?limit=20" \
   -H "Authorization: Bearer $ACCESS_TOKEN"
 ```
 
-Aparecem `application.created`, `secret.created`, `token.created` e `env.read`.
+Aparecem `application.created`, `secret.created`, `api_key.created` e `env.read`.
 
 Mais: [Guias](../README.md#guias) e [Arquivos `.http`](../development/http-files.md).

@@ -12,7 +12,7 @@ import (
 const (
 	apiPrefix     = "/api/"
 	runtimePrefix = "/api/v1/runtime/"
-	TokenPrefix   = entities.SDKTokenPrefix
+	TokenPrefix   = entities.SecretKeyPrefix
 )
 
 type TokenAuthenticator interface {

@@ -12,14 +12,14 @@ var allActions = []entities.Action{
 	entities.ActionApplicationCreate, entities.ActionApplicationRead, entities.ActionApplicationUpdate, entities.ActionApplicationDelete, entities.ActionInvitationAccept,
 	entities.ActionMemberList, entities.ActionMemberUpdate, entities.ActionMemberRemove, entities.ActionInvitationManage,
 	entities.ActionSecretRead, entities.ActionSecretWrite, entities.ActionSecretReveal,
-	entities.ActionTokenCreate, entities.ActionTokenList, entities.ActionTokenRevoke,
+	entities.ActionApiKeyCreate, entities.ActionApiKeyRead, entities.ActionApiKeyUpdate, entities.ActionApiKeyDelete,
 	entities.ActionAuditRead, entities.ActionEnvRead,
 }
 
 // Ações que um developer faz só no que é dele.
 var ownerScoped = map[entities.Action]bool{
 	entities.ActionSecretRead: true, entities.ActionSecretWrite: true, entities.ActionSecretReveal: true,
-	entities.ActionTokenCreate: true, entities.ActionTokenList: true, entities.ActionTokenRevoke: true,
+	entities.ActionApiKeyCreate: true, entities.ActionApiKeyRead: true, entities.ActionApiKeyUpdate: true, entities.ActionApiKeyDelete: true,
 	entities.ActionAuditRead: true,
 }
 

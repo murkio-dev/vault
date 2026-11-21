@@ -24,6 +24,7 @@ Embutidas no binário (`migrations/embed.go`) e aplicadas **no boot**, em ordem 
 | 0006 | `access_tokens` | `token_hash` único, `prefix`, expiração, uso e revogação |
 | 0007 | `audit_logs` | trilha append-only |
 | 0008 | `outbox_events` | eventos para o Messaging (e-mail de convite) |
+| 0009 | `api_keys` | renomeia `access_tokens`: `hash` único, `type` (`publishable`/`secret`), `prefix`, expiração, uso e `deleted_at` |
 
 Todas usam `uuid` como texto e `deleted_at` para soft delete. Índices únicos parciais (`WHERE deleted_at IS NULL`) liberam nomes depois de apagar.
 

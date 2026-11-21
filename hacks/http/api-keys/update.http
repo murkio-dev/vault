@@ -1,0 +1,7 @@
+PATCH {{APPLICATION_BACKEND}}/api/v1/api-keys/{{KEY_ID}}?application_id={{APP_ID}}&member_id=me
+Authorization: Bearer {{ACCESS_TOKEN}}
+Content-Type: application/json
+
+{
+    "name": "deploy"
+}

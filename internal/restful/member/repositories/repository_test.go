@@ -148,7 +148,7 @@ func whenDeleteCascades(t *testing.T) {
 	a := sqlitetest.Seed(t, db, "app-a")
 	dev := add(t, repo, a.Application, entities.RoleDeveloper)
 	now := time.Now().UTC()
-	_, err := db.Exec(`INSERT INTO access_tokens (id, application_id, member_id, name, prefix, token_hash, created_by, created_at) VALUES ('t', ?, ?, 'n', 'sk_vt_x', 'h', 'u', ?)`, a.Application.String(), dev.ID.String(), now)
+	_, err := db.Exec(`INSERT INTO api_keys (id, application_id, member_id, name, prefix, hash, created_by, created_at) VALUES ('t', ?, ?, 'n', 'sk_vt_x', 'h', 'u', ?)`, a.Application.String(), dev.ID.String(), now)
 	require.NoError(t, err)
 	_, err = db.Exec(`INSERT INTO secrets (id, application_id, member_id, name, type, source, created_by, created_at) VALUES ('s', ?, ?, 'A', 'string', 'static', 'u', ?)`, a.Application.String(), dev.ID.String(), now)
 	require.NoError(t, err)
@@ -156,7 +156,7 @@ func whenDeleteCascades(t *testing.T) {
 	require.NoError(t, repo.Delete(context.Background(), a.Application, dev.ID))
 
 	var revoked, deleted int
-	require.NoError(t, db.QueryRow(`SELECT COUNT(*) FROM access_tokens WHERE id = 't' AND revoked_at IS NOT NULL`).Scan(&revoked))
+	require.NoError(t, db.QueryRow(`SELECT COUNT(*) FROM api_keys WHERE id = 't' AND deleted_at IS NOT NULL`).Scan(&revoked))
 	require.NoError(t, db.QueryRow(`SELECT COUNT(*) FROM secrets WHERE id = 's' AND deleted_at IS NOT NULL`).Scan(&deleted))
 	assert.Equal(t, 1, revoked, "os tokens dele são revogados")
 	assert.Equal(t, 1, deleted, "e os segredos, apagados")
