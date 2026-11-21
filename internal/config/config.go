@@ -2,13 +2,13 @@ package config
 
 import (
 	"fmt"
-	"net"
-	"net/url"
 	"os"
 	"reflect"
 	"strconv"
 	"strings"
 	"uuid"
+
+	"github.com/murkio-dev/vault/pkg/identityclient"
 )
 
 type Config struct {
@@ -35,7 +35,10 @@ type Log struct {
 }
 
 type Auth struct {
-	URL           string `environmentRef:"AUTH_URL" required:"true"`
+	// GRPCAddr é o gRPC interno do identity (só loopback), de onde vem o JWKS
+	// que verifica o JWT das pessoas. Toda comunicação interna é gRPC: o vault
+	// nunca chama o identity pela API REST.
+	GRPCAddr      string `environmentRef:"IDENTITY_GRPC_ADDR" default:"127.0.0.1:50051"`
 	ApplicationID string `environmentRef:"AUTH_APPLICATION_ID" required:"true"`
 }
 
@@ -99,7 +102,7 @@ func (s Server) validateGRPCPort() error {
 }
 
 func (a Auth) validate() error {
-	if err := validateAuthURL(a.URL); err != nil {
+	if err := identityclient.ValidateAddr(a.GRPCAddr); err != nil {
 		return err
 	}
 
@@ -108,34 +111,6 @@ func (a Auth) validate() error {
 		return fmt.Errorf("AUTH_APPLICATION_ID must be a non-zero UUID")
 	}
 	return nil
-}
-
-// validateAuthURL aceita uma URL https:// (http:// só em localhost ou loopback,
-// para dev), sem caminho extra, credenciais, query ou fragmento. O JWKS sai
-// dela: uma chave de outra origem aceitaria token forjado, e uma URL com
-// credenciais as espalharia em log. A URL nunca é montada com dado do token.
-// Exemplo: https://auth.example.com vale; http://auth.example.com e
-// https://user:pass@auth.example.com não.
-func validateAuthURL(raw string) error {
-	u, err := url.Parse(raw)
-	if err != nil || u.Host == "" || u.User != nil || u.RawQuery != "" || u.Fragment != "" {
-		return fmt.Errorf("AUTH_URL must be an https url without credentials, query or fragment (http only on localhost)")
-	}
-
-	switch u.Scheme {
-	case "https":
-		return nil
-	case "http":
-		host := u.Hostname()
-		if host == "localhost" {
-			return nil
-		}
-		if ip := net.ParseIP(host); ip != nil && ip.IsLoopback() {
-			return nil
-		}
-	}
-
-	return fmt.Errorf("AUTH_URL must be an https url without credentials, query or fragment (http only on localhost)")
 }
 
 func (d *Database) GetActivePath() string {

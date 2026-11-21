@@ -1,28 +1,38 @@
-// Package authntest sobe um Auth falso para os testes: o JWKS da aplicação do
-// Vault e access tokens assinados como o Auth assina. Fica fora do pacote
-// authn para o binário não carregar o pacote testing.
+// Package authntest sobe um Auth falso para os testes: o SigningKeyService do
+// identity (o gRPC interno, em loopback) com o JWKS da aplicação do Vault, e
+// access tokens assinados como o Auth assina. Fica fora do pacote authn para o
+// binário não carregar o pacote testing.
 package authntest
 
 import (
+	"context"
 	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
-	"net/http"
-	"net/http/httptest"
+	"net"
+	"sync/atomic"
 	"testing"
 	"time"
 	"uuid"
 
 	"github.com/murkio-dev/vault/pkg/authn"
+	identityv1 "github.com/murkio-dev/vault/pkg/rpc/identityv1"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 )
 
 type Auth struct {
-	Server *httptest.Server
-	AppID  uuid.UUID
+	AppID uuid.UUID
 
-	kid  string
-	priv ed25519.PrivateKey
+	kid     string
+	pub     ed25519.PublicKey
+	priv    ed25519.PrivateKey
+	server  *grpc.Server
+	client  identityv1.SigningKeyServiceClient
+	fetches atomic.Int32
 }
 
 func New(t testing.TB) *Auth {
@@ -33,24 +43,44 @@ func New(t testing.TB) *Auth {
 		t.Fatal(err)
 	}
 
-	a := &Auth{AppID: uuid.NewV7(), kid: uuid.NewV7().String(), priv: priv}
-	a.Server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/api/v1/applications/"+a.AppID.String()+"/jwks.json" {
-			w.WriteHeader(http.StatusNotFound)
-			return
-		}
-		w.Header().Set("Cache-Control", "public, max-age=300")
-		_ = json.NewEncoder(w).Encode(map[string]any{"keys": []map[string]string{{
-			"kty": "OKP", "crv": "Ed25519", "x": base64.RawURLEncoding.EncodeToString(pub), "kid": a.kid, "alg": authn.Algorithm, "use": "sig",
-		}}})
-	}))
-	t.Cleanup(a.Server.Close)
+	a := &Auth{AppID: uuid.NewV7(), kid: uuid.NewV7().String(), pub: pub, priv: priv, server: grpc.NewServer()}
+	identityv1.RegisterSigningKeyServiceServer(a.server, signingKeys{auth: a})
+
+	var config net.ListenConfig
+	listener, err := config.Listen(context.Background(), "tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	go func() { _ = a.server.Serve(listener) }()
+	t.Cleanup(a.server.Stop)
+
+	conn, err := grpc.NewClient(listener.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = conn.Close() })
+	a.client = identityv1.NewSigningKeyServiceClient(conn)
 
 	return a
 }
 
+// Client é o cliente do SigningKeyService falso, para montar um Verifier à mão.
+func (a *Auth) Client() identityv1.SigningKeyServiceClient {
+	return a.client
+}
+
+// Close derruba o identity falso: as buscas seguintes falham.
+func (a *Auth) Close() {
+	a.server.Stop()
+}
+
+// Fetches conta quantas vezes o JWKS foi pedido.
+func (a *Auth) Fetches() int32 {
+	return a.fetches.Load()
+}
+
 func (a *Auth) Verifier() *authn.Verifier {
-	return authn.NewVerifier(a.Server.URL, a.AppID)
+	return authn.NewVerifier(a.client, a.AppID)
 }
 
 func (a *Auth) Token(t testing.TB, user uuid.UUID, roles []string, ttl time.Duration) string {
@@ -70,4 +100,19 @@ func (a *Auth) TokenFor(t testing.TB, app, user uuid.UUID, roles []string, ttl t
 
 	input := base64.RawURLEncoding.EncodeToString(h) + "." + base64.RawURLEncoding.EncodeToString(c)
 	return input + "." + base64.RawURLEncoding.EncodeToString(ed25519.Sign(a.priv, []byte(input)))
+}
+
+type signingKeys struct {
+	identityv1.UnimplementedSigningKeyServiceServer
+	auth *Auth
+}
+
+func (s signingKeys) GetJWKS(_ context.Context, req *identityv1.GetJWKSRequest) (*identityv1.JWKS, error) {
+	s.auth.fetches.Add(1)
+	if req.GetApplicationId() != s.auth.AppID.String() {
+		return nil, status.Error(codes.NotFound, "application not found")
+	}
+	return &identityv1.JWKS{MaxAgeSeconds: 300, Keys: []*identityv1.JWK{{
+		Kty: "OKP", Crv: "Ed25519", X: base64.RawURLEncoding.EncodeToString(s.auth.pub), Kid: s.auth.kid, Alg: authn.Algorithm, Use: "sig",
+	}}}, nil
 }

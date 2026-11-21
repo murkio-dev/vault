@@ -64,8 +64,8 @@ Resumo das garantias. Detalhes em [Segurança](docs/security/overview.md).
 Você não precisa confiar na nossa palavra:
 
 ```sh
-# 1. a única chamada de rede de saída do código de produção é a busca do JWKS no Identity (AUTH_URL)
-grep -rn "http.NewRequest\|http.Client\|net.Dial\|smtp\.\|exec.Command" --include='*.go' . \
+# 1. a única chamada de rede de saída do código de produção é a busca do JWKS no gRPC do Identity (IDENTITY_GRPC_ADDR, só loopback)
+grep -rn "http.NewRequest\|http.Client\|net.Dial\|grpc.NewClient\|smtp\.\|exec.Command" --include='*.go' . \
   | grep -v '_test.go' | grep -v 'pkg/rpc/' | grep -v 'pkg/mocks/'
 
 # 2. as dependências de terceiros (modernc.org/sqlite, yaml, grpc, protobuf e testify nos testes)
@@ -78,6 +78,6 @@ grep -rn "Metadata" --include='*.go' internal/restful/*/useCases | grep -v _test
 go test -race ./...
 ```
 
-O Vault não envia telemetria nem contata nenhum serviço da Murkio por conta própria: o único tráfego de saída é a leitura do JWKS do `AUTH_URL` que **você** configura.
+O Vault não envia telemetria nem contata nenhum serviço da Murkio por conta própria: o único tráfego de saída é a leitura do JWKS no gRPC do Identity em `IDENTITY_GRPC_ADDR`, que **você** configura e que só aceita loopback.
 
 Para publicar uma instância sua com segurança, siga [Deploy](docs/operations/deployment.md) e o checklist.

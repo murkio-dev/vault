@@ -1,7 +1,8 @@
 // Package authn verifica o access token que o Auth emite para as pessoas (JWT
 // EdDSA, assinado com a chave Ed25519 da aplicação do Vault no Auth),
-// localmente, com o JWKS público em {AUTH_URL}/api/v1/applications/{id}/jwks.json.
-// Não chama o Auth por requisição: o JWKS fica em cache.
+// localmente, com o JWKS público que o identity publica no gRPC interno
+// (SigningKeyService.GetJWKS, em IDENTITY_GRPC_ADDR, só loopback). Não chama o
+// Auth por requisição: o JWKS fica em cache.
 //
 // Diferente do messaging, que aceita qualquer aplicação, o Vault confia em uma
 // só: a configurada em AUTH_APPLICATION_ID. O aid de um token ainda não
@@ -19,14 +20,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"fmt"
-	"io"
-	"net/http"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
 	"uuid"
+
+	identityv1 "github.com/murkio-dev/vault/pkg/rpc/identityv1"
 )
 
 const (
@@ -39,7 +38,7 @@ const (
 
 const (
 	leeway     = 30 * time.Second
-	maxJWKS    = 64 << 10
+	timeout    = 5 * time.Second
 	maxToken   = 8 << 10
 	minTTL     = 30 * time.Second
 	maxTTL     = time.Hour
@@ -87,8 +86,10 @@ type Verifier struct {
 	now   func() time.Time
 }
 
-func NewVerifier(baseURL string, appID uuid.UUID) *Verifier {
-	return &Verifier{appID: appID, keys: newKeySet(baseURL, appID), now: time.Now}
+// NewVerifier recebe o cliente do SigningKeyService do identity (o gRPC
+// interno) e a aplicação do Vault no Auth, a única de onde vêm chaves.
+func NewVerifier(identity identityv1.SigningKeyServiceClient, appID uuid.UUID) *Verifier {
+	return &Verifier{appID: appID, keys: newKeySet(identity, appID), now: time.Now}
 }
 
 // Verify confere o token e devolve quem é. Confere o formato, o algoritmo
@@ -157,8 +158,8 @@ func decodeJSON(part string, out any) error {
 }
 
 type KeySet struct {
-	url    string
-	client *http.Client
+	identity identityv1.SigningKeyServiceClient
+	appID    uuid.UUID
 	// minRefresh é o intervalo mínimo entre buscas: um kid desconhecido (chave
 	// nova, rotação) busca de novo, mas um token com kid inventado não vira uma
 	// busca por requisição.
@@ -170,18 +171,8 @@ type KeySet struct {
 	ttl       time.Duration
 }
 
-func newKeySet(baseURL string, appID uuid.UUID) *KeySet {
-	return &KeySet{
-		url: strings.TrimRight(baseURL, "/") + "/api/v1/applications/" + appID.String() + "/jwks.json",
-		client: &http.Client{
-			Timeout: 5 * time.Second,
-			CheckRedirect: func(*http.Request, []*http.Request) error {
-				return http.ErrUseLastResponse
-			},
-		},
-		minRefresh: 30 * time.Second,
-		ttl:        defaultTTL,
-	}
+func newKeySet(identity identityv1.SigningKeyServiceClient, appID uuid.UUID) *KeySet {
+	return &KeySet{identity: identity, appID: appID, minRefresh: 30 * time.Second, ttl: defaultTTL}
 }
 
 // Key devolve a chave pública kid. Com o Auth fora, as chaves já em cache
@@ -215,74 +206,43 @@ func (k *KeySet) Key(ctx context.Context, kid string) (ed25519.PublicKey, error)
 	return key, nil
 }
 
-type jwks struct {
-	Keys []struct {
-		Kty string `json:"kty"`
-		Crv string `json:"crv"`
-		X   string `json:"x"`
-		Kid string `json:"kid"`
-		Alg string `json:"alg"`
-		Use string `json:"use"`
-	} `json:"keys"`
-}
-
 func (k *KeySet) fetch(ctx context.Context) (map[string]ed25519.PublicKey, time.Duration, error) {
 
-	ctx, cancel := context.WithTimeout(ctx, k.client.Timeout)
+	if k.identity == nil {
+		return nil, 0, errors.New("jwks: identity client is not set")
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, k.url, nil)
+	response, err := k.identity.GetJWKS(ctx, &identityv1.GetJWKSRequest{ApplicationId: k.appID.String()})
 	if err != nil {
 		return nil, 0, err
-	}
-	req.Header.Set("Accept", "application/json")
-
-	resp, err := k.client.Do(req)
-	if err != nil {
-		return nil, 0, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, 0, fmt.Errorf("jwks: status %d", resp.StatusCode)
-	}
-
-	var doc jwks
-	if err := json.NewDecoder(io.LimitReader(resp.Body, maxJWKS)).Decode(&doc); err != nil {
-		return nil, 0, fmt.Errorf("jwks: %w", err)
 	}
 
 	keys := map[string]ed25519.PublicKey{}
-	for _, jwk := range doc.Keys {
-		if jwk.Kty != "OKP" || jwk.Crv != "Ed25519" || jwk.Kid == "" || (jwk.Alg != "" && jwk.Alg != Algorithm) || (jwk.Use != "" && jwk.Use != "sig") {
+	for _, jwk := range response.GetKeys() {
+		if jwk.GetKty() != "OKP" || jwk.GetCrv() != "Ed25519" || jwk.GetKid() == "" || (jwk.GetAlg() != "" && jwk.GetAlg() != Algorithm) || (jwk.GetUse() != "" && jwk.GetUse() != "sig") {
 			continue
 		}
-		raw, err := base64.RawURLEncoding.DecodeString(jwk.X)
+		raw, err := base64.RawURLEncoding.DecodeString(jwk.GetX())
 		if err != nil || len(raw) != ed25519.PublicKeySize {
 			continue
 		}
-		keys[jwk.Kid] = ed25519.PublicKey(raw)
+		keys[jwk.GetKid()] = ed25519.PublicKey(raw)
 	}
 
-	return keys, cacheTTL(resp.Header.Get("Cache-Control")), nil
+	return keys, cacheTTL(response.GetMaxAgeSeconds()), nil
 }
 
-// cacheTTL lê o max-age do Cache-Control do JWKS, limitado entre 30s e 1h. O
-// Auth publica 5 minutos; sem o header ou com valor inválido, vale o padrão.
-// O piso de 30s impede um Auth mal configurado de forçar uma busca por
-// requisição, e o teto de 1h impede que uma rotação de chave demore a valer.
-// Exemplo: "public, max-age=300" devolve 5min; "max-age=0" devolve 30s.
-func cacheTTL(cacheControl string) time.Duration {
-	for _, directive := range strings.Split(cacheControl, ",") {
-		name, value, found := strings.Cut(strings.TrimSpace(directive), "=")
-		if !found || !strings.EqualFold(name, "max-age") {
-			continue
-		}
-		seconds, err := strconv.Atoi(strings.Trim(value, `"`))
-		if err != nil || seconds < 0 {
-			return defaultTTL
-		}
-		return min(max(time.Duration(seconds)*time.Second, minTTL), maxTTL)
+// cacheTTL é o max_age_seconds do JWKS, limitado entre 30s e 1h. O Auth publica
+// 5 minutos; zero ou negativo vale o padrão. O piso de 30s impede um Auth mal
+// configurado de forçar uma busca por requisição, e o teto de 1h impede que uma
+// rotação de chave demore a valer.
+// Exemplo: 300 devolve 5min; 1 devolve 30s.
+func cacheTTL(seconds int32) time.Duration {
+	if seconds <= 0 {
+		return defaultTTL
 	}
-	return defaultTTL
+	return min(max(time.Duration(seconds)*time.Second, minTTL), maxTTL)
 }

@@ -14,7 +14,7 @@ func setEnv(t *testing.T, overrides map[string]string) {
 	t.Helper()
 	values := map[string]string{
 		"APPLICATION_PORT":    "8083",
-		"AUTH_URL":            "https://auth.example.com",
+		"IDENTITY_GRPC_ADDR":  "127.0.0.1:50051",
 		"AUTH_APPLICATION_ID": uuid.NewV7().String(),
 		"ENCRYPTION_Key":      "",
 		"ENCRYPTION_KEY":      "a2V5LWRlLXRlc3RlLWRlLTMyLWJ5dGVzLWFxdWk=",
@@ -30,7 +30,7 @@ func setEnv(t *testing.T, overrides map[string]string) {
 func TestNew(t *testing.T) {
 	t.Run("Quando a config é válida.", func(t *testing.T) { whenConfigIsValid(t) })
 	t.Run("Quando falta uma chave obrigatória.", func(t *testing.T) { whenRequiredKeyIsMissing(t) })
-	t.Run("Quando o AUTH_URL é inválido.", func(t *testing.T) { whenAuthURLIsInvalid(t) })
+	t.Run("Quando o IDENTITY_GRPC_ADDR é inválido.", func(t *testing.T) { whenAuthURLIsInvalid(t) })
 	t.Run("Quando o AUTH_APPLICATION_ID é inválido.", func(t *testing.T) { whenApplicationIDIsInvalid(t) })
 	t.Run("Quando há chaves antigas.", func(t *testing.T) { whenThereArePreviousKeys(t) })
 	t.Run("Quando a porta HTTP é inválida.", func(t *testing.T) { whenPortIsInvalid(t) })
@@ -46,7 +46,7 @@ func whenConfigIsValid(t *testing.T) {
 	cfg, err := config.New()
 
 	require.NoError(t, err)
-	assert.Equal(t, "https://auth.example.com", cfg.Auth.URL)
+	assert.Equal(t, "127.0.0.1:50051", cfg.Auth.GRPCAddr)
 	assert.NotEqual(t, uuid.UUID{}, cfg.Auth.AuthApplicationID())
 }
 
@@ -59,16 +59,16 @@ func whenRequiredKeyIsMissing(t *testing.T) {
 }
 
 func whenAuthURLIsInvalid(t *testing.T) {
-	for _, bad := range []string{"http://auth.example.com", "https://user:pass@auth.example.com", "https://auth.example.com/?x=1", "ftp://auth", "não é url"} {
-		setEnv(t, map[string]string{"AUTH_URL": bad})
+	for _, bad := range []string{"https://auth.example.com", "10.0.0.5:50051", "auth.example.com:50051", "127.0.0.1", "127.0.0.1:0"} {
+		setEnv(t, map[string]string{"IDENTITY_GRPC_ADDR": bad})
 
 		_, err := config.New()
 
 		assert.Error(t, err, bad)
 	}
 
-	for _, good := range []string{"http://localhost:8080", "http://127.0.0.1:8080", "https://auth.example.com"} {
-		setEnv(t, map[string]string{"AUTH_URL": good})
+	for _, good := range []string{"127.0.0.1:50051", "localhost:50051", "[::1]:50051"} {
+		setEnv(t, map[string]string{"IDENTITY_GRPC_ADDR": good})
 
 		_, err := config.New()
 

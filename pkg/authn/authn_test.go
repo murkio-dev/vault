@@ -2,10 +2,7 @@ package authn_test
 
 import (
 	"context"
-	"net/http"
-	"net/http/httptest"
 	"strings"
-	"sync/atomic"
 	"testing"
 	"time"
 	"uuid"
@@ -23,7 +20,7 @@ func TestVerifier(t *testing.T) {
 	t.Run("Quando a assinatura foi adulterada.", func(t *testing.T) { whenSignatureIsTampered(t) })
 	t.Run("Quando o token é lixo.", func(t *testing.T) { whenTokenIsGarbage(t) })
 	t.Run("Quando o Auth está fora.", func(t *testing.T) { whenAuthIsDown(t) })
-	t.Run("Quando o Auth responde com redirecionamento.", func(t *testing.T) { whenAuthRedirects(t) })
+	t.Run("Quando o identity não conhece a aplicação.", func(t *testing.T) { whenApplicationIsUnknown(t) })
 	t.Run("Quando há várias verificações seguidas.", func(t *testing.T) { whenKeysAreCached(t) })
 }
 
@@ -79,40 +76,32 @@ func whenAuthIsDown(t *testing.T) {
 	auth := authntest.New(t)
 	token := auth.Token(t, uuid.NewV7(), nil, time.Minute)
 	verifier := auth.Verifier()
-	auth.Server.Close()
+	auth.Close()
 
 	_, err := verifier.Verify(context.Background(), token)
 
 	assert.ErrorIs(t, err, authn.ErrInvalidToken, "falha fechada: sem as chaves, nada é aceito")
 }
 
-func whenAuthRedirects(t *testing.T) {
+func whenApplicationIsUnknown(t *testing.T) {
 	auth := authntest.New(t)
-	token := auth.Token(t, uuid.NewV7(), nil, time.Minute)
-	redirect := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, auth.Server.URL+r.URL.Path, http.StatusFound)
-	}))
-	defer redirect.Close()
+	other := uuid.NewV7()
 
-	_, err := authn.NewVerifier(redirect.URL, auth.AppID).Verify(context.Background(), token)
+	_, err := authn.NewVerifier(auth.Client(), other).Verify(context.Background(), auth.TokenFor(t, other, uuid.NewV7(), nil, time.Minute))
+	_, noClient := authn.NewVerifier(nil, auth.AppID).Verify(context.Background(), auth.Token(t, uuid.NewV7(), nil, time.Minute))
 
-	assert.ErrorIs(t, err, authn.ErrInvalidToken, "o JWKS não segue redirecionamento")
+	assert.ErrorIs(t, err, authn.ErrInvalidToken, "o identity não tem chaves dessa aplicação")
+	assert.ErrorIs(t, noClient, authn.ErrInvalidToken, "sem cliente do identity, nada é aceito")
 }
 
 func whenKeysAreCached(t *testing.T) {
 	auth := authntest.New(t)
-	var fetches atomic.Int32
-	counting := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fetches.Add(1)
-		auth.Server.Config.Handler.ServeHTTP(w, r)
-	}))
-	defer counting.Close()
-	verifier := authn.NewVerifier(counting.URL, auth.AppID)
+	verifier := auth.Verifier()
 
 	for range 5 {
 		_, err := verifier.Verify(context.Background(), auth.Token(t, uuid.NewV7(), nil, time.Minute))
 		require.NoError(t, err)
 	}
 
-	assert.EqualValues(t, 1, fetches.Load(), "o JWKS fica em cache")
+	assert.EqualValues(t, 1, auth.Fetches(), "o JWKS fica em cache")
 }

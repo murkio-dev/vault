@@ -1,0 +1,461 @@
+syntax = "proto3";
+
+package murkio.identity.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/murkio-dev/identity/pkg/rpc/identityv1;identityv1";
+
+// IdentityService é o canal privado do Identity para os outros serviços. Escuta
+// só em 127.0.0.1, fora do Caddy, e exige a sk_ da plataforma no metadata
+// "authorization" (Bearer sk_...). Não usa o JWT do usuário final.
+//
+// Os demais serviços deste arquivo são a administração do Identity pelo mesmo
+// canal, com a mesma credencial (só a sk_ da plataforma) e as mesmas regras e
+// auditoria das rotas HTTP administrativas. A aplicação em que a chamada age
+// vem do metadata "x-application-id", o equivalente do header X-Application-ID
+// do HTTP; sem ele, a chamada age na própria aplicação de plataforma. Os fluxos
+// do usuário final (login, cadastro, MFA, OAuth, redefinição de senha e aceite
+// de termos) não existem neste canal.
+service IdentityService {
+  // ListUsers pagina os usuários de uma aplicação por cursor (keyset), em ordem
+  // estável, para o broadcast e a automação do Messaging.
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+}
+
+message ListUsersRequest {
+  string application_id = 1;
+  // cursor é o next_cursor da página anterior; vazio começa do início.
+  string cursor = 2;
+  // limit vazio (0) usa o padrão do servidor; acima do teto, o teto.
+  int32 limit = 3;
+}
+
+message ListUsersResponse {
+  repeated User users = 1;
+  // next_cursor vazio quando não há mais páginas.
+  string next_cursor = 2;
+}
+
+message User {
+  string id = 1;
+  string application_id = 2;
+  bool banned = 3;
+  google.protobuf.Timestamp created_at = 4;
+  repeated Identifier identifiers = 5;
+}
+
+message Identifier {
+  string type = 1;
+  string value = 2;
+  bool is_primary = 3;
+  bool verified = 4;
+}
+
+// ListMeta descreve a página devolvida por uma listagem, como o meta do HTTP.
+message ListMeta {
+  int32 limit = 1;
+  int32 offset = 2;
+  int32 count = 3;
+  int32 total = 4;
+}
+
+// UserService administra os usuários da aplicação, como /api/v1/users.
+service UserService {
+  rpc CreateUser(CreateUserRequest) returns (Account);
+  rpc ListAccounts(ListAccountsRequest) returns (ListAccountsResponse);
+  rpc GetUser(UserRequest) returns (Account);
+  // UpdateUser é o PATCH e UpgradeUser é o PUT de /api/v1/users/{id}.
+  rpc UpdateUser(UserRequest) returns (Account);
+  rpc UpgradeUser(UserRequest) returns (Account);
+  rpc DeleteUser(UserRequest) returns (Empty);
+  // ExportUser devolve os dados pessoais do usuário (sem segredos), em JSON
+  // idêntico ao de GET /api/v1/users/{id}/export. A leitura é auditada.
+  rpc ExportUser(UserRequest) returns (ExportUserResponse);
+  // EraseUser apaga os dados pessoais e encerra as sessões; o id permanece.
+  rpc EraseUser(UserRequest) returns (Empty);
+  rpc BanUser(BanUserRequest) returns (Empty);
+  rpc UnbanUser(UserRequest) returns (Empty);
+  // ListPlatformAccounts lê os usuários de todas as aplicações (primeira
+  // página), como GET /api/v1/platform/users. A leitura é auditada.
+  rpc ListPlatformAccounts(ListAccountsRequest) returns (ListAccountsResponse);
+}
+
+message Empty {}
+
+// Account é o usuário como a administração o vê. Não leva credencial.
+message Account {
+  string id = 1;
+  string application_id = 2;
+  google.protobuf.Timestamp banned_at = 3;
+  string ban_reason = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+  google.protobuf.Timestamp deleted_at = 7;
+}
+
+message CreateUserRequest {}
+
+message ListAccountsRequest {}
+
+message ListAccountsResponse {
+  repeated Account users = 1;
+  ListMeta meta = 2;
+}
+
+message UserRequest {
+  string id = 1;
+}
+
+message BanUserRequest {
+  string id = 1;
+  string reason = 2;
+}
+
+message ExportUserResponse {
+  // json é o corpo "data" da exportação.
+  string json = 1;
+}
+
+// ApplicationService administra as aplicações, como /api/v1/applications.
+service ApplicationService {
+  rpc CreateApplication(CreateApplicationRequest) returns (Application);
+  rpc ListApplications(ListApplicationsRequest) returns (ListApplicationsResponse);
+  rpc GetApplication(ApplicationRequest) returns (Application);
+  // UpdateApplication é o PATCH e UpgradeApplication é o PUT.
+  rpc UpdateApplication(ChangeApplicationRequest) returns (Application);
+  rpc UpgradeApplication(ChangeApplicationRequest) returns (Application);
+  rpc DeleteApplication(ApplicationRequest) returns (Empty);
+  // QueryPlatformMetrics devolve o uso por aplicação, como
+  // GET /api/v1/platform/metrics. A leitura é auditada.
+  rpc QueryPlatformMetrics(QueryPlatformMetricsRequest) returns (QueryPlatformMetricsResponse);
+}
+
+message Application {
+  string id = 1;
+  string name = 2;
+  bool is_platform = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+  google.protobuf.Timestamp deleted_at = 6;
+}
+
+message CreateApplicationRequest {
+  string name = 1;
+}
+
+message ListApplicationsRequest {}
+
+message ListApplicationsResponse {
+  repeated Application applications = 1;
+  ListMeta meta = 2;
+}
+
+message ApplicationRequest {
+  string id = 1;
+}
+
+message ChangeApplicationRequest {
+  string id = 1;
+  string name = 2;
+}
+
+message QueryPlatformMetricsRequest {}
+
+message PlatformMetrics {
+  string application_id = 1;
+  int64 users_total = 2;
+  int64 login_failures_total = 3;
+  int64 users_banned_total = 4;
+}
+
+message QueryPlatformMetricsResponse {
+  repeated PlatformMetrics metrics = 1;
+}
+
+// ApiKeyService administra as API keys da aplicação, como /api/v1/api-keys. O
+// valor da chave sai uma única vez, na criação e na rotação; o banco guarda só
+// o hash, que nunca sai.
+service ApiKeyService {
+  rpc CreateApiKey(CreateApiKeyRequest) returns (ApiKeyCreated);
+  rpc ListApiKeys(ListApiKeysRequest) returns (ListApiKeysResponse);
+  rpc GetApiKey(ApiKeyRequest) returns (ApiKey);
+  // UpdateApiKey é o PATCH e UpgradeApiKey é o PUT.
+  rpc UpdateApiKey(ChangeApiKeyRequest) returns (ApiKey);
+  rpc UpgradeApiKey(ChangeApiKeyRequest) returns (ApiKey);
+  rpc DeleteApiKey(ApiKeyRequest) returns (Empty);
+  // RotateApiKey cria a chave substituta; a antiga vale até o fim da janela.
+  rpc RotateApiKey(ApiKeyRequest) returns (ApiKeyCreated);
+}
+
+message ApiKey {
+  string id = 1;
+  string application_id = 2;
+  string name = 3;
+  // type: "publishable" ou "secret".
+  string type = 4;
+  string prefix = 5;
+  google.protobuf.Timestamp last_used_at = 6;
+  google.protobuf.Timestamp expires_at = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+  google.protobuf.Timestamp deleted_at = 10;
+}
+
+message ApiKeyCreated {
+  ApiKey api_key = 1;
+  // key é o valor em claro; não é possível lê-lo de novo.
+  string key = 2;
+}
+
+message CreateApiKeyRequest {
+  string name = 1;
+  string type = 2;
+  // expires_at é opcional: ausente, a chave não vence.
+  google.protobuf.Timestamp expires_at = 3;
+}
+
+message ListApiKeysRequest {}
+
+message ListApiKeysResponse {
+  repeated ApiKey api_keys = 1;
+  ListMeta meta = 2;
+}
+
+message ApiKeyRequest {
+  string id = 1;
+}
+
+message ChangeApiKeyRequest {
+  string id = 1;
+  string name = 2;
+}
+
+// RoleService administra os papéis da aplicação e os papéis de cada usuário,
+// como /api/v1/roles e /api/v1/users/{id}/roles.
+service RoleService {
+  rpc CreateRole(CreateRoleRequest) returns (Role);
+  rpc ListRoles(ListRolesRequest) returns (ListRolesResponse);
+  rpc GetRole(RoleRequest) returns (Role);
+  // UpdateRole é o PATCH e UpgradeRole é o PUT.
+  rpc UpdateRole(ChangeRoleRequest) returns (Role);
+  rpc UpgradeRole(ChangeRoleRequest) returns (Role);
+  rpc DeleteRole(RoleRequest) returns (Empty);
+  rpc ListUserRoles(ListUserRolesRequest) returns (ListRolesResponse);
+  rpc AssignUserRole(UserRoleRequest) returns (Empty);
+  rpc UnassignUserRole(UserRoleRequest) returns (Empty);
+}
+
+message Role {
+  string id = 1;
+  string application_id = 2;
+  string name = 3;
+  string created_by = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+  google.protobuf.Timestamp deleted_at = 7;
+}
+
+message CreateRoleRequest {
+  string name = 1;
+}
+
+message ListRolesRequest {}
+
+message ListRolesResponse {
+  repeated Role roles = 1;
+  ListMeta meta = 2;
+}
+
+message RoleRequest {
+  string id = 1;
+}
+
+message ChangeRoleRequest {
+  string id = 1;
+  string name = 2;
+}
+
+message ListUserRolesRequest {
+  string user_id = 1;
+}
+
+message UserRoleRequest {
+  string user_id = 1;
+  string role_id = 2;
+}
+
+// TermService administra os termos de uso da aplicação, como /api/v1/terms. O
+// aceite e a consulta pelo usuário final existem só na API HTTP.
+service TermService {
+  rpc CreateTerm(CreateTermRequest) returns (Term);
+  // ListTerms devolve os termos sem o conteúdo.
+  rpc ListTerms(ListTermsRequest) returns (ListTermsResponse);
+  rpc GetTerm(TermRequest) returns (Term);
+  // UpdateTerm é o PATCH e UpgradeTerm é o PUT.
+  rpc UpdateTerm(ChangeTermRequest) returns (Term);
+  rpc UpgradeTerm(ChangeTermRequest) returns (Term);
+  rpc DeleteTerm(TermRequest) returns (Empty);
+  rpc PublishTerm(TermRequest) returns (Term);
+  rpc ListUserAcceptances(ListUserAcceptancesRequest) returns (ListUserAcceptancesResponse);
+}
+
+message Term {
+  string id = 1;
+  string application_id = 2;
+  // version fica ausente enquanto o termo é rascunho.
+  optional int32 version = 3;
+  string title = 4;
+  // content vem vazio na listagem.
+  string content = 5;
+  google.protobuf.Timestamp published_at = 6;
+  google.protobuf.Timestamp created_at = 7;
+  google.protobuf.Timestamp updated_at = 8;
+  google.protobuf.Timestamp deleted_at = 9;
+}
+
+message CreateTermRequest {
+  string title = 1;
+  string content = 2;
+}
+
+message ListTermsRequest {}
+
+message ListTermsResponse {
+  repeated Term terms = 1;
+  ListMeta meta = 2;
+}
+
+message TermRequest {
+  string id = 1;
+}
+
+message ChangeTermRequest {
+  string id = 1;
+  string title = 2;
+  string content = 3;
+}
+
+message ListUserAcceptancesRequest {
+  string user_id = 1;
+}
+
+message Acceptance {
+  string id = 1;
+  string terms_id = 2;
+  string user_id = 3;
+  string ip = 4;
+  string user_agent = 5;
+  google.protobuf.Timestamp accepted_at = 6;
+}
+
+message ListUserAcceptancesResponse {
+  repeated Acceptance acceptances = 1;
+  ListMeta meta = 2;
+}
+
+// AuditLogService lê a trilha de auditoria, como /api/v1/audit-logs.
+service AuditLogService {
+  rpc ListAuditLogs(ListAuditLogsRequest) returns (ListAuditLogsResponse);
+  rpc GetAuditLog(AuditLogRequest) returns (AuditLog);
+  // ListPlatformAuditLogs lê a trilha de todas as aplicações, como
+  // GET /api/v1/platform/audit-logs. A leitura é auditada.
+  rpc ListPlatformAuditLogs(ListAuditLogsRequest) returns (ListAuditLogsResponse);
+}
+
+message AuditLog {
+  string id = 1;
+  string application_id = 2;
+  string action = 3;
+  string api_key_id = 4;
+  string user_id = 5;
+  string target_id = 6;
+  string ip = 7;
+  string user_agent = 8;
+  // metadata é o JSON da linha, como na API HTTP; nunca leva segredo.
+  string metadata = 9;
+  google.protobuf.Timestamp created_at = 10;
+}
+
+message ListAuditLogsRequest {}
+
+message ListAuditLogsResponse {
+  repeated AuditLog logs = 1;
+  ListMeta meta = 2;
+}
+
+message AuditLogRequest {
+  string id = 1;
+}
+
+// ConfigService lê e altera a configuração da aplicação, como /api/v1/config. As
+// configurações viajam em JSON, idêntico ao da API HTTP: segredos de OAuth
+// entram no patch e nunca voltam (a resposta só diz se existem).
+service ConfigService {
+  rpc GetConfig(GetConfigRequest) returns (Config);
+  // UpdateConfig aplica um patch e cria uma versão nova.
+  rpc UpdateConfig(UpdateConfigRequest) returns (Config);
+  rpc ListConfigVersions(ListConfigVersionsRequest) returns (ListConfigVersionsResponse);
+  rpc RestoreConfigVersion(RestoreConfigVersionRequest) returns (Config);
+}
+
+message Config {
+  int32 version = 1;
+  // restored_from fica ausente quando a versão não veio de uma restauração.
+  optional int32 restored_from = 2;
+  string api_key_id = 3;
+  google.protobuf.Timestamp created_at = 4;
+  // settings_json é o objeto "settings" da resposta HTTP.
+  string settings_json = 5;
+}
+
+message GetConfigRequest {}
+
+message UpdateConfigRequest {
+  // patch_json é o corpo do PATCH /api/v1/config.
+  string patch_json = 1;
+}
+
+message ListConfigVersionsRequest {}
+
+message ListConfigVersionsResponse {
+  repeated Config versions = 1;
+  ListMeta meta = 2;
+}
+
+message RestoreConfigVersionRequest {
+  int32 version = 1;
+}
+
+// SigningKeyService publica as chaves públicas que assinam o access token do
+// usuário final, para o vault e o messaging verificarem o JWT sem chamar o
+// Identity por requisição. É o mesmo conteúdo do GET
+// /api/v1/applications/{id}/jwks.json e, como ele, é público: é a única RPC
+// que não exige a sk_ da plataforma, para nenhum serviço precisar guardar a
+// chave mais poderosa do Identity só para ler chaves públicas.
+service SigningKeyService {
+  // GetJWKS devolve as chaves publicadas da aplicação (a ativa e as
+  // aposentadas que ainda não venceram). Aplicação inválida ou inexistente
+  // recebe NotFound.
+  rpc GetJWKS(GetJWKSRequest) returns (JWKS);
+}
+
+message GetJWKSRequest {
+  string application_id = 1;
+}
+
+message JWK {
+  string kty = 1;
+  string crv = 2;
+  string x = 3;
+  string kid = 4;
+  string alg = 5;
+  string use = 6;
+}
+
+message JWKS {
+  repeated JWK keys = 1;
+  // max_age_seconds é por quanto tempo o cliente pode guardar as chaves, o
+  // mesmo max-age do Cache-Control do HTTP.
+  int32 max_age_seconds = 2;
+}
