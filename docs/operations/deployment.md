@@ -67,7 +67,7 @@ O Vault traz limites de proteção do protocolo: `ReadHeaderTimeout` 5 s, `ReadT
 ## Checklist
 
 - [ ] `ENCRYPTION_KEY` gerada com `openssl rand -base64 32` e guardada à parte do banco.
-- [ ] `AUTH_URL` em `https` e `AUTH_APPLICATION_ID` correto.
+- [ ] Identity na mesma máquina, com o gRPC em `IDENTITY_GRPC_ADDR` (loopback), e `AUTH_APPLICATION_ID` correto.
 - [ ] `APPLICATION_BACKEND` com a URL pública.
 - [ ] Porta HTTP acessível só pelo Caddy.
 - [ ] Backup do `vault.db` agendado.

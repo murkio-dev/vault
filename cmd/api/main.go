@@ -14,7 +14,9 @@ import (
 	"github.com/murkio-dev/vault/pkg/dependencies"
 	"github.com/murkio-dev/vault/pkg/graceful"
 	"github.com/murkio-dev/vault/pkg/httpx"
+	"github.com/murkio-dev/vault/pkg/identityclient"
 	"github.com/murkio-dev/vault/pkg/migration"
+	identityv1 "github.com/murkio-dev/vault/pkg/rpc/identityv1"
 	"github.com/murkio-dev/vault/pkg/secretbox"
 	"github.com/murkio-dev/vault/pkg/sqlite"
 )
@@ -59,7 +61,12 @@ func main() {
 		fatal(err)
 	}
 
-	verifier := authn.NewVerifier(cfg.Auth.URL, cfg.Auth.AuthApplicationID())
+	identity, err := identityclient.Dial(cfg.Auth.GRPCAddr)
+	if err != nil {
+		fatal(err)
+	}
+	defer identity.Close()
+	verifier := authn.NewVerifier(identityv1.NewSigningKeyServiceClient(identity), cfg.Auth.AuthApplicationID())
 
 	deps, tokenAuthenticator := dependencies.New(db, box)
 	grpcServer, err := restful.InitGRPC(db, deps, verifier, tokenAuthenticator, cfg.Server.BackendURL, cfg.Server.GRPCPort)

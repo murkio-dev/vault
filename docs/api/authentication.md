@@ -21,7 +21,7 @@ Authorization: Bearer sk_vt_Zk3...
 
 ## JWT
 
-O Vault valida o token **localmente**, com o JWKS do Identity (`{AUTH_URL}/api/v1/applications/{AUTH_APPLICATION_ID}/jwks.json`). Regras, nesta ordem:
+O Vault valida o token **localmente**, com o JWKS do Identity, lido pelo gRPC interno (`SigningKeyService.GetJWKS` em `IDENTITY_GRPC_ADDR`, para a aplicação `AUTH_APPLICATION_ID`). Regras, nesta ordem:
 
 1. Tamanho de até 8 KiB e três partes.
 2. Header com `alg=EdDSA`, `typ=JWT` e `kid`.

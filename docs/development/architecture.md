@@ -79,7 +79,7 @@ type IUseCase[i any, o any] interface {
 3. Carrega a `ENCRYPTION_KEY` no `secretbox`.
 4. Roda as migrations embutidas.
 5. `restful.Init(...)`: registra as rotas HTTP de cada service e devolve o autenticador do token.
-6. Cria o verificador de JWT (`AUTH_URL`, `AUTH_APPLICATION_ID`).
+6. Abre o cliente gRPC do Identity (`IDENTITY_GRPC_ADDR`) e cria o verificador de JWT (`AUTH_APPLICATION_ID`).
 7. `restful.InitGRPC(...)`: sobe o gRPC em `127.0.0.1`.
 8. `httpx.NewServer`, com o handler `authn.Authenticate(verifier, tokens, mux)`.
 9. `graceful.Run`: sobe os dois servidores e os desliga juntos por sinal.

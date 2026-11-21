@@ -21,7 +21,7 @@ Em produção prefira definir as variáveis no ambiente do processo ([Deploy](de
 | `APPLICATION_PORT` | | sim | Porta HTTP (1 a 65535). Escuta em todas as interfaces |
 | `APPLICATION_BACKEND` | vazio | não | URL pública base. Usada para montar o `uri` devolvido ao criar um token |
 | `GRPC_PORT` | `50052` | não | Porta do gRPC interno (1 a 65535, diferente da HTTP). O host é sempre `127.0.0.1` |
-| `AUTH_URL` | | sim | URL do Identity. `https`, ou `http` só para `localhost` e IP de loopback. Sem credenciais, query nem fragmento |
+| `IDENTITY_GRPC_ADDR` | `127.0.0.1:50051` | não | gRPC interno do Identity, de onde vem o JWKS. `host:porta` só em loopback (`127.0.0.1`, `::1` ou `localhost`) |
 | `AUTH_APPLICATION_ID` | | sim | UUID (não zero) da aplicação do Vault no Identity |
 | `ENCRYPTION_KEY` | | sim | Chave ativa: base64 de exatamente 32 bytes |
 | `ENCRYPTION_KEYS_PREVIOUS` | vazio | não | Chaves antigas em base64, separadas por vírgula |
@@ -43,7 +43,7 @@ O Vault não sobe (e sai com código 1) se:
 
 - falta uma variável obrigatória (a mensagem nomeia o campo da struct, como `Port`);
 - uma porta é inválida, ou as duas portas são iguais;
-- `AUTH_URL` não é `https` (fora o loopback) ou tem credenciais, query ou fragmento;
+- `IDENTITY_GRPC_ADDR` não é `host:porta` em loopback;
 - `AUTH_APPLICATION_ID` não é um UUID ou é zero;
 - `ENCRYPTION_KEY` não é base64 de 32 bytes, ou uma chave anterior é igual à ativa.
 
@@ -56,7 +56,7 @@ APPLICATION_PORT=8083
 APPLICATION_BACKEND=http://localhost:8083
 GRPC_PORT=50052
 
-AUTH_URL=http://localhost:8080
+IDENTITY_GRPC_ADDR=127.0.0.1:50051
 AUTH_APPLICATION_ID=0194f3a2-7c10-7000-8000-000000000001
 
 SQLITE_PATH=vault.db

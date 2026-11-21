@@ -6,7 +6,7 @@ O Vault é um binário único. Não há pacote, imagem Docker nem instalador: vo
 
 - Go 1.27.
 - Uma aplicação do Vault cadastrada no Identity. O id dela é o `AUTH_APPLICATION_ID`.
-- O Identity acessível em `AUTH_URL`, para o Vault buscar o JWKS.
+- O Identity na mesma máquina, com o gRPC interno em `IDENTITY_GRPC_ADDR`, para o Vault buscar o JWKS.
 - Uma chave de cifragem de 32 bytes em base64.
 
 Produção: FreeBSD (4 GB de RAM, 2 núcleos), sem Docker. Desenvolvimento: Linux (Debian/WSL) ou Windows.
