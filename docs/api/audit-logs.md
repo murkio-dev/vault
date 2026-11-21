@@ -50,7 +50,7 @@ Valor inválido dá `400`.
 | Membro | `member.updated`, `member.removed` |
 | Convite | `invitation.created`, `invitation.accepted`, `invitation.revoked` |
 | Segredo | `secret.created`, `secret.updated`, `secret.renamed`, `secret.deleted`, `secret.revealed` |
-| Token | `token.created`, `token.revoked` |
+| Chave de API | `api_key.created`, `api_key.updated`, `api_key.rotated`, `api_key.revoked` (as linhas anteriores à migration `0009` seguem como `token.created` e `token.revoked`, porque a trilha é imutável) |
 | Runtime | `env.read` |
 | Acesso | `access.denied` |
 

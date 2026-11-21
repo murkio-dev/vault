@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/murkio-dev/vault/internal/entities"
-	tokencontracts "github.com/murkio-dev/vault/internal/restful/token/contracts"
+	apikeyscontracts "github.com/murkio-dev/vault/internal/restful/apikeys/contracts"
 	"github.com/murkio-dev/vault/pkg/authn"
 )
 
@@ -21,10 +21,10 @@ var errInvalidToken = errors.New("invalid token")
 // Authenticator é o authn.TokenAuthenticator: transforma o token do SDK no ator
 // que ele representa.
 type Authenticator struct {
-	Repository tokencontracts.ITokenRepository
+	Repository apikeyscontracts.IApiKeyRepository
 }
 
-func NewAuthenticator(repository tokencontracts.ITokenRepository) Authenticator {
+func NewAuthenticator(repository apikeyscontracts.IApiKeyRepository) Authenticator {
 	return Authenticator{Repository: repository}
 }
 
@@ -32,13 +32,13 @@ var _ authn.TokenAuthenticator = Authenticator{}
 
 // Authenticate busca o token pelo hash a cada requisição, no banco: revogar,
 // expirar, suspender o membro ou apagar a aplicação valem na hora. Formato
-// errado (sem o prefixo sk_vt_ ou grande demais) nem chega ao banco. Todo motivo
+// errado (sem o prefixo sk_vt_, como a pk_vt_, ou grande demais) nem chega ao banco. Todo motivo
 // de recusa vira o mesmo erro, sem detalhe, e a falha do banco também nega.
 // O último uso é só informação: se gravá-lo falhar, o token continua valendo.
 // Exemplo: um token revogado um segundo atrás já recebe erro.
 func (a Authenticator) Authenticate(ctx context.Context, raw string) (entities.Actor, error) {
 
-	if !strings.HasPrefix(raw, entities.SDKTokenPrefix) || len(raw) > maxRawToken {
+	if !strings.HasPrefix(raw, entities.SecretKeyPrefix) || len(raw) > maxRawToken {
 		return entities.Actor{}, errInvalidToken
 	}
 
@@ -51,7 +51,7 @@ func (a Authenticator) Authenticate(ctx context.Context, raw string) (entities.A
 	}
 
 	now := time.Now().UTC()
-	_, _ = a.Repository.TouchLastUsed(ctx, entities.AccessToken{ID: token.ID, ApplicationID: token.ApplicationID, LastUsedAt: &now})
+	_, _ = a.Repository.TouchLastUsed(ctx, entities.ApiKey{ID: token.ID, ApplicationID: token.ApplicationID, LastUsedAt: &now})
 
 	return entities.Actor{
 		Kind:          entities.ActorToken,

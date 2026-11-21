@@ -28,8 +28,10 @@ const (
 	AuditSecretRenamed      = "secret.renamed"
 	AuditSecretDeleted      = "secret.deleted"
 	AuditSecretRevealed     = "secret.revealed"
-	AuditTokenCreated       = "token.created"
-	AuditTokenRevoked       = "token.revoked"
+	AuditApiKeyCreated      = "api_key.created"
+	AuditApiKeyUpdated      = "api_key.updated"
+	AuditApiKeyRotated      = "api_key.rotated" // #nosec G101 -- audit action name, not a credential
+	AuditApiKeyRevoked      = "api_key.revoked"
 	AuditEnvRead            = "env.read"
 	AuditAccessDenied       = "access.denied"
 )

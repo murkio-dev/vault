@@ -60,13 +60,17 @@ Accept: application/json
 | `GET …/secrets/{id}/versions` | `secret.read` | JWT | `200` | |
 | `POST …/secrets/{id}/reveal` | `secret.reveal` | JWT | `200` | |
 
-### Tokens (`/applications/{app}/members/{member}/tokens`)
+### Chaves de API (`/api-keys?application_id={app}&member_id={member}`)
 
 | Método e caminho | Ação | Credencial | Sucesso | Página |
 |---|---|---|---|---|
-| `POST …/tokens` | `token.create` | JWT | `201` | [Tokens](api/tokens.md) |
-| `GET …/tokens` | `token.list` | JWT | `200` | |
-| `POST …/tokens/{id}/revoke` | `token.revoke` | JWT | `204` | |
+| `POST /api-keys` | `api_key.create` | JWT | `201` | [Chaves de API](api/api-keys.md) |
+| `GET /api-keys` | `api_key.read` | JWT | `200` | |
+| `GET /api-keys/{id}` | `api_key.read` | JWT | `200` | |
+| `PATCH /api-keys/{id}` | `api_key.update` | JWT | `200` | |
+| `PUT /api-keys/{id}` | `api_key.update` | JWT | `200` | |
+| `DELETE /api-keys/{id}` | `api_key.delete` | JWT | `204` | |
+| `POST /api-keys/{id}/rotate` | `api_key.create` | JWT | `201` | |
 
 ### Runtime
 
@@ -92,7 +96,7 @@ Quem decide é `entities.Decide` (função pura, testada em matriz). Nenhum use 
 | `member.list`, `member.update`, `member.remove` | sim | sim | `403` | não |
 | `invitation.manage` | sim | sim | `403` | não |
 | `secret.read`, `secret.write`, `secret.reveal` | sim | sim (de todos) | só os próprios | não |
-| `token.create`, `token.list`, `token.revoke` | sim | sim (de todos) | só os próprios | não |
+| `api_key.create`, `api_key.read`, `api_key.update`, `api_key.delete` | sim | sim (de todos) | só as próprias | não |
 | `audit.read` | sim | sim (tudo) | só as próprias linhas | não |
 | `env.read` | não | não | não | só o próprio membro |
 

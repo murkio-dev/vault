@@ -11,13 +11,13 @@ curl -s $VAULT/api/v1/applications/$APP_ID/members/me -H "Authorization: Bearer 
 ## 2. Crie o token
 
 ```sh
-curl -s -X POST $VAULT/api/v1/applications/$APP_ID/members/me/tokens \
+curl -s -X POST "$VAULT/api/v1/api-keys?application_id=$APP_ID" \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"name": "notebook", "expires_at": "2027-01-01T00:00:00Z"}'
+  -d '{"name": "notebook", "type": "secret", "expires_at": "2027-01-01T00:00:00Z"}'
 ```
 
-Copie o `data.token`. **Ele não aparece de novo.** Sem `expires_at` o token não expira (o máximo, quando informado, é 10 anos).
+Copie o `data.key`. **Ele não aparece de novo.** Sem `expires_at` o token não expira (o máximo, quando informado, é 10 anos).
 
 ## 3. Leia o ambiente
 
@@ -36,4 +36,4 @@ eval "$(curl -s "$VAULT/api/v1/runtime/$URI_ID/env" -H "Authorization: Bearer $V
 
 O token só lê o **seu** `uri_id` (outro dá `404` e fica registrado como `access.denied`). Guarde o token como um segredo: em um cofre de CI, nunca no repositório.
 
-Referências: [Tokens](../api/tokens.md) e [Runtime](../api/runtime.md).
+Referências: [Chaves de API](../api/api-keys.md) e [Runtime](../api/runtime.md).

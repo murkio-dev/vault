@@ -43,7 +43,7 @@ curl "$VAULT/api/v1/applications/$APP_ID/audit-logs?limit=100&cursor=<next_curso
 | `GET …/invitations` | os 200 convites mais novos |
 | `GET …/secrets` | todos os segredos do membro (até 100) |
 | `GET …/secrets/{id}/versions` | até 500 versões, da mais nova à mais antiga |
-| `GET …/tokens` | até 200 tokens, inclusive os revogados |
+| `GET /api-keys` | até 200 chaves, inclusive as apagadas |
 | `GET /runtime/{uri_id}/env` | até 100 variáveis, ordenadas por nome |
 
 No gRPC, `page` e `limit` valem `0` para "padrão" e negativo é `InvalidArgument`.

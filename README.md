@@ -102,7 +102,7 @@ Para trocar a chave de cifragem sem perder dados, siga a [Rotação da `ENCRYPTI
   - [Membros](docs/api/members.md)
   - [Convites](docs/api/invitations.md)
   - [Segredos](docs/api/secrets.md)
-  - [Tokens](docs/api/tokens.md)
+  - [Chaves de API](docs/api/api-keys.md)
   - [Runtime (`/runtime/{uri_id}/env`)](docs/api/runtime.md)
   - [Auditoria](docs/api/audit-logs.md)
   - [gRPC interno](docs/api/grpc.md)

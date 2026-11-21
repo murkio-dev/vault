@@ -151,7 +151,7 @@ func (r MemberRepository) Delete(ctx context.Context, application, id uuid.UUID)
 		return err
 	}
 
-	if _, err := conn.ExecContext(ctx, "UPDATE access_tokens SET revoked_at = ? WHERE member_id = ? AND revoked_at IS NULL", now, member); err != nil {
+	if _, err := conn.ExecContext(ctx, "UPDATE api_keys SET deleted_at = ? WHERE member_id = ? AND deleted_at IS NULL", now, member); err != nil {
 		return err
 	}
 	_, err = conn.ExecContext(ctx, "UPDATE secrets SET deleted_at = ? WHERE member_id = ? AND deleted_at IS NULL", now, member)

@@ -21,9 +21,10 @@ const (
 	ActionSecretWrite  Action = "secret.write"
 	ActionSecretReveal Action = "secret.reveal"
 
-	ActionTokenCreate Action = "token.create"
-	ActionTokenList   Action = "token.list"
-	ActionTokenRevoke Action = "token.revoke"
+	ActionApiKeyCreate Action = "api_key.create"
+	ActionApiKeyRead   Action = "api_key.read"
+	ActionApiKeyUpdate Action = "api_key.update"
+	ActionApiKeyDelete Action = "api_key.delete"
 
 	ActionAuditRead Action = "audit.read"
 	ActionEnvRead   Action = "env.read"
@@ -34,7 +35,7 @@ var knownActions = map[Action]bool{
 	ActionMemberList: true, ActionMemberUpdate: true, ActionMemberRemove: true,
 	ActionInvitationManage: true, ActionInvitationAccept: true,
 	ActionSecretRead: true, ActionSecretWrite: true, ActionSecretReveal: true,
-	ActionTokenCreate: true, ActionTokenList: true, ActionTokenRevoke: true,
+	ActionApiKeyCreate: true, ActionApiKeyRead: true, ActionApiKeyUpdate: true, ActionApiKeyDelete: true,
 	ActionAuditRead: true, ActionEnvRead: true,
 }
 
@@ -107,7 +108,7 @@ func Decide(actor Actor, member *Member, action Action, owner uuid.UUID) Decisio
 	case ActionApplicationRead:
 		return Allow
 	case ActionSecretRead, ActionSecretWrite, ActionSecretReveal,
-		ActionTokenCreate, ActionTokenList, ActionTokenRevoke, ActionAuditRead:
+		ActionApiKeyCreate, ActionApiKeyRead, ActionApiKeyUpdate, ActionApiKeyDelete, ActionAuditRead:
 		if owner == member.ID {
 			return Allow
 		}

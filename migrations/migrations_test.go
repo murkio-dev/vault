@@ -29,12 +29,13 @@ func TestSchema(t *testing.T) {
 	t.Run("Quando alguém altera a auditoria.", func(t *testing.T) { whenAuditIsTampered(t) })
 	t.Run("Quando alguém altera uma versão de segredo.", func(t *testing.T) { whenSecretVersionIsTampered(t) })
 	t.Run("Quando o nome de uma aplicação apagada é reusado.", func(t *testing.T) { whenApplicationNameIsReused(t) })
+	t.Run("Quando um token antigo passa pela 0009.", func(t *testing.T) { whenLegacyTokenBecomesApiKey(t) })
 }
 
 func whenMigrationsRun(t *testing.T) {
 	db := migrated(t)
 
-	for _, table := range []string{"applications", "members", "invitations", "secrets", "secret_versions", "access_tokens", "audit_logs", "outbox_events"} {
+	for _, table := range []string{"applications", "members", "invitations", "secrets", "secret_versions", "api_keys", "audit_logs", "outbox_events"} {
 		var name string
 		err := db.QueryRow(`SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?`, table).Scan(&name)
 		assert.NoError(t, err, table)
@@ -56,7 +57,7 @@ func whenMigrationsRunTwice(t *testing.T) {
 		assert.True(t, strings.HasSuffix(version, ".up.sql"), "uma .down.sql nunca roda no boot: %s", version)
 		count++
 	}
-	assert.Equal(t, 8, count)
+	assert.Equal(t, 9, count)
 }
 
 func seedApplication(t *testing.T, db *sql.DB, id, name string) {
@@ -109,4 +110,39 @@ func whenApplicationNameIsReused(t *testing.T) {
 	_, err = db.Exec(`UPDATE applications SET deleted_at = ? WHERE id = 'a'`, time.Now().UTC())
 	require.NoError(t, err)
 	seedApplication(t, db, "c", "minha-app")
+}
+
+func whenLegacyTokenBecomesApiKey(t *testing.T) {
+	db, err := sqlite.New(t.TempDir() + "/vault.db")
+	require.NoError(t, err)
+	t.Cleanup(func() { db.Close() })
+	apply := func(name string) {
+		t.Helper()
+		script, err := migrations_embed.FS.ReadFile("sqlite/" + name)
+		require.NoError(t, err)
+		_, err = db.Exec(string(script))
+		require.NoError(t, err, name)
+	}
+	for _, name := range []string{"0001_applications_table.up.sql", "0002_members_table.up.sql", "0006_access_tokens_table.up.sql"} {
+		apply(name)
+	}
+	now := time.Now().UTC()
+	seedApplication(t, db, "app", "minha-app")
+	_, err = db.Exec(`INSERT INTO members (id, application_id, user_id, uri_id, role, created_at) VALUES ('m', 'app', 'u', 'uri', 'admin', ?)`, now)
+	require.NoError(t, err)
+	_, err = db.Exec(`INSERT INTO access_tokens (id, application_id, member_id, name, prefix, token_hash, revoked_at, revoked_by, created_by, created_at)
+		VALUES ('t', 'app', 'm', 'ci', 'sk_vt_abcdef', 'h', ?, 'admin', 'u', ?)`, now, now)
+	require.NoError(t, err)
+
+	apply("0009_api_keys_table.up.sql")
+
+	var keyType, hash, deletedBy string
+	var deletedAt *time.Time
+	require.NoError(t, db.QueryRow(`SELECT type, hash, deleted_at, deleted_by FROM api_keys WHERE id = 't'`).Scan(&keyType, &hash, &deletedAt, &deletedBy))
+	assert.Equal(t, "secret", keyType, "o token antigo vira chave secreta")
+	assert.Equal(t, "h", hash, "o hash não muda, então o token continua valendo")
+	assert.NotNil(t, deletedAt, "revoked_at vira deleted_at")
+	assert.Equal(t, "admin", deletedBy)
+	_, err = db.Exec(`UPDATE api_keys SET type = 'outro' WHERE id = 't'`)
+	assert.Error(t, err, "type só aceita publishable ou secret")
 }

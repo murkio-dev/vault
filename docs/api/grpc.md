@@ -32,7 +32,7 @@ grpcurl -plaintext -H "authorization: Bearer sk_vt_..." \
 | `ApplicationService` | `CreateApplications`, `GetApplication`, `ListApplications`, `UpdateApplications`, `DeleteApplications` | [Aplicações](applications.md) (não há `Upgrade`/PATCH) |
 | `MemberService` | `ListMembers`, `GetMe`, `UpdateMember`, `RemoveMember` | [Membros](members.md) |
 | `InvitationService` | `CreateInvitation`, `ListInvitations`, `RevokeInvitation`, `AcceptInvitation` | [Convites](invitations.md) |
-| `TokenService` | `CreateToken`, `ListTokens`, `RevokeToken` | [Tokens](tokens.md) |
+| `ApiKeyService` | `CreateApiKey`, `ListApiKeys`, `GetApiKey`, `UpdateApiKey`, `UpgradeApiKey`, `DeleteApiKey`, `RotateApiKey` | [Chaves de API](api-keys.md) |
 | `SecretService` | `CreateSecrets`, `ListSecrets`, `GetSecret`, `UpdateSecret`, `RenameSecret`, `DeleteSecret`, `ListSecretVersions`, `RevealSecret` | [Segredos](secrets.md) |
 | `AuditService` | `ListAuditLogs` | [Auditoria](audit-logs.md) |
 

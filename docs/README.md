@@ -32,7 +32,7 @@ O lugar do serviço na plataforma está em [`../../schema/vault.md`](../../schem
 - [Lote](api/batch.md)
 - [Paginação](api/pagination.md)
 - [Erros](api/errors.md)
-- [Aplicações](api/applications.md), [Membros](api/members.md), [Convites](api/invitations.md), [Segredos](api/secrets.md), [Tokens](api/tokens.md), [Runtime](api/runtime.md), [Auditoria](api/audit-logs.md)
+- [Aplicações](api/applications.md), [Membros](api/members.md), [Convites](api/invitations.md), [Segredos](api/secrets.md), [Chaves de API](api/api-keys.md), [Runtime](api/runtime.md), [Auditoria](api/audit-logs.md)
 - [gRPC interno](api/grpc.md)
 
 ## Segurança
